@@ -1,0 +1,1716 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ballistic Calculator</title>
+    <!-- PWA Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Ballistic Calculator">
+    <!-- Theme Color for PWA -->
+    <meta name="theme-color" content="#f5f5f5">
+    <!-- Icons for PWA -->
+    <link rel="apple-touch-icon" href="/icons/icon-192.png">
+    <link rel="icon" href="/icons/icon-192.png">
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 15px;
+            background-color: #f5f5f5;
+            padding-bottom: 20px;
+        }
+        h2 { 
+            margin-top: 15px;
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+            color: #333;
+        }
+        .form-group { 
+            margin-bottom: 8px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            align-items: center;
+        }
+        label { 
+            display: inline-block;
+            width: 100%;
+            max-width: 180px;
+            color: #555;
+            font-size: 0.9rem;
+        }
+        input, select { 
+            width: 100%;
+            max-width: 200px;
+            padding: 6px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 0.9rem;
+        }
+        button { 
+            margin: 5px 5px;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            font-size: 0.9rem;
+            min-width: 80px;
+        }
+        button:hover { 
+            transform: translateY(-1px);
+            box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+        }
+        button.add-session { 
+            background-color: #28a745; 
+            color: white; 
+        }
+        button.add-session:hover { 
+            background-color: #218838; 
+        }
+        button.calculate-save { 
+            background-color: #28a745; 
+            color: white; 
+        }
+        button.calculate-save:hover { 
+            background-color: #218838; 
+        }
+        button.cancel-edit { 
+            background-color: #ffc107; 
+            color: white; 
+        }
+        button.cancel-edit:hover { 
+            background-color: #e0a800; 
+        }
+        button.view-all { 
+            background-color: #007bff; 
+            color: white; 
+        }
+        button.view-all:hover { 
+            background-color: #0056b3; 
+        }
+        button.clear-all { 
+            background-color: #6c757d; 
+            color: white; 
+        }
+        button.clear-all:hover { 
+            background-color: #5a6268; 
+        }
+        button.search { 
+            background-color: #17a2b8; 
+            color: white; 
+        }
+        button.search:hover { 
+            background-color: #138496; 
+        }
+        button.clear-search { 
+            background-color: #dc3545; 
+            color: white; 
+        }
+        button.clear-search:hover { 
+            background-color: #c82333; 
+        }
+        button.delete-selected { 
+            background-color: #ff6f61; 
+            color: white; 
+        }
+        button.delete-selected:hover { 
+            background-color: #ff4d3d; 
+        }
+        button.compare-selected { 
+            background-color: #20c997; 
+            color: white; 
+        }
+        button.compare-selected:hover { 
+            background-color: #1ba87e; 
+        }
+        button.view-session, button.edit-session { 
+            padding: 4px 8px;
+            font-size: 0.8rem;
+            margin-right: 5px;
+        }
+        button.view-session { 
+            background-color: #6f42c1; 
+            color: white; 
+        }
+        button.view-session:hover { 
+            background-color: #5a32a3; 
+        }
+        button.edit-session { 
+            background-color: #fd7e14; 
+            color: white; 
+        }
+        button.edit-session:hover { 
+            background-color: #e06c0f; 
+        }
+        button.login, button.logout, button.reset-password { 
+            background-color: #007bff; 
+            color: white; 
+        }
+        button.login:hover, button.logout:hover, button.reset-password:hover { 
+            background-color: #0056b3; 
+        }
+        button.back-to-login { 
+            background-color: #6c757d; 
+            color: white; 
+        }
+        button.back-to-login:hover { 
+            background-color: #5a6268; 
+        }
+        table { 
+            border-collapse: collapse;
+            margin-top: 10px;
+            width: 100%;
+            background-color: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        th, td { 
+            border: 1px solid #ddd;
+            padding: 6px;
+            text-align: right;
+            font-size: 0.85rem;
+        }
+        th { 
+            background-color: #f2f2f2;
+            color: #333;
+        }
+        td:first-child, th:first-child { 
+            text-align: center;
+        }
+        .message { 
+            color: green;
+            margin-top: 5px;
+            font-size: 0.9rem;
+        }
+        .error { 
+            color: red;
+            font-size: 0.9rem;
+        }
+        .session-controls { 
+            margin-top: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+        .search-group { 
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        #ballisticForm { 
+            display: none;
+            margin-top: 10px;
+        }
+        .filter-section {
+            display: none;
+        }
+        .filter-section.active {
+            display: block;
+        }
+        .toggle-filter {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+        .toggle-filter:hover {
+            background-color: #0056b3;
+            transform: translateY(-1px);
+            box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+        }
+        .forgot-password {
+            display: block;
+            margin: 5px 0;
+            font-size: 0.9rem;
+            color: #007bff;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .forgot-password:hover {
+            text-decoration: underline;
+        }
+        #resetPasswordForm {
+            display: none;
+            margin-top: 10px;
+        }
+        @media (max-width: 576px) {
+            body {
+                margin: 10px;
+                padding-bottom: 15px;
+            }
+            h2 {
+                font-size: 1.1rem;
+            }
+            label {
+                font-size: 0.85rem;
+                max-width: 100%;
+            }
+            input, select {
+                font-size: 0.85rem;
+                max-width: 100%;
+            }
+            button {
+                font-size: 0.85rem;
+                padding: 6px 10px;
+                min-width: 70px;
+            }
+            button.view-session, button.edit-session {
+                font-size: 0.75rem;
+                padding: 3px 6px;
+            }
+            th, td {
+                font-size: 0.75rem;
+                padding: 4px;
+            }
+            .trajectory-table th, .trajectory-table td {
+                font-size: 0.7rem;
+                padding: 3px;
+            }
+            .trajectory-table th:nth-child(1), .trajectory-table td:nth-child(1),
+            .trajectory-table th:nth-child(2), .trajectory-table td:nth-child(2),
+            .trajectory-table th:nth-child(3), .trajectory-table td:nth-child(3) {
+                font-weight: bold;
+            }
+            .form-group {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .session-controls {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .search-group {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .filter-section {
+                display: none;
+            }
+            .filter-section.active {
+                display: block;
+            }
+            .forgot-password {
+                font-size: 0.85rem;
+            }
+        }
+        .trajectory-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        #trajectoryTitle {
+            display: inline-block;
+        }
+        #trajectoryDescription {
+            font-size: 0.9rem;
+            color: #555;
+            font-style: italic;
+        }
+        #compareForm {
+            display: none;
+            margin-top: 10px;
+        }
+        .flattest-trajectory {
+            background-color: #28a745 !important;
+            color: white;
+        }
+        #loginForm {
+            margin-top: 20px;
+            display: none;
+        }
+        #appContent {
+            display: none;
+        }
+        .user-info {
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+    </style>
+    <script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+            return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+            if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+                try {
+                    var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                    var firstSheetName = workbook.SheetNames[0];
+                    var worksheet = workbook.Sheets[firstSheetName];
+                    var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                    var filteredData = jsonData.filter(row => row.some(filledCell));
+                    var headerRowIndex = filteredData.findIndex((row, index) =>
+                        row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                    );
+                    if (headerRowIndex === -1 || headerRowIndex > 25) {
+                        headerRowIndex = 0;
+                    }
+                    var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex));
+                    csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                    return csv;
+                } catch (e) {
+                    console.error(e);
+                    return "";
+                }
+            }
+            return gk_fileData[filename] || "";
+        }
+    </script>
+</head>
+<body>
+    <div id="loginForm">
+        <h2>Login to Ballistic Calculator</h2>
+        <form id="authForm">
+            <div class="form-group">
+                <label>Email:</label>
+                <input type="email" id="login_email" autocomplete="email">
+            </div>
+            <div class="form-group">
+                <label>Password:</label>
+                <input type="password" id="login_password" autocomplete="current-password">
+            </div>
+            <button type="button" class="login" onclick="login()">Login</button>
+            <button type="button" class="login" onclick="signup()">Sign Up</button>
+        </form>
+        <a class="forgot-password" onclick="showResetPasswordForm()">Forgot Password?</a>
+        <form id="resetPasswordForm">
+            <div class="form-group">
+                <label>Email:</label>
+                <input type="email" id="reset_email" autocomplete="email">
+            </div>
+            <button type="button" class="reset-password" onclick="resetPassword()">Reset Password</button>
+            <button type="button" class="back-to-login" onclick="showLoginForm()">Back to Login</button>
+        </form>
+        <div id="authMessage"></div>
+    </div>
+
+    <div id="appContent">
+        <div class="user-info">
+            <span id="userEmail"></span>
+            <button class="logout" onclick="logout()">Logout</button>
+        </div>
+        <h2>Ballistic Calculator Input 29</h2>
+        <button class="add-session" onclick="toggleForm()">Add New</button>
+        <form id="ballisticForm">
+            <div class="form-group">
+                <label>Shooter Name:</label>
+                <input type="text" name="shooter_name">
+            </div>
+            <div class="form-group">
+                <label>Firearm Type:</label>
+                <select name="firearm_type">
+                    <option value="">Select</option>
+                    <option value="Rifle">Rifle</option>
+                    <option value="Pistol">Pistol</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Firearm Name:</label>
+                <input type="text" name="firearm_name">
+            </div>
+            <div class="form-group">
+                <label>Optic Name:</label>
+                <input type="text" name="optic_name">
+            </div>
+            <div class="form-group">
+                <label>Caliber:</label>
+                <input type="text" name="caliber">
+            </div>
+            <div class="form-group">
+                <label>Barrel Length (inches):</label>
+                <input type="number" step="0.1" name="barrel_length">
+            </div>
+            <div class="form-group">
+                <label>Bullet Grain (gr):</label>
+                <input type="number" name="bullet_grain">
+            </div>
+            <div class="form-group">
+                <label>Muzzle Velocity (fps):</label>
+                <input type="number" name="muzzle_velocity">
+            </div>
+            <div class="form-group">
+                <label>Ballistic Coefficient:</label>
+                <input type="number" step="0.001" name="ballistic_coefficient">
+            </div>
+            <div class="form-group">
+                <label>Zero Distance (yards):</label>
+                <input type="number" name="zero_distance">
+            </div>
+            <div class="form-group">
+                <label>Height Over Bore (inches):</label>
+                <input type="number" step="0.01" name="height_over_bore">
+            </div>
+            <div class="form-group">
+                <label>Drag Model:</label>
+                <select name="drag_model">
+                    <option value="">Select</option>
+                    <option value="G1">G1</option>
+                    <option value="G7">G7</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Step Interval (yards):</label>
+                <input type="number" name="step_interval_yards">
+            </div>
+            <div class="form-group">
+                <label>Max Distance (yards):</label>
+                <input type="number" name="max_distance_yards">
+            </div>
+            <div class="form-group">
+                <label>Wind Speed (mph):</label>
+                <input type="number" name="wind_speed">
+            </div>
+            <div class="form-group">
+                <label>Wind Angle (degrees):</label>
+                <input type="number" name="wind_angle">
+            </div>
+            <button type="button" class="calculate-save" onclick="calculateAndSave()">Calculate & Save</button>
+            <button type="button" class="cancel-edit" onclick="cancelEdit()" style="display: none;" id="cancelEditButton">Cancel Edit</button>
+        </form>
+
+        <div id="message"></div>
+
+        <h2>Filter</h2>
+        <button class="toggle-filter" onclick="toggleFilters()">Show Filters</button>
+        <div class="filter-section" id="filterSection">
+            <div class="session-controls">
+                <button class="view-all" onclick="viewAll()">View All</button>
+                <button class="clear-all" onclick="clearAll()">Clear All</button>
+                <div class="search-group">
+                    <label>Shooter Name:</label>
+                    <input type="text" id="search_shooter_name">
+                </div>
+                <div class="search-group">
+                    <label>Firearm Type:</label>
+                    <select id="search_firearm_type">
+                        <option value="">All</option>
+                        <option value="Rifle">Rifle</option>
+                        <option value="Pistol">Pistol</option>
+                    </select>
+                </div>
+                <div class="search-group">
+                    <label>Firearm Name:</label>
+                    <input type="text" id="search_firearm_name">
+                </div>
+                <div class="search-group">
+                    <label>Bullet Grain (gr):</label>
+                    <input type="number" id="search_bullet_grain">
+                </div>
+                <div class="search-group">
+                    <label>Barrel Length (in):</label>
+                    <input type="number" step="0.1" id="search_barrel_length">
+                </div>
+                <button class="search" onclick="searchSessions()">Search</button>
+                <button class="clear-search" onclick="clearSearch()">Clear Search</button>
+                <button class="delete-selected" onclick="deleteSelected()">Delete Selected</button>
+                <button class="compare-selected" onclick="showCompareForm()">Compare Selected</button>
+            </div>
+        </div>
+
+        <form id="compareForm">
+            <div class="form-group">
+                <label>Step Interval (yards):</label>
+                <input type="number" id="compare_step_interval" name="compare_step_interval" placeholder="Enter Value">
+            </div>
+            <div class="form-group">
+                <label>Max Distance (yards):</label>
+                <input type="number" id="compare_max_distance" name="compare_max_distance" placeholder="Enter Value">
+            </div>
+            <button type="button" class="calculate-save" onclick="compareSelected()">Compare</button>
+            <button type="button" class="cancel-edit" onclick="hideCompareForm()">Cancel</button>
+        </form>
+
+        <h2>Saved</h2>
+        <table id="sessionsTable">
+            <thead>
+                <tr>
+                    <th>Select</th>
+                    <th>Shooter</th>
+                    <th>Firearm Type</th>
+                    <th>Firearm</th>
+                    <th>Optic</th>
+                    <th>Caliber</th>
+                    <th>Barrel</th>
+                    <th>Gr</th>
+                    <th>Zero</th>
+                    <th>Range</th>
+                    <th>Step</th>
+                    <th>HOB</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="sessionsBody"></tbody>
+        </table>
+
+        <div class="trajectory-header">
+            <h2 id="trajectoryTitle">Trajectory Grid</h2>
+            <span id="trajectoryDescription"></span>
+        </div>
+        <table id="trajectoryTable" class="trajectory-table">
+            <thead>
+                <tr>
+                    <th>Distance (yd)</th>
+                    <th>Hold (in)</th>
+                    <th>Hold (MOA)</th>
+                    <th>Velocity (fps)</th>
+                    <th>Energy (ft-lbs)</th>
+                    <th>Drop (in)</th>
+                </tr>
+            </thead>
+            <tbody id="trajectoryBody"></tbody>
+        </table>
+
+        <h2 id="comparisonTitle" style="display: none;">Trajectory Comparison</h2>
+        <table id="comparisonTable" style="display: none;">
+            <thead id="comparisonTableHead"></thead>
+            <tbody id="comparisonTableBody"></tbody>
+        </table>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script>
+        // Register Service Worker for PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => {
+                        console.log('Service Worker registered with scope:', registration.scope);
+                    })
+                    .catch(error => {
+                        console.error('Service Worker registration failed:', error);
+                    });
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            console.warn('Starting Ballistic Calculator script execution');
+
+            if (!window.supabase) {
+                console.error('Supabase client not loaded');
+                document.getElementById('authMessage').innerHTML = '<div class="error">Error: Supabase client failed to load. Please check your network or CDN.</div>';
+                return;
+            }
+
+            const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBnaXFvamNvaG92b2d1d3hsZWlqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDczMjkzMjEsImV4cCI6MjA2MjkwNTMyMX0.a8XUU4QuxHIS5oUpSyvx0EyxtmwFXOxnH9Mq-5bzGck';
+            const supabase = window.supabase.createClient(
+                'https://pgiqojcohovoguwxleij.supabase.co',
+                supabaseKey
+            );
+
+            let editSessionId = null;
+            let currentUser = null;
+
+            // Check user session on load
+            async function checkSession() {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (session) {
+                    currentUser = session.user;
+                    document.getElementById('userEmail').textContent = `Logged in as: ${currentUser.email}`;
+                    document.getElementById('loginForm').style.display = 'none';
+                    document.getElementById('appContent').style.display = 'block';
+                } else {
+                    document.getElementById('loginForm').style.display = 'block';
+                    document.getElementById('appContent').style.display = 'none';
+                }
+                
+                // Check if user came from password reset email
+                checkPasswordResetURL();
+            }
+
+            // Check if URL contains password reset parameters
+            function checkPasswordResetURL() {
+                const urlParams = new URLSearchParams(window.location.search);
+                const isReset = urlParams.get('reset');
+                const token = urlParams.get('access_token');
+                
+                if (isReset === 'true' || token) {
+                    console.log('Password reset detected, showing reset form');
+                    showResetPasswordForm();
+                    
+                    if (token) {
+                        // Handle the token for password reset
+                        handlePasswordResetToken(token);
+                    }
+                }
+            }
+
+            // Handle password reset token from URL
+            async function handlePasswordResetToken(token) {
+                console.log('Handling password reset token');
+                try {
+                    const { data, error } = await supabase.auth.verifyOtp({
+                        token_hash: token,
+                        type: 'recovery'
+                    });
+                    
+                    if (error) {
+                        console.error('Token verification error:', error);
+                        document.getElementById('authMessage').innerHTML = `<div class="error">Invalid or expired reset link. Please request a new password reset.</div>`;
+                    } else {
+                        console.log('Token verified successfully');
+                        document.getElementById('authMessage').innerHTML = `<div class="message">Reset link verified! Please enter your new password below.</div>`;
+                    }
+                } catch (e) {
+                    console.error('Token handling error:', e);
+                    document.getElementById('authMessage').innerHTML = `<div class="error">Error processing reset link. Please try again.</div>`;
+                }
+            }
+
+            // Handle login
+            window.login = async function() {
+                const email = document.getElementById('login_email').value;
+                const password = document.getElementById('login_password').value;
+                const authMessage = document.getElementById('authMessage');
+
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email,
+                    password
+                });
+
+                if (error) {
+                    authMessage.innerHTML = `<div class="error">Login failed: ${error.message}</div>`;
+                    return;
+                }
+
+                currentUser = data.user;
+                document.getElementById('userEmail').textContent = `Logged in as: ${currentUser.email}`;
+                document.getElementById('loginForm').style.display = 'none';
+                document.getElementById('appContent').style.display = 'block';
+                authMessage.innerHTML = '';
+            };
+
+            // Handle sign-up
+            window.signup = async function() {
+                const email = document.getElementById('login_email').value.trim();
+                const password = document.getElementById('login_password').value.trim();
+                const authMessage = document.getElementById('authMessage');
+
+                // Validate email and password before attempting sign-up
+                if (!email || !password) {
+                    authMessage.innerHTML = '<div class="error">Please enter an Email Address and Password, then click the Sign Up button. A confirmation email will be sent to the email address provided.</div>';
+                    return;
+                }
+
+                console.log('Attempting to sign up with email:', email);
+                const { data, error } = await supabase.auth.signUp({
+                    email,
+                    password
+                });
+
+                console.log('Sign-up response:', { data, error });
+
+                if (error) {
+                    console.log('Sign-up error:', error);
+                    if (error.message.toLowerCase().includes('already registered') || error.message.toLowerCase().includes('user already exists')) {
+                        authMessage.innerHTML = '<div class="error">This email is already registered. Please log in or use a different email.</div>';
+                    } else {
+                        authMessage.innerHTML = `<div class="error">Sign-up failed: ${error.message}</div>`;
+                    }
+                    return;
+                }
+
+                // Check if the user already exists by examining the response
+                if (data.user) {
+                    // If the user has a last_sign_in_at, they are an existing user
+                    if (data.user.last_sign_in_at) {
+                        console.log('Existing user detected (last_sign_in_at exists):', data.user);
+                        authMessage.innerHTML = '<div class="error">This email is already registered. Please log in or use a different email.</div>';
+                        return;
+                    }
+                    // Check identities array; if empty or indicates existing user, they are already registered
+                    if (!data.user.identities || data.user.identities.length === 0) {
+                        console.log('Existing user detected (no new identities):', data.user);
+                        authMessage.innerHTML = '<div class="error">This email is already registered. Please log in or use a different email.</div>';
+                        return;
+                    }
+                }
+
+                // If we reach here, the sign-up is successful
+                authMessage.innerHTML = '<div class="message">Sign-up successful! A confirmation email has been sent to your email address. Please confirm your email, then log in.</div>';
+                document.getElementById('login_email').value = '';
+                document.getElementById('login_password').value = '';
+            };
+
+            // Show the reset password form
+            window.showResetPasswordForm = function() {
+                document.getElementById('authForm').style.display = 'none';
+                document.getElementById('resetPasswordForm').style.display = 'block';
+                document.getElementById('authMessage').innerHTML = '';
+                document.querySelector('.forgot-password').style.display = 'none';
+            };
+
+            // Show the login form
+            window.showLoginForm = function() {
+                document.getElementById('authForm').style.display = 'block';
+                document.getElementById('resetPasswordForm').style.display = 'none';
+                document.getElementById('authMessage').innerHTML = '';
+                document.querySelector('.forgot-password').style.display = 'block';
+                document.getElementById('reset_email').value = '';
+            };
+
+            // Handle password reset
+window.resetPassword = async function() {
+        const email = document.getElementById('reset_email').value.trim();
+        const authMessage = document.getElementById('authMessage');
+
+        if (!email) {
+            authMessage.innerHTML = '<div class="error">Please enter your email address to reset your password.</div>';
+            return;
+        }
+
+        console.log('Attempting to reset password for email:', email);
+        const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+            redirectTo: 'https://realballistics.com/?reset=true'
+        });
+
+        console.log('Password reset response:', { data, error });
+
+        if (error) {
+            console.log('Password reset error:', error);
+            authMessage.innerHTML = `<div class="error">Failed to send password reset email: ${error.message}</div>`;
+            return;
+        }
+
+        authMessage.innerHTML = '<div class="message">A password reset link has been sent to your email address. Please check your inbox (and spam/junk folder) to reset your password.</div>';
+        document.getElementById('reset_email').value = '';
+    };
+
+            // Handle logout
+            window.logout = async function() {
+                const { error } = await supabase.auth.signOut();
+                if (error) {
+                    document.getElementById('authMessage').innerHTML = `<div class="error">Logout failed: ${error.message}</div>`;
+                    return;
+                }
+
+                currentUser = null;
+                document.getElementById('loginForm').style.display = 'block';
+                document.getElementById('appContent').style.display = 'none';
+                document.getElementById('authMessage').innerHTML = '<div class="message">Logged out successfully.</div>';
+                document.getElementById('login_email').value = '';
+                document.getElementById('login_password').value = '';
+            };
+
+            // Initialize session check
+            checkSession();
+
+            function adjustMuzzleVelocity(caliber, barrelLength, muzzleVelocity) {
+                if (!barrelLength || isNaN(barrelLength) || !muzzleVelocity || isNaN(muzzleVelocity)) {
+                    return muzzleVelocity;
+                }
+                let standardLength, fpsPerInch;
+                if (caliber && caliber.toLowerCase().includes('5.56')) {
+                    standardLength = 20;
+                    fpsPerInch = 25;
+                } else if (caliber && caliber.toLowerCase().includes('9mm')) {
+                    standardLength = 4;
+                    fpsPerInch = 30;
+                } else {
+                    standardLength = 16;
+                    fpsPerInch = 25;
+                }
+                const lengthDifference = barrelLength - standardLength;
+                const velocityAdjustment = lengthDifference * fpsPerInch;
+                return Math.max(muzzleVelocity + velocityAdjustment, 0);
+            }
+
+            window.toggleForm = function() {
+                const form = document.getElementById('ballisticForm');
+                const addButton = document.querySelector('.add-session');
+                if (form.style.display === 'none' || form.style.display === '') {
+                    form.style.display = 'block';
+                    addButton.textContent = 'Hide Form';
+                } else {
+                    form.style.display = 'none';
+                    addButton.textContent = 'Add New';
+                    cancelEditWithoutToggle();
+                }
+            };
+
+            window.toggleFilters = function() {
+                const filterSection = document.getElementById('filterSection');
+                const toggleButton = document.querySelector('.toggle-filter');
+                filterSection.classList.toggle('active');
+                toggleButton.textContent = filterSection.classList.contains('active') ? 'Hide Filters' : 'Show Filters';
+            };
+
+            function cancelEditWithoutToggle() {
+                console.log('Canceling edit without toggling form');
+                const form = document.getElementById('ballisticForm');
+                form.reset();
+                editSessionId = null;
+                document.getElementById('cancelEditButton').style.display = 'none';
+                document.getElementById('message').innerHTML = '';
+            }
+
+            function formatHold(hold) {
+                const holdValue = parseFloat(hold);
+                if (holdValue >= 0) {
+                    return `+${holdValue.toFixed(2)}`;
+                } else {
+                    return holdValue.toFixed(2);
+                }
+            }
+
+            function calculateMOA(holdInInches, distanceYards) {
+                if (distanceYards === 0) return '0.00'; // Avoid division by zero at 0 yards
+                const moa = holdInInches / (distanceYards * 1.047 / 100);
+                return moa >= 0 ? `+${moa.toFixed(2)}` : moa.toFixed(2);
+            }
+
+            const workerScript = `
+                self.onmessage = function(e) {
+                    const { inputs } = e.data;
+
+                    const GRAVITY = 32.174;
+                    const AIR_DENSITY = 0.0765;
+                    const DT = 0.001;
+
+                    const bulletMass = inputs.bullet_grain / 7000;
+                    const muzzleVelocity = inputs.muzzle_velocity;
+                    const zeroDistance = inputs.zero_distance * 3;
+                    const heightOverBore = inputs.height_over_bore / 12;
+                    const stepIntervalFeet = inputs.step_interval_yards * 3;
+                    const maxDistanceFeet = inputs.max_distance_yards * 3;
+
+                    const targetDistances = Array.from(
+                        { length: Math.floor(inputs.max_distance_yards / inputs.step_interval_yards) + 1 },
+                        (_, i) => i * stepIntervalFeet
+                    );
+
+                    function getDragCoefficient(v) {
+                        const mach = v / 1116;
+                        if (mach >= 2.5) return 0.180;
+                        if (mach >= 2.0) return 0.170;
+                        if (mach >= 1.5) return 0.160;
+                        if (mach >= 1.0) return 0.170;
+                        return 0.150;
+                    }
+
+                    function computeDerivatives(state) {
+                        const [x, y, vx, vy] = state;
+                        const speed = Math.sqrt(vx * vx + vy * vy) || 0.0001;
+                        const cd = getDragCoefficient(speed) / inputs.ballistic_coefficient;
+                        const bulletArea = 0.000137;
+                        const drag = 0.5 * AIR_DENSITY * speed * speed * cd * bulletArea;
+                        const ax = -drag * (vx / speed) / bulletMass;
+                        const ay = -GRAVITY - (drag * (vy / speed) / bulletMass);
+                        return [vx, vy, ax, ay, drag, speed];
+                    }
+
+                    function rk4Step(state, dt) {
+                        const k1 = computeDerivatives(state);
+                        const k2 = computeDerivatives([
+                            state[0] + 0.5 * dt * k1[0],
+                            state[1] + 0.5 * dt * k1[1],
+                            state[2] + 0.5 * dt * k1[2],
+                            state[3] + 0.5 * dt * k1[3]
+                        ]);
+                        const k3 = computeDerivatives([
+                            state[0] + 0.5 * dt * k2[0],
+                            state[1] + 0.5 * dt * k2[1],
+                            state[2] + 0.5 * dt * k2[2],
+                            state[3] + 0.5 * dt * k2[3]
+                        ]);
+                        const k4 = computeDerivatives([
+                            state[0] + dt * k3[0],
+                            state[1] + dt * k3[1],
+                            state[2] + dt * k3[2],
+                            state[3] + dt * k3[3]
+                        ]);
+
+                        return [
+                            state[0] + (dt / 6) * (k1[0] + 2 * k2[0] + 2 * k3[0] + k4[0]),
+                            state[1] + (dt / 6) * (k1[1] + 2 * k2[1] + 2 * k3[1] + k4[1]),
+                            state[2] + (dt / 6) * (k1[2] + 2 * k2[2] + 2 * k3[2] + k4[2]),
+                            state[3] + (dt / 6) * (k1[3] + 2 * k2[3] + 2 * k3[3] + k4[3])
+                        ];
+                    }
+
+                    function simulateTrajectory(initialAngle) {
+                        let state = [0, -heightOverBore, muzzleVelocity * Math.cos(initialAngle), muzzleVelocity * Math.sin(initialAngle)];
+                        let t = 0;
+                        const trajectory = [];
+
+                        let lastState = [...state, t];
+                        trajectory.push({ x: state[0], y: state[1], v: Math.sqrt(state[2] * state[2] + state[3] * state[3]), t });
+
+                        const keyDistances = [0, 75, 150];
+                        let closestPoints = keyDistances.map(dist => ({ dist: dist, closestX: null, drag: null, speed: null, minDiff: Infinity }));
+
+                        while (state[0] <= maxDistanceFeet) {
+                            const derivatives = computeDerivatives(state);
+                            state = rk4Step(state, DT);
+                            t += DT;
+
+                            if (state[0] - lastState[0] >= 0.001) {
+                                const fraction = (state[0] - lastState[0]) / (state[0] - lastState[0] || 0.0001);
+                                const interpX = state[0];
+                                const interpY = lastState[1] + fraction * (state[1] - lastState[1]);
+                                const interpVx = lastState[2] + fraction * (state[2] - lastState[2]);
+                                const interpVy = lastState[3] + fraction * (state[3] - lastState[3]);
+                                const interpT = lastState[4] + fraction * (t - lastState[4]);
+                                const interpV = Math.sqrt(interpVx * interpVx + interpVy * interpVy);
+                                trajectory.push({ x: interpX, y: interpY, v: interpV, t: interpT });
+
+                                keyDistances.forEach((keyDist, index) => {
+                                    const diff = Math.abs(interpX - keyDist);
+                                    if (diff < closestPoints[index].minDiff) {
+                                        closestPoints[index] = {
+                                            dist: keyDist,
+                                            closestX: interpX,
+                                            drag: derivatives[4],
+                                            speed: derivatives[5],
+                                            minDiff: diff
+                                        };
+                                    }
+                                });
+
+                                targetDistances.forEach(target => {
+                                    if (state[0] >= target && lastState[0] < target) {
+                                        const fractionTarget = (target - lastState[0]) / (state[0] - lastState[0] || 0.0001);
+                                        const interpYTarget = lastState[1] + fractionTarget * (state[1] - lastState[1]);
+                                        const interpVxTarget = lastState[2] + fractionTarget * (state[2] - lastState[2]);
+                                        const interpVyTarget = lastState[3] + fractionTarget * (state[3] - lastState[3]);
+                                        const interpTTarget = lastState[4] + fractionTarget * (t - lastState[4]);
+                                        const interpVTarget = Math.sqrt(interpVxTarget * interpVxTarget + interpVyTarget * interpVyTarget);
+                                        trajectory.push({ x: target, y: interpYTarget, v: interpVTarget, t: interpTTarget });
+                                    }
+                                });
+
+                                lastState = [...state, t];
+                            }
+                        }
+
+                        self.postMessage({ log: 'Simulated trajectory points: ' + trajectory.length });
+                        return { trajectory: trajectory.sort((a, b) => a.x - b.x), closestPoints };
+                    }
+
+                    function zeroTrajectory(inputs) {
+                        const zeroDistance = inputs.zero_distance * 3;
+                        let angleLow = -0.01;
+                        let angleHigh = 0.01;
+                        let yLow = simulateTrajectory(angleLow).trajectory.reduce((closest, point) => {
+                            const dist = Math.abs(point.x - zeroDistance);
+                            return dist < Math.abs(closest.x - zeroDistance) ? point : closest;
+                        }, { x: 0, y: 0 }).y;
+                        let yHigh = simulateTrajectory(angleHigh).trajectory.reduce((closest, point) => {
+                            const dist = Math.abs(point.x - zeroDistance);
+                            return dist < Math.abs(closest.x - zeroDistance) ? point : closest;
+                        }, { x: 0, y: 0 }).y;
+
+                        let trajectory, closestPoints;
+                        let converged = false;
+                        for (let i = 0; i < 1000; i++) {
+                            const angle = (angleLow + angleHigh) / 2;
+                            const result = simulateTrajectory(angle);
+                            trajectory = result.trajectory;
+                            closestPoints = result.closestPoints;
+                            const zeroPoint = trajectory.reduce((closest, point) => {
+                                const dist = Math.abs(point.x - zeroDistance);
+                                return dist < Math.abs(closest.x - zeroDistance) ? point : closest;
+                            }, trajectory[0]);
+                            const y = zeroPoint.y;
+
+                            if (i % 500 === 0) {
+                                self.postMessage({ log: 'Iteration ' + i + ': Angle=' + angle.toFixed(12) + ', y at ' + inputs.zero_distance + 'yd=' + y.toFixed(12) });
+                            }
+
+                            if (Math.abs(y) < 0.00001) {
+                                converged = true;
+                                break;
+                            }
+
+                            if (y > 0) {
+                                angleHigh = angle;
+                                yHigh = y;
+                            } else {
+                                angleLow = angle;
+                                yLow = y;
+                            }
+
+                            if (Math.abs(yHigh - yLow) < 1e-12) {
+                                self.postMessage({ log: 'Zeroing stagnating' });
+                                break;
+                            }
+                        }
+
+                        if (!converged) {
+                            self.postMessage({ log: 'Zeroing failed to converge within tolerance' });
+                            angleLow = 0.01;
+                            angleHigh = 0.02;
+                            yLow = simulateTrajectory(angleLow).trajectory.reduce((closest, point) => {
+                                const dist = Math.abs(point.x - zeroDistance);
+                                return dist < Math.abs(closest.x - zeroDistance) ? point : closest;
+                            }, { x: 0, y: 0 }).y;
+                            yHigh = simulateTrajectory(angleHigh).trajectory.reduce((closest, point) => {
+                                const dist = Math.abs(point.x - zeroDistance);
+                                return dist < Math.abs(closest.x - zeroDistance) ? point : closest;
+                            }, { x: 0, y: 0 }).y;
+
+                            for (let i = 0; i < 1000; i++) {
+                                const angle = (angleLow + angleHigh) / 2;
+                                const result = simulateTrajectory(angle);
+                                trajectory = result.trajectory;
+                                closestPoints = result.closestPoints;
+                                const zeroPoint = trajectory.reduce((closest, point) => {
+                                    const dist = Math.abs(point.x - zeroDistance);
+                                    return dist < Math.abs(closest.x - zeroDistance) ? point : closest;
+                                }, trajectory[0]);
+                                const y = zeroPoint.y;
+
+                                if (i % 500 === 0) {
+                                    self.postMessage({ log: 'Fallback Iteration ' + i + ': Angle=' + angle.toFixed(12) + ', y at ' + inputs.zero_distance + 'yd=' + y.toFixed(12) });
+                                }
+
+                                if (Math.abs(y) < 0.00001) {
+                                    converged = true;
+                                    break;
+                                }
+
+                                if (y > 0) {
+                                    angleHigh = angle;
+                                    yHigh = y;
+                                } else {
+                                    angleLow = angle;
+                                    yLow = y;
+                                }
+
+                                if (Math.abs(yHigh - yLow) < 1e-12) {
+                                    self.postMessage({ log: 'Fallback zeroing stagnating' });
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (!converged) {
+                            self.postMessage({ error: 'Zeroing failed after fallback' });
+                            return;
+                        }
+
+                        self.postMessage({ log: 'Drag at key points (0, 75, 150 ft): ' + JSON.stringify(closestPoints) });
+                        self.postMessage({ log: 'Final trajectory at zero distance: ' + JSON.stringify(trajectory.find(p => Math.abs(p.x - zeroDistance) < 0.001)) });
+
+                        const results_grid = trajectory.filter(point => targetDistances.includes(point.x)).map(point => ({
+                            distance_yd: (point.x / 3).toFixed(0),
+                            drop_in: (point.y * 12).toFixed(2),
+                            hold_in: (-point.y * 12).toFixed(2),
+                            velocity_fps: point.v.toFixed(0),
+                            energy_ftlbs: (0.5 * bulletMass * point.v * point.v / 32.174).toFixed(1)
+                        }));
+
+                        self.postMessage({ log: 'Results Grid: ' + JSON.stringify(results_grid) });
+                        self.postMessage({ results_grid, converged });
+                    }
+
+                    zeroTrajectory(inputs);
+                };
+            `;
+
+            const workerBlob = new Blob([workerScript], { type: 'application/javascript' });
+            const workerURL = URL.createObjectURL(workerBlob);
+            const worker = new Worker(workerURL);
+
+            worker.onmessage = function(e) {
+                (async () => {
+                    if (e.data.log) {
+                        console.log(e.data.log);
+                    } else if (e.data.error) {
+                        console.error(e.data.error);
+                        const messageDiv = document.getElementById('message');
+                        messageDiv.innerHTML = `<div class="error">Error: ${e.data.error}</div>`;
+                    } else {
+                        const { results_grid, converged } = e.data;
+                        const messageDiv = document.getElementById('message');
+                        if (!converged) {
+                            messageDiv.innerHTML = `<div class="error">Error: Zeroing failed completely.</div>`;
+                            return;
+                        }
+
+                        const tbody = document.getElementById('trajectoryBody');
+                        tbody.innerHTML = '';
+                        results_grid.forEach(point => {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td>${point.distance_yd}</td>
+                                <td>${formatHold(point.hold_in)}</td>
+                                <td>${calculateMOA(parseFloat(point.hold_in), parseFloat(point.distance_yd))}</td>
+                                <td>${point.velocity_fps}</td>
+                                <td>${point.energy_ftlbs}</td>
+                                <td>${point.drop_in}</td>
+                            `;
+                            tbody.appendChild(row);
+                        });
+
+                        const form = document.getElementById('ballisticForm');
+                        const inputs = {
+                            shooter_name: form.shooter_name.value,
+                            firearm_type: form.firearm_type.value,
+                            firearm_name: form.firearm_name.value,
+                            optic_name: form.optic_name.value,
+                            caliber: form.caliber.value,
+                            barrel_length: parseFloat(form.barrel_length.value) || null,
+                            bullet_grain: parseInt(form.bullet_grain.value),
+                            muzzle_velocity: parseFloat(form.muzzle_velocity.value),
+                            ballistic_coefficient: parseFloat(form.ballistic_coefficient.value),
+                            zero_distance: parseFloat(form.zero_distance.value),
+                            height_over_bore: parseFloat(form.height_over_bore.value),
+                            drag_model: form.drag_model.value,
+                            step_interval_yards: parseInt(form.step_interval_yards.value),
+                            max_distance_yards: parseInt(form.max_distance_yards.value),
+                            wind_speed: parseFloat(form.wind_speed.value) || 0,
+                            wind_angle: parseFloat(form.wind_angle.value) || 0
+                        };
+
+                        const sessionData = {
+                            shooter_name: inputs.shooter_name,
+                            firearm_type: inputs.firearm_type,
+                            firearm_name: inputs.firearm_name,
+                            optic_name: inputs.optic_name,
+                            caliber: inputs.caliber,
+                            barrel_length: inputs.barrel_length,
+                            bullet_grain: inputs.bullet_grain,
+                            muzzle_velocity: inputs.muzzle_velocity,
+                            ballistic_coefficient: inputs.ballistic_coefficient,
+                            zero_distance: inputs.zero_distance,
+                            height_over_bore: inputs.height_over_bore,
+                            drag_model: inputs.drag_model,
+                            step_interval_yards: inputs.step_interval_yards,
+                            max_distance_yards: inputs.max_distance_yards,
+                            wind_speed: inputs.wind_speed,
+                            wind_angle: inputs.wind_angle,
+                            environment: {
+                                wind_speed: inputs.wind_speed,
+                                wind_angle: inputs.wind_angle
+                            },
+                            results_grid: results_grid,
+                            user_id: currentUser.id // Tie the session to the logged-in user
+                        };
+
+                        let operation;
+                        if (editSessionId) {
+                            const { data: existingRecord, error: fetchError } = await supabase
+                                .from('ballistic_sessions')
+                                .select('*')
+                                .eq('id', editSessionId)
+                                .eq('user_id', currentUser.id)
+                                .single();
+
+                            if (fetchError || !existingRecord) {
+                                console.error('Error verifying session before update:', fetchError || 'Record not found');
+                                messageDiv.innerHTML = `<div class="error">Error: Session with ID ${editSessionId} not found before update. ${fetchError ? fetchError.message : ''}</div>`;
+                                return;
+                            }
+                            console.log(`Verified session exists before update:`, existingRecord);
+                            console.log(`Comparing IDs - editSessionId: ${editSessionId}, record ID: ${existingRecord.id}, match: ${editSessionId === existingRecord.id}`);
+                            console.log(`Session data to update:`, sessionData);
+
+                            console.log(`Updating session with ID: ${editSessionId}`);
+                            operation = supabase.from('ballistic_sessions').update(sessionData).eq('id', editSessionId).eq('user_id', currentUser.id).select();
+                        } else {
+                            console.log('Inserting new session', sessionData);
+                            operation = supabase.from('ballistic_sessions').insert([sessionData]).select();
+                        }
+
+                        const { data, error, status, statusText, count } = await operation;
+                        if (error) {
+                            console.error('Supabase operation error:', { error, status, statusText, count });
+                            messageDiv.innerHTML = `<div class="error">Error ${editSessionId ? 'updating' : 'saving'} session: ${error.message} (Status: ${status} ${statusText})</div>`;
+                            return;
+                        }
+
+                        if (!data || data.length === 0) {
+                            console.error('No rows affected by the operation', { data, status, statusText, count });
+                            messageDiv.innerHTML = `<div class="error">Failed to ${editSessionId ? 'update' : 'save'} session: No rows were affected. Check permissions or data (Status: ${status} ${statusText}).</div>`;
+                            return;
+                        }
+
+                        console.log('Data operation successful in Supabase', { data, count });
+                        messageDiv.innerHTML = `<div class="message">${editSessionId ? 'Session updated' : 'Data saved'} successfully!</div>`;
+                        form.reset();
+                        editSessionId = null;
+                        document.getElementById('cancelEditButton').style.display = 'none';
+                        toggleForm();
+
+                        const sessionId = data[0].id;
+                        const { data: session, error: fetchError } = await supabase
+                            .from('ballistic_sessions')
+                            .select('*')
+                            .eq('id', sessionId)
+                            .eq('user_id', currentUser.id)
+                            .single();
+                        if (fetchError) {
+                            console.error('Error fetching session:', fetchError);
+                            messageDiv.innerHTML = `<div class="error">Error fetching session: ${fetchError.message}</div>`;
+                        } else {
+                            console.log('Fetched session after operation:', session);
+                            window.displaySingleSession(session);
+                        }
+                    }
+                })();
+            };
+
+            window.calculateAndSave = function() {
+                console.warn('calculateAndSave function started');
+                const messageDiv = document.getElementById('message');
+                messageDiv.innerHTML = '';
+
+                const form = document.getElementById('ballisticForm');
+                const inputs = {
+                    shooter_name: form.shooter_name.value,
+                    firearm_type: form.firearm_type.value,
+                    firearm_name: form.firearm_name.value,
+                    optic_name: form.optic_name.value,
+                    caliber: form.caliber.value,
+                    barrel_length: parseFloat(form.barrel_length.value) || null,
+                    bullet_grain: parseInt(form.bullet_grain.value),
+                    muzzle_velocity: parseFloat(form.muzzle_velocity.value),
+                    ballistic_coefficient: parseFloat(form.ballistic_coefficient.value),
+                    zero_distance: parseFloat(form.zero_distance.value),
+                    height_over_bore: parseFloat(form.height_over_bore.value),
+                    drag_model: form.drag_model.value,
+                    step_interval_yards: parseInt(form.step_interval_yards.value),
+                    max_distance_yards: parseInt(form.max_distance_yards.value),
+                    wind_speed: parseFloat(form.wind_speed.value) || 0,
+                    wind_angle: parseFloat(form.wind_angle.value) || 0
+                };
+
+                if (!inputs.shooter_name || !inputs.firearm_name || !inputs.caliber ||
+                    isNaN(inputs.bullet_grain) || isNaN(inputs.muzzle_velocity) || isNaN(inputs.ballistic_coefficient) ||
+                    isNaN(inputs.zero_distance) || isNaN(inputs.height_over_bore) || isNaN(inputs.step_interval_yards) ||
+                    isNaN(inputs.max_distance_yards) || inputs.step_interval_yards <= 0 || inputs.max_distance_yards <= 0) {
+                    console.error('Input validation failed', inputs);
+                    messageDiv.innerHTML = '<div class="error">Please fill all required fields with valid positive values.</div>';
+                    return;
+                }
+
+                if (!inputs.firearm_type || inputs.firearm_type === '') {
+                    console.error('Firearm type not selected');
+                    messageDiv.innerHTML = '<div class="error">Please select a firearm type (Rifle or Pistol).</div>';
+                    return;
+                }
+
+                if (!inputs.drag_model || inputs.drag_model === '') {
+                    console.error('Drag model not selected');
+                    messageDiv.innerHTML = '<div class="error">Please select a drag model (G1 or G7).</div>';
+                    return;
+                }
+
+                inputs.muzzle_velocity = adjustMuzzleVelocity(inputs.caliber, inputs.barrel_length, inputs.muzzle_velocity);
+                console.log('Adjusted inputs:', inputs);
+                worker.postMessage({ inputs });
+            };
+
+            window.loadSessionForEdit = async function(sessionId) {
+                console.log(`Loading session for edit: ${sessionId}`);
+                const { data, error } = await supabase
+                    .from('ballistic_sessions')
+                    .select('*')
+                    .eq('id', sessionId)
+                    .eq('user_id', currentUser.id)
+                    .single();
+
+                if (error) {
+                    console.error('Error loading session:', error);
+                    document.getElementById('message').innerHTML = `<div class="error">Error loading session: ${error.message}</div>`;
+                    return;
+                }
+
+                const session = data;
+                const form = document.getElementById('ballisticForm');
+                form.shooter_name.value = session.shooter_name || '';
+                form.firearm_type.value = session.firearm_type || '';
+                form.firearm_name.value = session.firearm_name || '';
+                form.optic_name.value = session.optic_name || '';
+                form.caliber.value = session.caliber || '';
+                form.barrel_length.value = session.barrel_length || '';
+                form.bullet_grain.value = session.bullet_grain || '';
+                form.muzzle_velocity.value = session.muzzle_velocity || '';
+                form.ballistic_coefficient.value = session.ballistic_coefficient || '';
+                form.zero_distance.value = session.zero_distance || '';
+                form.height_over_bore.value = session.height_over_bore || '';
+                form.drag_model.value = session.drag_model || '';
+                form.step_interval_yards.value = session.step_interval_yards || '';
+                form.max_distance_yards.value = session.max_distance_yards || '';
+                form.wind_speed.value = session.wind_speed || '';
+                form.wind_angle.value = session.wind_angle || '';
+
+                editSessionId = sessionId;
+                document.getElementById('cancelEditButton').style.display = 'inline-block';
+                const formElement = document.getElementById('ballisticForm');
+                formElement.style.display = 'block';
+                document.querySelector('.add-session').textContent = 'Hide Form';
+            };
+
+            window.cancelEdit = function() {
+                cancelEditWithoutToggle();
+            };
+
+            window.viewAll = async function() {
+                console.warn('viewAll function started');
+                const messageDiv = document.getElementById('message');
+                messageDiv.innerHTML = '';
+
+                const { data, error } = await supabase.from('ballistic_sessions').select('*').eq('user_id', currentUser.id);
+                if (error) {
+                    console.error('Supabase select error:', error);
+                    messageDiv.innerHTML = `<div class="error">Error fetching sessions: ${error.message}</div>`;
+                    return;
+                }
+
+                if (!data || data.length === 0) {
+                    console.log('No sessions found');
+                    messageDiv.innerHTML = '<div class="message">No sessions found.</div>';
+                }
+
+                window.displaySessions(data);
+            };
+
+            window.displaySessions = function(sessions) {
+                console.log('Displaying sessions:', sessions);
+                const tbody = document.getElementById('sessionsBody');
+                tbody.innerHTML = '';
+                sessions.forEach(session => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td><input type="checkbox" class="select-session" data-id="${session.id}"></td>
+                        <td>${session.shooter_name || ''}</td>
+                        <td>${session.firearm_type || ''}</td>
+                        <td>${session.firearm_name || ''}</td>
+                        <td>${session.optic_name || ''}</td>
+                        <td>${session.caliber || ''}</td>
+                        <td>${session.barrel_length ? session.barrel_length.toFixed(1) : ''}</td>
+                        <td>${session.bullet_grain || ''}</td>
+                        <td>${session.zero_distance || ''}</td>
+                        <td>${session.max_distance_yards || ''}</td>
+                        <td>${session.step_interval_yards || ''}</td>
+                        <td>${session.height_over_bore || ''}</td>
+                        <td>
+                            <button class="view-session" onclick="window.viewTrajectory('${session.id}')">View</button>
+                            <button class="edit-session" onclick="window.loadSessionForEdit('${session.id}')">Edit</button>
+                        </td>
+                    `;
+                    row.dataset.resultsGrid = JSON.stringify(session.results_grid);
+                    row.dataset.description = `${session.shooter_name || 'Unknown'} ${session.firearm_type || ''} ${session.firearm_name || ''} ${session.optic_name || ''} ${session.barrel_length ? session.barrel_length.toFixed(1) + 'in' : ''} - ${session.zero_distance || '0'}yd Zero`.trim();
+                    tbody.appendChild(row);
+                });
+            };
+
+            window.displaySingleSession = function(session) {
+                console.log('Displaying single session:', session);
+                const sessions = [session];
+                window.displaySessions(sessions);
+                window.viewTrajectory(session.id);
+            };
+
+            window.viewTrajectory = function(sessionId) {
+                console.log(`Viewing trajectory for session ID: ${sessionId}`);
+                const row = document.querySelector(`.select-session[data-id="${sessionId}"]`).closest('tr');
+                let results_grid;
+                try {
+                    results_grid = JSON.parse(row.dataset.resultsGrid);
+                    console.log('Parsed results_grid:', results_grid);
+                } catch (e) {
+                    console.error('Error parsing results_grid:', e);
+                    document.getElementById('message').innerHTML = '<div class="error">Error loading trajectory data.</div>';
+                    return;
+                }
+
+                if (!Array.isArray(results_grid) || results_grid.length === 0) {
+                    console.error('Invalid or empty results_grid:', results_grid);
+                    document.getElementById('message').innerHTML = '<div class="error">No trajectory data available.</div>';
+                    return;
+                }
+
+                const tbody = document.getElementById('trajectoryBody');
+                tbody.innerHTML = '';
+                results_grid.forEach(point => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${point.distance_yd}</td>
+                        <td>${formatHold(point.hold_in)}</td>
+                        <td>${calculateMOA(parseFloat(point.hold_in), parseFloat(point.distance_yd))}</td>
+                        <td>${point.velocity_fps}</td>
+                        <td>${point.energy_ftlbs}</td>
+                        <td>${point.drop_in}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+
+                const description = row.dataset.description || '';
+                document.getElementById('trajectoryDescription').textContent = description ? `- ${description}` : '';
+
+                // Hide comparison table when viewing a single session
+                document.getElementById('comparisonTitle').style.display = 'none';
+                document.getElementById('comparisonTable').style.display = 'none';
+            };
+
+            window.showCompareForm = function() {
+                const checkboxes = document.querySelectorAll('.select-session:checked');
+                if (checkboxes.length < 2) {
+                    document.getElementById('message').innerHTML = '<div class="error">Please select at least two sessions to compare.</div>';
+                    return;
+                }
+                const compareForm = document.getElementById('compareForm');
+                compareForm.style.display = 'block';
+            };
+
+            window.hideCompareForm = function() {
+                const compareForm = document.getElementById('compareForm');
+                compareForm.style.display = 'none';
+                document.getElementById('message').innerHTML = '';
+            };
+
+            window.compareSelected = function() {
+                const checkboxes = document.querySelectorAll('.select-session:checked');
+                if (checkboxes.length < 2) {
+                    document.getElementById('message').innerHTML = '<div class="error">Please select at least two sessions to compare.</div>';
+                    return;
+                }
+
+                const stepIntervalInput = document.getElementById('compare_step_interval').value;
+                const maxDistanceInput = document.getElementById('compare_max_distance').value;
+
+                if (!stepIntervalInput || stepIntervalInput === "Enter Value" || !maxDistanceInput || maxDistanceInput === "Enter Value") {
+                    document.getElementById('message').innerHTML = '<div class="error">Please enter values for step interval and max distance.</div>';
+                    return;
+                }
+
+                const stepInterval = parseInt(stepIntervalInput);
+                const maxDistance = parseInt(maxDistanceInput);
+
+                if (isNaN(stepInterval) || isNaN(maxDistance) || stepInterval <= 0 || maxDistance <= 0) {
+                    document.getElementById('message').innerHTML = '<div class="error">Please enter valid positive values for step interval and max distance.</div>';
+                    return;
+                }
+
+                const selectedRows = Array.from(checkboxes).map(cb => cb.closest('tr'));
+                const selectedSessions = selectedRows.map(row => ({
+                    results_grid: JSON.parse(row.dataset.resultsGrid),
+                    description: row.dataset.description
+                }));
+
+                const distances = Array.from(
+                    { length: Math.floor(maxDistance / stepInterval) + 1 },
+                    (_, i) => i * stepInterval
+                );
+
+                const comparisonData = selectedSessions.map(session => {
+                    const grid = session.results_grid;
+                    return {
+                        description: session.description,
+                        trajectory: distances.map(distance => {
+                            const point = grid.find(p => parseFloat(p.distance_yd) === distance);
+                            if (point) {
+                                return { distance_yd: distance, hold_in: parseFloat(point.hold_in) };
+                            }
+                            const before = grid.filter(p => parseFloat(p.distance_yd) < distance).pop();
+                            const after = grid.find(p => parseFloat(p.distance_yd) > distance);
+                            if (!before || !after) {
+                                return { distance_yd: distance, hold_in: null };
+                            }
+                            const fraction = (distance - parseFloat(before.distance_yd)) / (parseFloat(after.distance_yd) - parseFloat(before.distance_yd));
+                            const interpolatedHold = parseFloat(before.hold_in) + fraction * (parseFloat(after.hold_in) - parseFloat(before.hold_in));
+                            return { distance_yd: distance, hold_in: interpolatedHold };
+                        })
+                    };
+                });
+
+                // Calculate the flattest trajectory by finding the session with the smallest hold range
+                const trajectoryRanges = comparisonData.map(session => {
+                    const holds = session.trajectory
+                        .map(point => point.hold_in)
+                        .filter(hold => hold !== null);
+                    if (holds.length === 0) return Infinity;
+                    const maxHold = Math.max(...holds);
+                    const minHold = Math.min(...holds);
+                    return maxHold - minHold;
+                });
+
+                const flattestIndex = trajectoryRanges.indexOf(Math.min(...trajectoryRanges));
+
+                const comparisonTableHead = document.getElementById('comparisonTableHead');
+                const comparisonTableBody = document.getElementById('comparisonTableBody');
+                comparisonTableHead.innerHTML = '';
+                comparisonTableBody.innerHTML = '';
+
+                const headerRow = document.createElement('tr');
+                headerRow.innerHTML = '<th>Distance (yd)</th>';
+                comparisonData.forEach((session, index) => {
+                    const th = document.createElement('th');
+                    th.textContent = session.description;
+                    if (index === flattestIndex) {
+                        th.classList.add('flattest-trajectory');
+                    }
+                    headerRow.appendChild(th);
+                });
+                comparisonTableHead.appendChild(headerRow);
+
+                distances.forEach(distance => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `<td>${distance}</td>`;
+                    comparisonData.forEach(session => {
+                        const point = session.trajectory.find(p => p.distance_yd === distance);
+                        const td = document.createElement('td');
+                        td.textContent = point.hold_in !== null ? formatHold(point.hold_in) : '-';
+                        row.appendChild(td);
+                    });
+                    comparisonTableBody.appendChild(row);
+                });
+
+                document.getElementById('comparisonTitle').style.display = 'block';
+                document.getElementById('comparisonTable').style.display = 'table';
+                hideCompareForm();
+            };
+
+            window.clearAll = function() {
+                console.log('Clearing all UI data');
+                const form = document.getElementById('ballisticForm');
+                form.reset();
+                editSessionId = null;
+                document.getElementById('cancelEditButton').style.display = 'none';
+                document.getElementById('sessionsBody').innerHTML = '';
+                document.getElementById('trajectoryBody').innerHTML = '';
+                document.getElementById('message').innerHTML = '';
+                document.getElementById('search_shooter_name').value = '';
+                document.getElementById('search_firearm_type').value = '';
+                document.getElementById('search_firearm_name').value = '';
+                document.getElementById('search_bullet_grain').value = '';
+                document.getElementById('search_barrel_length').value = '';
+                document.getElementById('trajectoryDescription').textContent = '';
+                document.getElementById('comparisonTitle').style.display = 'none';
+                document.getElementById('comparisonTable').style.display = 'none';
+                const formElement = document.getElementById('ballisticForm');
+                if (formElement.style.display === 'block') {
+                    toggleForm();
+                }
+            };
+
+            window.searchSessions = async function() {
+                console.warn('searchSessions function started');
+                const shooterName = document.getElementById('search_shooter_name').value.trim().toLowerCase();
+                const firearmType = document.getElementById('search_firearm_type').value.trim();
+                const firearmName = document.getElementById('search_firearm_name').value.trim().toLowerCase();
+                const bulletGrainInput = document.getElementById('search_bullet_grain').value.trim();
+                const barrelLengthInput = document.getElementById('search_barrel_length').value.trim();
+
+                // Parse numeric inputs
+                const bulletGrain = bulletGrainInput ? parseInt(bulletGrainInput) : null;
+                const barrelLength = barrelLengthInput ? parseFloat(barrelLengthInput) : null;
+
+                const { data, error } = await supabase.from('ballistic_sessions').select('*').eq('user_id', currentUser.id);
+                if (error) {
+                    console.error('Supabase search error:', error);
+                    document.getElementById('message').innerHTML = `<div class="error">Error searching sessions: ${error.message}</div>`;
+                    return;
+                }
+
+                const filtered = data.filter(session =>
+                    (shooterName === '' || (session.shooter_name && session.shooter_name.trim().toLowerCase().includes(shooterName))) &&
+                    (firearmType === '' || (session.firearm_type && session.firearm_type.trim() === firearmType)) &&
+                    (firearmName === '' || (session.firearm_name && session.firearm_name.trim().toLowerCase().includes(firearmName))) &&
+                    (bulletGrain === null || (session.bullet_grain && session.bullet_grain === bulletGrain)) &&
+                    (barrelLength === null || (session.barrel_length && session.barrel_length === barrelLength))
+                );
+                window.displaySessions(filtered);
+            };
+
+            window.clearSearch = function() {
+                console.log('Clearing search');
+                document.getElementById('search_shooter_name').value = '';
+                document.getElementById('search_firearm_type').value = '';
+                document.getElementById('search_firearm_name').value = '';
+                document.getElementById('search_bullet_grain').value = '';
+                document.getElementById('search_barrel_length').value = '';
+                document.getElementById('sessionsBody').innerHTML = '';
+                document.getElementById('message').innerHTML = '';
+                document.getElementById('trajectoryDescription').textContent = '';
+                document.getElementById('comparisonTitle').style.display = 'none';
+                document.getElementById('comparisonTable').style.display = 'none';
+            };
+
+            window.deleteSelected = async function() {
+                console.warn('deleteSelected function started');
+                const checkboxes = document.querySelectorAll('.select-session:checked');
+                if (checkboxes.length === 0) {
+                    console.error('No sessions selected for deletion');
+                    document.getElementById('message').innerHTML = '<div class="error">No sessions selected for deletion.</div>';
+                    return;
+                }
+
+                if (!confirm('Are you sure you want to delete the selected sessions?')) {
+                    return;
+                }
+
+                const ids = Array.from(checkboxes).map(cb => cb.dataset.id);
+                const { error } = await supabase.from('ballistic_sessions').delete().in('id', ids).eq('user_id', currentUser.id);
+                if (error) {
+                    console.error('Supabase delete error:', error);
+                    document.getElementById('message').innerHTML = `<div class="error">Error deleting sessions: ${error.message}</div>`;
+                } else {
+                    console.log('Selected sessions deleted successfully');
+                    document.getElementById('message').innerHTML = '<div class="message">Selected sessions deleted successfully!</div>';
+                    document.getElementById('trajectoryDescription').textContent = '';
+                    document.getElementById('comparisonTitle').style.display = 'none';
+                    document.getElementById('comparisonTable').style.display = 'none';
+                    window.viewAll();
+                }
+            };
+        });
+    </script>
+</body>
+</html>
