@@ -768,6 +768,14 @@
                 activeBulletLibrary.remove();
             }
             
+            // Reset filter section state properly
+            const filterSection = document.getElementById('filterSection');
+            const filterButton = document.querySelector('button[onclick="toggleFilters()"]');
+            if (filterSection && filterButton) {
+                filterSection.style.display = 'none';
+                filterButton.textContent = 'Show Filters';
+            }
+            
             viewAll(); // Load the shooting sessions
         };
 
