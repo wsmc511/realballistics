@@ -783,10 +783,15 @@
             // Ensure toggleFilters function is properly bound after section switch
             setTimeout(() => {
                 const toggleButton = document.querySelector('.toggle-filter');
+                console.log('Rebinding toggle button:', !!toggleButton);
                 if (toggleButton) {
                     // Remove any existing event listeners and re-add
                     toggleButton.onclick = null;
-                    toggleButton.onclick = function() { window.toggleFilters(); };
+                    toggleButton.onclick = function() { 
+                        console.log('Button clicked, calling toggleFilters');
+                        window.toggleFilters(); 
+                    };
+                    console.log('Toggle button rebound successfully');
                 }
             }, 100);
             
@@ -1486,8 +1491,11 @@ window.resetPassword = async function() {
             };
 
             window.toggleFilters = function() {
+                console.log('toggleFilters called');
                 const filterSection = document.getElementById('filterSection');
                 const toggleButton = document.querySelector('.toggle-filter');
+                
+                console.log('Filter elements found:', { filterSection: !!filterSection, toggleButton: !!toggleButton });
                 
                 if (!filterSection || !toggleButton) {
                     console.error('Filter elements not found');
@@ -1496,6 +1504,7 @@ window.resetPassword = async function() {
                 
                 filterSection.classList.toggle('active');
                 toggleButton.textContent = filterSection.classList.contains('active') ? 'Hide Filters' : 'Show Filters';
+                console.log('Filter toggled, active:', filterSection.classList.contains('active'));
             };
 
             function cancelEditWithoutToggle() {
