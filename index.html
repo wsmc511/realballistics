@@ -776,7 +776,10 @@
             bulletSection.style.opacity = '1';
             bulletSection.style.position = 'relative';
             bulletSection.style.zIndex = '1';
-            console.log('Set bullet library section to display block with visibility fixes');
+            bulletSection.style.backgroundColor = 'red';
+            bulletSection.style.minHeight = '200px';
+            bulletSection.style.border = '5px solid yellow';
+            console.log('Set bullet library section to display block with visibility fixes and test styling');
             
             hideElement('filterSection');
             hideElement('ballisticForm');
