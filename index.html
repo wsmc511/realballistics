@@ -747,6 +747,12 @@
             document.getElementById('addBulletForm').style.display = 'none';
             const filterSection = document.getElementById('filterSection');
             if (filterSection) filterSection.style.display = 'none';
+            
+            // Remove the active bullet library content to fix display issue
+            const activeBulletLibrary = document.getElementById('activeBulletLibrary');
+            if (activeBulletLibrary) {
+                activeBulletLibrary.remove();
+            }
         };
 
         window.showShootingProfile = function() {
@@ -2377,6 +2383,9 @@ window.resetPassword = async function() {
                                         <th style="border: 1px solid #ddd; padding: 8px;">BC</th>
                                         <th style="border: 1px solid #ddd; padding: 8px;">Drag</th>
                                         <th style="border: 1px solid #ddd; padding: 8px;">Type</th>
+                                        <th style="border: 1px solid #ddd; padding: 8px;">Lot Number</th>
+                                        <th style="border: 1px solid #ddd; padding: 8px;">Production Date</th>
+                                        <th style="border: 1px solid #ddd; padding: 8px;">Purchase Date</th>
                                         <th style="border: 1px solid #ddd; padding: 8px;">Actions</th>
                                     </tr>
                                 </thead>
@@ -2392,6 +2401,9 @@ window.resetPassword = async function() {
                                     <td style="border: 1px solid #ddd; padding: 8px;">${bullet.ballistic_coefficient}</td>
                                     <td style="border: 1px solid #ddd; padding: 8px;">${bullet.drag_model}</td>
                                     <td style="border: 1px solid #ddd; padding: 8px;">${bullet.bullet_type}</td>
+                                    <td style="border: 1px solid #ddd; padding: 8px;">${bullet.lot_number || '-'}</td>
+                                    <td style="border: 1px solid #ddd; padding: 8px;">${bullet.production_date || '-'}</td>
+                                    <td style="border: 1px solid #ddd; padding: 8px;">${bullet.purchase_date || '-'}</td>
                                     <td style="border: 1px solid #ddd; padding: 8px;">
                                         <button onclick="deleteBulletDirect(${bullet.id})" style="background-color: #dc3545; color: white; padding: 5px 10px; border: none; border-radius: 3px; cursor: pointer;">Delete</button>
                                     </td>
@@ -2441,6 +2453,18 @@ window.resetPassword = async function() {
                             <label style="display: block; margin-bottom: 5px;">Bullet Type:</label>
                             <input type="text" id="bullet_type_direct" placeholder="e.g. BTHP, FMJ, Soft Point" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
                         </div>
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px;">Lot Number:</label>
+                            <input type="text" id="bullet_lot_direct" placeholder="e.g. LOT123456" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px;">Production Date:</label>
+                            <input type="date" id="bullet_production_direct" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px;">Purchase Date:</label>
+                            <input type="date" id="bullet_purchase_direct" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                        </div>
                         <div style="display: flex; gap: 10px;">
                             <button onclick="saveBulletDirect()" style="background-color: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">Save Bullet</button>
                             <button onclick="loadBulletLibraryDirect()" style="background-color: #6c757d; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">Cancel</button>
@@ -2458,7 +2482,10 @@ window.resetPassword = async function() {
                         grain: parseInt(document.getElementById('bullet_grain_direct').value),
                         ballistic_coefficient: parseFloat(document.getElementById('bullet_bc_direct').value),
                         drag_model: document.getElementById('bullet_drag_direct').value,
-                        bullet_type: document.getElementById('bullet_type_direct').value
+                        bullet_type: document.getElementById('bullet_type_direct').value,
+                        lot_number: document.getElementById('bullet_lot_direct').value,
+                        production_date: document.getElementById('bullet_production_direct').value || null,
+                        purchase_date: document.getElementById('bullet_purchase_direct').value || null
                     };
 
                     const { error } = await supabase
