@@ -2374,9 +2374,16 @@ window.resetPassword = async function() {
                     
                     if (data && data.length > 0) {
                         let tableHTML = `
+                            <div style="margin-bottom: 15px;">
+                                <button onclick="deleteSelectedBullets()" style="background-color: #dc3545; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer;">Delete Selected</button>
+                                <button onclick="selectAllBullets()" style="background-color: #6c757d; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; margin-left: 10px;">Select All</button>
+                            </div>
                             <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
                                 <thead>
                                     <tr style="background-color: #f5f5f5;">
+                                        <th style="border: 1px solid #ddd; padding: 8px;">
+                                            <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll()">
+                                        </th>
                                         <th style="border: 1px solid #ddd; padding: 8px;">Manufacturer</th>
                                         <th style="border: 1px solid #ddd; padding: 8px;">Caliber</th>
                                         <th style="border: 1px solid #ddd; padding: 8px;">Grain</th>
@@ -2395,6 +2402,9 @@ window.resetPassword = async function() {
                         data.forEach(bullet => {
                             tableHTML += `
                                 <tr>
+                                    <td style="border: 1px solid #ddd; padding: 8px;">
+                                        <input type="checkbox" class="bullet-checkbox" value="${bullet.id}">
+                                    </td>
                                     <td style="border: 1px solid #ddd; padding: 8px;">${bullet.manufacturer_name}</td>
                                     <td style="border: 1px solid #ddd; padding: 8px;">${bullet.caliber}</td>
                                     <td style="border: 1px solid #ddd; padding: 8px;">${bullet.grain}</td>
@@ -2405,6 +2415,7 @@ window.resetPassword = async function() {
                                     <td style="border: 1px solid #ddd; padding: 8px;">${bullet.production_date || '-'}</td>
                                     <td style="border: 1px solid #ddd; padding: 8px;">${bullet.purchase_date || '-'}</td>
                                     <td style="border: 1px solid #ddd; padding: 8px;">
+                                        <button onclick="editBulletDirect(${bullet.id})" style="background-color: #17a2b8; color: white; padding: 5px 10px; border: none; border-radius: 3px; cursor: pointer; margin-right: 5px;">Edit</button>
                                         <button onclick="deleteBulletDirect(${bullet.id})" style="background-color: #dc3545; color: white; padding: 5px 10px; border: none; border-radius: 3px; cursor: pointer;">Delete</button>
                                     </td>
                                 </tr>
@@ -2522,6 +2533,168 @@ window.resetPassword = async function() {
                     } catch (e) {
                         alert('Error deleting bullet. Please try again.');
                     }
+                }
+            };
+
+            window.editBulletDirect = async function(bulletId) {
+                try {
+                    // Get the bullet data
+                    const { data, error } = await supabase
+                        .from('bullet_library')
+                        .select('*')
+                        .eq('id', bulletId)
+                        .single();
+
+                    if (error) {
+                        alert('Error loading bullet data: ' + error.message);
+                        return;
+                    }
+
+                    const content = document.getElementById('bulletLibraryContent');
+                    content.innerHTML = `
+                        <div style="background-color: white; padding: 20px; border-radius: 5px; border: 1px solid #ddd; margin-top: 15px;">
+                            <h3>Edit Bullet</h3>
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px;">Manufacturer Name:</label>
+                                <input type="text" id="edit_bullet_manufacturer" value="${data.manufacturer_name}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            </div>
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px;">Caliber:</label>
+                                <input type="text" id="edit_bullet_caliber" value="${data.caliber}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            </div>
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px;">Grain Weight:</label>
+                                <input type="number" id="edit_bullet_grain" value="${data.grain}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            </div>
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px;">Ballistic Coefficient:</label>
+                                <input type="number" step="0.001" id="edit_bullet_bc" value="${data.ballistic_coefficient}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            </div>
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px;">Drag Model:</label>
+                                <select id="edit_bullet_drag" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                    <option value="G1" ${data.drag_model === 'G1' ? 'selected' : ''}>G1</option>
+                                    <option value="G7" ${data.drag_model === 'G7' ? 'selected' : ''}>G7</option>
+                                </select>
+                            </div>
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px;">Bullet Type:</label>
+                                <input type="text" id="edit_bullet_type" value="${data.bullet_type}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            </div>
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px;">Lot Number:</label>
+                                <input type="text" id="edit_bullet_lot" value="${data.lot_number || ''}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            </div>
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px;">Production Date:</label>
+                                <input type="date" id="edit_bullet_production" value="${data.production_date || ''}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            </div>
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px;">Purchase Date:</label>
+                                <input type="date" id="edit_bullet_purchase" value="${data.purchase_date || ''}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            </div>
+                            <div style="display: flex; gap: 10px;">
+                                <button onclick="updateBulletDirect(${bulletId})" style="background-color: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">Update Bullet</button>
+                                <button onclick="loadBulletLibraryDirect()" style="background-color: #6c757d; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">Cancel</button>
+                            </div>
+                        </div>
+                    `;
+                } catch (e) {
+                    alert('Error loading bullet data. Please try again.');
+                }
+            };
+
+            window.updateBulletDirect = async function(bulletId) {
+                try {
+                    const bulletData = {
+                        manufacturer_name: document.getElementById('edit_bullet_manufacturer').value,
+                        caliber: document.getElementById('edit_bullet_caliber').value,
+                        grain: parseInt(document.getElementById('edit_bullet_grain').value),
+                        ballistic_coefficient: parseFloat(document.getElementById('edit_bullet_bc').value),
+                        drag_model: document.getElementById('edit_bullet_drag').value,
+                        bullet_type: document.getElementById('edit_bullet_type').value,
+                        lot_number: document.getElementById('edit_bullet_lot').value,
+                        production_date: document.getElementById('edit_bullet_production').value || null,
+                        purchase_date: document.getElementById('edit_bullet_purchase').value || null
+                    };
+
+                    const { error } = await supabase
+                        .from('bullet_library')
+                        .update(bulletData)
+                        .eq('id', bulletId);
+
+                    if (error) {
+                        alert('Error updating bullet: ' + error.message);
+                        return;
+                    }
+
+                    alert('Bullet updated successfully!');
+                    await loadBulletLibraryDirect();
+                } catch (e) {
+                    alert('Error updating bullet. Please try again.');
+                }
+            };
+
+            window.toggleSelectAll = function() {
+                const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+                const bulletCheckboxes = document.querySelectorAll('.bullet-checkbox');
+                
+                bulletCheckboxes.forEach(checkbox => {
+                    checkbox.checked = selectAllCheckbox.checked;
+                });
+            };
+
+            window.selectAllBullets = function() {
+                const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+                const bulletCheckboxes = document.querySelectorAll('.bullet-checkbox');
+                
+                const allChecked = Array.from(bulletCheckboxes).every(cb => cb.checked);
+                
+                bulletCheckboxes.forEach(checkbox => {
+                    checkbox.checked = !allChecked;
+                });
+                
+                selectAllCheckbox.checked = !allChecked;
+            };
+
+            window.deleteSelectedBullets = async function() {
+                const selectedCheckboxes = document.querySelectorAll('.bullet-checkbox:checked');
+                
+                if (selectedCheckboxes.length === 0) {
+                    alert('Please select at least one bullet to delete.');
+                    return;
+                }
+
+                const bulletCount = selectedCheckboxes.length;
+                const confirmMessage = bulletCount === 1 
+                    ? 'Are you sure you want to delete the selected bullet?' 
+                    : `Are you sure you want to delete ${bulletCount} selected bullets?`;
+
+                if (!confirm(confirmMessage)) {
+                    return;
+                }
+
+                try {
+                    const bulletIds = Array.from(selectedCheckboxes).map(cb => parseInt(cb.value));
+                    
+                    const { error } = await supabase
+                        .from('bullet_library')
+                        .delete()
+                        .in('id', bulletIds);
+
+                    if (error) {
+                        alert('Error deleting bullets: ' + error.message);
+                        return;
+                    }
+
+                    const successMessage = bulletCount === 1 
+                        ? 'Bullet deleted successfully!' 
+                        : `${bulletCount} bullets deleted successfully!`;
+                    
+                    alert(successMessage);
+                    await loadBulletLibraryDirect();
+                } catch (e) {
+                    alert('Error deleting bullets. Please try again.');
                 }
             };
 
