@@ -712,12 +712,17 @@
     <script>
         // Define bullet library functions first for immediate button access
         window.showBulletLibrary = async function() {
+            const hideElement = (id) => {
+                const element = document.getElementById(id);
+                if (element) element.style.display = 'none';
+            };
+            
             document.getElementById('bulletLibrarySection').style.display = 'block';
-            document.getElementById('filterSection').style.display = 'none';
-            document.getElementById('ballisticForm').style.display = 'none';
-            document.getElementById('compareForm').style.display = 'none';
-            document.getElementById('compareResults').style.display = 'none';
-            document.getElementById('addBulletForm').style.display = 'none';
+            hideElement('filterSection');
+            hideElement('ballisticForm');
+            hideElement('compareForm');
+            hideElement('compareResults');
+            hideElement('addBulletForm');
             await loadBulletLibrary();
         };
 
