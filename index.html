@@ -1525,7 +1525,7 @@ window.resetPassword = async function() {
                         .from('bullet_library')
                         .select('*')
                         .eq('user_id', currentUser.id)
-                        .order('manufacturer', { ascending: true });
+                        .order('manufacturer_name', { ascending: true });
 
                     if (error) {
                         console.error('Error loading bullet library:', error);
@@ -1539,7 +1539,7 @@ window.resetPassword = async function() {
                     data.forEach(bullet => {
                         const option = document.createElement('option');
                         option.value = JSON.stringify(bullet);
-                        option.textContent = `${bullet.manufacturer} ${bullet.caliber} ${bullet.grain}gr ${bullet.bullet_type} (BC: ${bullet.ballistic_coefficient})`;
+                        option.textContent = `${bullet.manufacturer_name} ${bullet.caliber} ${bullet.grain}gr ${bullet.bullet_type} (BC: ${bullet.ballistic_coefficient})`;
                         select.appendChild(option);
                     });
                 } catch (error) {
@@ -1557,18 +1557,14 @@ window.resetPassword = async function() {
                 try {
                     const bulletData = JSON.parse(select.value);
                     
-                    // Populate form fields with bullet data
+                    // Populate only the specified fields from bullet library
                     form.caliber.value = bulletData.caliber || '';
                     form.bullet_grain.value = bulletData.grain || '';
+                    form.muzzle_velocity.value = bulletData.muzzle_velocity || '';
                     form.ballistic_coefficient.value = bulletData.ballistic_coefficient || '';
                     form.drag_model.value = bulletData.drag_model || '';
                     
-                    // If the bullet has muzzle velocity data, use it
-                    if (bulletData.muzzle_velocity) {
-                        form.muzzle_velocity.value = bulletData.muzzle_velocity;
-                    }
-                    
-                    console.log('Loaded bullet data:', bulletData.manufacturer, bulletData.caliber, bulletData.grain + 'gr');
+                    console.log('Loaded bullet data:', bulletData.manufacturer_name, bulletData.caliber, bulletData.grain + 'gr');
                 } catch (error) {
                     console.error('Error loading bullet data:', error);
                 }
