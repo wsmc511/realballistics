@@ -2485,7 +2485,19 @@ window.resetPassword = async function() {
                         </div>
                         <div style="margin-bottom: 15px;">
                             <label style="display: block; margin-bottom: 5px;">Bullet Type:</label>
-                            <input type="text" id="bullet_type_direct" placeholder="e.g. BTHP, FMJ, Soft Point" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            <select id="bullet_type_direct" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                <option value="">Select bullet type...</option>
+                                <option value="FMJ">FMJ</option>
+                                <option value="JHP">JHP</option>
+                                <option value="Soft Point">Soft Point</option>
+                                <option value="TMJ">TMJ</option>
+                                <option value="Frangible">Frangible</option>
+                                <option value="WC">WC</option>
+                                <option value="SWC">SWC</option>
+                                <option value="AP">AP</option>
+                                <option value="Subsonic">Subsonic</option>
+                                <option value="GT">GT</option>
+                            </select>
                         </div>
                         <div style="margin-bottom: 15px;">
                             <label style="display: block; margin-bottom: 5px;">Lot Number:</label>
@@ -2612,7 +2624,19 @@ window.resetPassword = async function() {
                             </div>
                             <div style="margin-bottom: 15px;">
                                 <label style="display: block; margin-bottom: 5px;">Bullet Type:</label>
-                                <input type="text" id="edit_bullet_type" value="${data.bullet_type}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                <select id="edit_bullet_type" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                    <option value="">Select bullet type...</option>
+                                    <option value="FMJ" ${data.bullet_type === 'FMJ' ? 'selected' : ''}>FMJ</option>
+                                    <option value="JHP" ${data.bullet_type === 'JHP' ? 'selected' : ''}>JHP</option>
+                                    <option value="Soft Point" ${data.bullet_type === 'Soft Point' ? 'selected' : ''}>Soft Point</option>
+                                    <option value="TMJ" ${data.bullet_type === 'TMJ' ? 'selected' : ''}>TMJ</option>
+                                    <option value="Frangible" ${data.bullet_type === 'Frangible' ? 'selected' : ''}>Frangible</option>
+                                    <option value="WC" ${data.bullet_type === 'WC' ? 'selected' : ''}>WC</option>
+                                    <option value="SWC" ${data.bullet_type === 'SWC' ? 'selected' : ''}>SWC</option>
+                                    <option value="AP" ${data.bullet_type === 'AP' ? 'selected' : ''}>AP</option>
+                                    <option value="Subsonic" ${data.bullet_type === 'Subsonic' ? 'selected' : ''}>Subsonic</option>
+                                    <option value="GT" ${data.bullet_type === 'GT' ? 'selected' : ''}>GT</option>
+                                </select>
                             </div>
                             <div style="margin-bottom: 15px;">
                                 <label style="display: block; margin-bottom: 5px;">Lot Number:</label>
