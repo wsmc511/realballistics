@@ -768,11 +768,11 @@
                 activeBulletLibrary.remove();
             }
             
-            // Reset filter section state properly
+            // Reset filter section state properly using CSS classes
             const filterSection = document.getElementById('filterSection');
             const filterButton = document.querySelector('button[onclick="toggleFilters()"]');
             if (filterSection && filterButton) {
-                filterSection.style.display = 'none';
+                filterSection.classList.remove('active');
                 filterButton.textContent = 'Show Filters';
             }
             
