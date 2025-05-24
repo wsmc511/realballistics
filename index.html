@@ -760,14 +760,20 @@
 
         // Define bullet library functions first for immediate button access
         window.showBulletLibrary = async function() {
+            console.log('showBulletLibrary called');
             const hideElement = (id) => {
                 const element = document.getElementById(id);
                 if (element) element.style.display = 'none';
             };
             
+            const bulletSection = document.getElementById('bulletLibrarySection');
+            console.log('Bullet library section:', bulletSection);
+            
             document.getElementById('homePage').style.display = 'none';
             document.getElementById('shootingProfileSection').style.display = 'none';
-            document.getElementById('bulletLibrarySection').style.display = 'block';
+            bulletSection.style.display = 'block';
+            console.log('Set bullet library section to display block');
+            
             hideElement('filterSection');
             hideElement('ballisticForm');
             hideElement('compareForm');
