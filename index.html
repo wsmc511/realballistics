@@ -459,7 +459,7 @@
         </div>
         <h2>Ballistic Calculator Input 29</h2>
         <button class="add-session" onclick="toggleForm()">Add New</button>
-       <button class="add-session" onclick="document.getElementById('bulletLibrarySection').style.display='block';document.getElementById('filterSection').style.display='none';document.getElementById('ballisticForm').style.display='none';document.getElementById('compareForm').style.display='none';document.getElementById('compareResults').style.display='none';document.getElementById('addBulletForm').style.display='none';" style="background-color: #28a745;">My Bullet Library</button>
+        <button class="add-session" onclick="document.getElementById('bulletLibrarySection').style.display='block';document.getElementById('filterSection').style.display='none';document.getElementById('ballisticForm').style.display='none';document.getElementById('compareForm').style.display='none';document.getElementById('compareResults').style.display='none';document.getElementById('addBulletForm').style.display='none';" style="background-color: #28a745;">My Bullet Library</button>
         <form id="ballisticForm">
             <div class="form-group">
                 <label>Shooter Name:</label>
@@ -1377,6 +1377,12 @@ window.resetPassword = async function() {
             window.toggleFilters = function() {
                 const filterSection = document.getElementById('filterSection');
                 const toggleButton = document.querySelector('.toggle-filter');
+                
+                if (!filterSection || !toggleButton) {
+                    console.error('Filter elements not found');
+                    return;
+                }
+                
                 filterSection.classList.toggle('active');
                 toggleButton.textContent = filterSection.classList.contains('active') ? 'Hide Filters' : 'Show Filters';
             };
