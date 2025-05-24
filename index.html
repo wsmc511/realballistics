@@ -692,10 +692,11 @@
                 const token = urlParams.get('access_token');
                 const refreshToken = urlParams.get('refresh_token');
                 const type = urlParams.get('type');
+                const pathname = window.location.pathname;
                 
-                console.log('URL parameters detected:', { isReset, token, refreshToken, type });
+                console.log('URL check:', { pathname, isReset, token, refreshToken, type });
                 
-                if (isReset === 'true' || token || type === 'recovery') {
+                if (isReset === 'true' || token || type === 'recovery' || pathname === '/password-reset') {
                     console.log('Password reset detected, logging out current user and showing reset form');
                     
                     // Log out current user first
@@ -713,6 +714,19 @@
                         
                         if (token) {
                             handlePasswordResetToken(token);
+                        }
+                    } else if (pathname === '/password-reset') {
+                        // Check if Supabase has established a session automatically
+                        const { data: { session } } = await supabase.auth.getSession();
+                        
+                        if (session && session.user) {
+                            console.log('Found active session for password reset:', session.user);
+                            showNewPasswordForm();
+                            document.getElementById('authMessage').innerHTML = '<div class="message">Please enter your new password below.</div>';
+                        } else {
+                            // No session found, show email form
+                            showResetPasswordForm();
+                            document.getElementById('authMessage').innerHTML = '<div class="message">Please enter your email address below to reset your password.</div>';
                         }
                     } else {
                         // User just has reset=true - show email form
@@ -917,7 +931,7 @@ window.resetPassword = async function() {
 
         console.log('Attempting to reset password for email:', email);
         const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-            redirectTo: 'https://realballistics.com/?reset=true'
+            redirectTo: 'https://realballistics.com/password-reset'
         });
 
         console.log('Password reset response:', { data, error });
