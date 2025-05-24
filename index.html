@@ -537,6 +537,78 @@
             <button type="button" class="cancel-edit" onclick="cancelEdit()" style="display: none;" id="cancelEditButton">Cancel Edit</button>
         </form>
 
+        <!-- Bullet Library Section -->
+        <div id="bulletLibrarySection" style="display: none;">
+            <h2>My Bullet Library</h2>
+            <button class="add-session" onclick="showAddBulletForm()">Add New Bullet</button>
+            <button class="back-to-login" onclick="hideBulletLibrary()">Back to Calculator</button>
+            
+            <!-- Add Bullet Form -->
+            <form id="addBulletForm" style="display: none; margin-top: 15px; background-color: white; padding: 15px; border-radius: 5px;">
+                <h3>Add New Bullet</h3>
+                <div class="form-group">
+                    <label>Manufacturer Name:</label>
+                    <input type="text" id="bullet_manufacturer" placeholder="e.g. Federal, Hornady, Barnes" required>
+                </div>
+                <div class="form-group">
+                    <label>Caliber:</label>
+                    <input type="text" id="bullet_caliber" placeholder="e.g. .308 Win, 6.5 Creedmoor" required>
+                </div>
+                <div class="form-group">
+                    <label>Grain:</label>
+                    <input type="number" id="bullet_grain" min="10" max="1000" placeholder="e.g. 168" required>
+                </div>
+                <div class="form-group">
+                    <label>Ballistic Coefficient:</label>
+                    <input type="number" id="bullet_bc" step="0.001" min="0.100" max="1.000" placeholder="e.g. 0.462" required>
+                </div>
+                <div class="form-group">
+                    <label>Drag Model:</label>
+                    <select id="bullet_drag_model" required>
+                        <option value="">Select Drag Model</option>
+                        <option value="G1">G1</option>
+                        <option value="G7">G7</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Bullet Type:</label>
+                    <select id="bullet_type" required>
+                        <option value="">Select Type</option>
+                        <option value="FMJ">FMJ (Full Metal Jacket)</option>
+                        <option value="HP">HP (Hollow Point)</option>
+                        <option value="SP">SP (Soft Point)</option>
+                        <option value="JHP">JHP (Jacketed Hollow Point)</option>
+                        <option value="OTM">OTM (Open Tip Match)</option>
+                        <option value="AP">AP (Armor Piercing)</option>
+                    </select>
+                </div>
+                <button type="button" onclick="saveBullet()" class="add-session">Save Bullet</button>
+                <button type="button" onclick="cancelAddBullet()" class="back-to-login">Cancel</button>
+            </form>
+
+            <!-- Bullet Library Table -->
+            <div id="bulletLibraryTable" style="margin-top: 15px;">
+                <table id="bulletTable" style="display: none;">
+                    <thead>
+                        <tr>
+                            <th>Manufacturer</th>
+                            <th>Caliber</th>
+                            <th>Grain</th>
+                            <th>BC</th>
+                            <th>Drag</th>
+                            <th>Type</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bulletTableBody">
+                    </tbody>
+                </table>
+                <div id="noBulletsMessage" style="text-align: center; padding: 20px; color: #666;">
+                    No bullets in your library yet. Click "Add New Bullet" to get started!
+                </div>
+            </div>
+        </div>
+
         <div id="message"></div>
 
         <h2>Filter</h2>
@@ -1839,6 +1911,443 @@ window.resetPassword = async function() {
                     document.getElementById('comparisonTitle').style.display = 'none';
                     document.getElementById('comparisonTable').style.display = 'none';
                     window.viewAll();
+                }
+            };
+
+            // Bullet Library Functions
+            window.showBulletLibrary = async function() {
+                document.getElementById('bulletLibrarySection').style.display = 'block';
+                document.getElementById('filterSection').style.display = 'none';
+                document.getElementById('ballisticForm').style.display = 'none';
+                document.getElementById('compareForm').style.display = 'none';
+                document.getElementById('compareResults').style.display = 'none';
+                document.getElementById('addBulletForm').style.display = 'none';
+                await loadBulletLibrary();
+            };
+
+            window.hideBulletLibrary = function() {
+                document.getElementById('bulletLibrarySection').style.display = 'none';
+                document.getElementById('addBulletForm').style.display = 'none';
+            };
+
+            window.showAddBulletForm = function() {
+                document.getElementById('addBulletForm').style.display = 'block';
+                document.getElementById('bullet_manufacturer').value = '';
+                document.getElementById('bullet_caliber').value = '';
+                document.getElementById('bullet_grain').value = '';
+                document.getElementById('bullet_bc').value = '';
+                document.getElementById('bullet_drag_model').value = '';
+                document.getElementById('bullet_type').value = '';
+            };
+
+            window.cancelAddBullet = function() {
+                document.getElementById('addBulletForm').style.display = 'none';
+            };
+
+            window.saveBullet = async function() {
+                const manufacturer = document.getElementById('bullet_manufacturer').value.trim();
+                const caliber = document.getElementById('bullet_caliber').value.trim();
+                const grain = parseInt(document.getElementById('bullet_grain').value);
+                const bc = parseFloat(document.getElementById('bullet_bc').value);
+                const dragModel = document.getElementById('bullet_drag_model').value;
+                const bulletType = document.getElementById('bullet_type').value;
+
+                if (!manufacturer || !caliber || !grain || !bc || !dragModel || !bulletType) {
+                    alert('Please fill in all fields');
+                    return;
+                }
+
+                if (bc < 0.1 || bc > 1.0) {
+                    alert('Ballistic coefficient must be between 0.1 and 1.0');
+                    return;
+                }
+
+                try {
+                    const { data, error } = await supabase
+                        .from('bullet_library')
+                        .insert([{
+                            user_id: currentUser.id,
+                            manufacturer_name: manufacturer,
+                            caliber: caliber,
+                            grain: grain,
+                            ballistic_coefficient: bc,
+                            drag_model: dragModel,
+                            bullet_type: bulletType
+                        }]);
+
+                    if (error) {
+                        console.error('Error saving bullet:', error);
+                        alert('Error saving bullet. Please try again.');
+                    } else {
+                        console.log('Bullet saved successfully');
+                        document.getElementById('addBulletForm').style.display = 'none';
+                        await loadBulletLibrary();
+                    }
+                } catch (e) {
+                    console.error('Error:', e);
+                    alert('Error saving bullet. Please try again.');
+                }
+            };
+
+            window.loadBulletLibrary = async function() {
+                try {
+                    const { data, error } = await supabase
+                        .from('bullet_library')
+                        .select('*')
+                        .eq('user_id', currentUser.id)
+                        .order('manufacturer_name', { ascending: true });
+
+                    if (error) {
+                        console.error('Error loading bullets:', error);
+                        return;
+                    }
+
+                    const tableBody = document.getElementById('bulletTableBody');
+                    const table = document.getElementById('bulletTable');
+                    const noMessage = document.getElementById('noBulletsMessage');
+
+                    if (data && data.length > 0) {
+                        table.style.display = 'table';
+                        noMessage.style.display = 'none';
+                        
+                        tableBody.innerHTML = '';
+                        data.forEach(bullet => {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td>${bullet.manufacturer_name}</td>
+                                <td>${bullet.caliber}</td>
+                                <td>${bullet.grain}</td>
+                                <td>${bullet.ballistic_coefficient}</td>
+                                <td>${bullet.drag_model}</td>
+                                <td>${bullet.bullet_type}</td>
+                                <td>
+                                    <button onclick="deleteBullet(${bullet.id})" class="back-to-login" style="padding: 4px 8px; margin: 2px;">Delete</button>
+                                </td>
+                            `;
+                            tableBody.appendChild(row);
+                        });
+                    } else {
+                        table.style.display = 'none';
+                        noMessage.style.display = 'block';
+                    }
+                } catch (e) {
+                    console.error('Error loading bullet library:', e);
+                }
+            };
+
+            window.deleteBullet = async function(bulletId) {
+                if (!confirm('Are you sure you want to delete this bullet?')) {
+                    return;
+                }
+
+                try {
+                    const { error } = await supabase
+                        .from('bullet_library')
+                        .delete()
+                        .eq('id', bulletId)
+                        .eq('user_id', currentUser.id);
+
+                    if (error) {
+                        console.error('Error deleting bullet:', error);
+                        alert('Error deleting bullet. Please try again.');
+                    } else {
+                        await loadBulletLibrary();
+                    }
+                } catch (e) {
+                    console.error('Error:', e);
+                    alert('Error deleting bullet. Please try again.');
+                }
+            };
+
+            // Bullet Library Functions
+            window.showBulletLibrary = async function() {
+                document.getElementById('bulletLibrarySection').style.display = 'block';
+                document.getElementById('filterSection').style.display = 'none';
+                document.getElementById('ballisticForm').style.display = 'none';
+                document.getElementById('compareForm').style.display = 'none';
+                document.getElementById('compareResults').style.display = 'none';
+                document.getElementById('addBulletForm').style.display = 'none';
+                await loadBulletLibrary();
+            };
+
+            window.hideBulletLibrary = function() {
+                document.getElementById('bulletLibrarySection').style.display = 'none';
+                document.getElementById('addBulletForm').style.display = 'none';
+            };
+
+            window.showAddBulletForm = function() {
+                document.getElementById('addBulletForm').style.display = 'block';
+                // Clear form
+                document.getElementById('bullet_manufacturer').value = '';
+                document.getElementById('bullet_caliber').value = '';
+                document.getElementById('bullet_grain').value = '';
+                document.getElementById('bullet_bc').value = '';
+                document.getElementById('bullet_drag_model').value = '';
+                document.getElementById('bullet_type').value = '';
+            };
+
+            window.cancelAddBullet = function() {
+                document.getElementById('addBulletForm').style.display = 'none';
+            };
+
+            window.saveBullet = async function() {
+                const manufacturer = document.getElementById('bullet_manufacturer').value.trim();
+                const caliber = document.getElementById('bullet_caliber').value.trim();
+                const grain = parseInt(document.getElementById('bullet_grain').value);
+                const bc = parseFloat(document.getElementById('bullet_bc').value);
+                const dragModel = document.getElementById('bullet_drag_model').value;
+                const bulletType = document.getElementById('bullet_type').value;
+
+                // Validation
+                if (!manufacturer || !caliber || !grain || !bc || !dragModel || !bulletType) {
+                    alert('Please fill in all fields');
+                    return;
+                }
+
+                if (bc < 0.1 || bc > 1.0) {
+                    alert('Ballistic coefficient must be between 0.1 and 1.0');
+                    return;
+                }
+
+                try {
+                    const { data, error } = await supabase
+                        .from('bullet_library')
+                        .insert([{
+                            user_id: currentUser.id,
+                            manufacturer_name: manufacturer,
+                            caliber: caliber,
+                            grain: grain,
+                            ballistic_coefficient: bc,
+                            drag_model: dragModel,
+                            bullet_type: bulletType
+                        }]);
+
+                    if (error) {
+                        console.error('Error saving bullet:', error);
+                        alert('Error saving bullet. Please try again.');
+                    } else {
+                        console.log('Bullet saved successfully');
+                        document.getElementById('addBulletForm').style.display = 'none';
+                        await loadBulletLibrary();
+                    }
+                } catch (e) {
+                    console.error('Error:', e);
+                    alert('Error saving bullet. Please try again.');
+                }
+            };
+
+            window.loadBulletLibrary = async function() {
+                try {
+                    const { data, error } = await supabase
+                        .from('bullet_library')
+                        .select('*')
+                        .eq('user_id', currentUser.id)
+                        .order('manufacturer_name', { ascending: true });
+
+                    if (error) {
+                        console.error('Error loading bullets:', error);
+                        return;
+                    }
+
+                    const tableBody = document.getElementById('bulletTableBody');
+                    const table = document.getElementById('bulletTable');
+                    const noMessage = document.getElementById('noBulletsMessage');
+
+                    if (data && data.length > 0) {
+                        table.style.display = 'table';
+                        noMessage.style.display = 'none';
+                        
+                        tableBody.innerHTML = '';
+                        data.forEach(bullet => {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td>${bullet.manufacturer_name}</td>
+                                <td>${bullet.caliber}</td>
+                                <td>${bullet.grain}</td>
+                                <td>${bullet.ballistic_coefficient}</td>
+                                <td>${bullet.drag_model}</td>
+                                <td>${bullet.bullet_type}</td>
+                                <td>
+                                    <button onclick="deleteBullet(${bullet.id})" class="back-to-login" style="padding: 4px 8px; margin: 2px;">Delete</button>
+                                </td>
+                            `;
+                            tableBody.appendChild(row);
+                        });
+                    } else {
+                        table.style.display = 'none';
+                        noMessage.style.display = 'block';
+                    }
+                } catch (e) {
+                    console.error('Error loading bullet library:', e);
+                }
+            };
+
+            window.deleteBullet = async function(bulletId) {
+                if (!confirm('Are you sure you want to delete this bullet?')) {
+                    return;
+                }
+
+                try {
+                    const { error } = await supabase
+                        .from('bullet_library')
+                        .delete()
+                        .eq('id', bulletId)
+                        .eq('user_id', currentUser.id);
+
+                    if (error) {
+                        console.error('Error deleting bullet:', error);
+                        alert('Error deleting bullet. Please try again.');
+                    } else {
+                        await loadBulletLibrary();
+                    }
+                } catch (e) {
+                    console.error('Error:', e);
+                    alert('Error deleting bullet. Please try again.');
+                }
+            };
+
+            // Bullet Library Functions
+            window.showBulletLibrary = async function() {
+                document.getElementById('bulletLibrarySection').style.display = 'block';
+                document.getElementById('filterSection').style.display = 'none';
+                document.getElementById('ballisticForm').style.display = 'none';
+                document.getElementById('compareForm').style.display = 'none';
+                document.getElementById('compareResults').style.display = 'none';
+                document.getElementById('addBulletForm').style.display = 'none';
+                await loadBulletLibrary();
+            };
+
+            window.hideBulletLibrary = function() {
+                document.getElementById('bulletLibrarySection').style.display = 'none';
+                document.getElementById('addBulletForm').style.display = 'none';
+            };
+
+            window.showAddBulletForm = function() {
+                document.getElementById('addBulletForm').style.display = 'block';
+                document.getElementById('bullet_manufacturer').value = '';
+                document.getElementById('bullet_caliber').value = '';
+                document.getElementById('bullet_grain').value = '';
+                document.getElementById('bullet_bc').value = '';
+                document.getElementById('bullet_drag_model').value = '';
+                document.getElementById('bullet_type').value = '';
+            };
+
+            window.cancelAddBullet = function() {
+                document.getElementById('addBulletForm').style.display = 'none';
+            };
+
+            window.saveBullet = async function() {
+                const manufacturer = document.getElementById('bullet_manufacturer').value.trim();
+                const caliber = document.getElementById('bullet_caliber').value.trim();
+                const grain = parseInt(document.getElementById('bullet_grain').value);
+                const bc = parseFloat(document.getElementById('bullet_bc').value);
+                const dragModel = document.getElementById('bullet_drag_model').value;
+                const bulletType = document.getElementById('bullet_type').value;
+
+                if (!manufacturer || !caliber || !grain || !bc || !dragModel || !bulletType) {
+                    alert('Please fill in all fields');
+                    return;
+                }
+
+                if (bc < 0.1 || bc > 1.0) {
+                    alert('Ballistic coefficient must be between 0.1 and 1.0');
+                    return;
+                }
+
+                try {
+                    const { data, error } = await supabase
+                        .from('bullet_library')
+                        .insert([{
+                            user_id: currentUser.id,
+                            manufacturer_name: manufacturer,
+                            caliber: caliber,
+                            grain: grain,
+                            ballistic_coefficient: bc,
+                            drag_model: dragModel,
+                            bullet_type: bulletType
+                        }]);
+
+                    if (error) {
+                        console.error('Error saving bullet:', error);
+                        alert('Error saving bullet. Please try again.');
+                    } else {
+                        console.log('Bullet saved successfully');
+                        document.getElementById('addBulletForm').style.display = 'none';
+                        await loadBulletLibrary();
+                    }
+                } catch (e) {
+                    console.error('Error:', e);
+                    alert('Error saving bullet. Please try again.');
+                }
+            };
+
+            window.loadBulletLibrary = async function() {
+                try {
+                    const { data, error } = await supabase
+                        .from('bullet_library')
+                        .select('*')
+                        .eq('user_id', currentUser.id)
+                        .order('manufacturer_name', { ascending: true });
+
+                    if (error) {
+                        console.error('Error loading bullets:', error);
+                        return;
+                    }
+
+                    const tableBody = document.getElementById('bulletTableBody');
+                    const table = document.getElementById('bulletTable');
+                    const noMessage = document.getElementById('noBulletsMessage');
+
+                    if (data && data.length > 0) {
+                        table.style.display = 'table';
+                        noMessage.style.display = 'none';
+                        
+                        tableBody.innerHTML = '';
+                        data.forEach(bullet => {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td>${bullet.manufacturer_name}</td>
+                                <td>${bullet.caliber}</td>
+                                <td>${bullet.grain}</td>
+                                <td>${bullet.ballistic_coefficient}</td>
+                                <td>${bullet.drag_model}</td>
+                                <td>${bullet.bullet_type}</td>
+                                <td>
+                                    <button onclick="deleteBullet(${bullet.id})" class="back-to-login" style="padding: 4px 8px; margin: 2px;">Delete</button>
+                                </td>
+                            `;
+                            tableBody.appendChild(row);
+                        });
+                    } else {
+                        table.style.display = 'none';
+                        noMessage.style.display = 'block';
+                    }
+                } catch (e) {
+                    console.error('Error loading bullet library:', e);
+                }
+            };
+
+            window.deleteBullet = async function(bulletId) {
+                if (!confirm('Are you sure you want to delete this bullet?')) {
+                    return;
+                }
+
+                try {
+                    const { error } = await supabase
+                        .from('bullet_library')
+                        .delete()
+                        .eq('id', bulletId)
+                        .eq('user_id', currentUser.id);
+
+                    if (error) {
+                        console.error('Error deleting bullet:', error);
+                        alert('Error deleting bullet. Please try again.');
+                    } else {
+                        await loadBulletLibrary();
+                    }
+                } catch (e) {
+                    console.error('Error:', e);
+                    alert('Error deleting bullet. Please try again.');
                 }
             };
         });
