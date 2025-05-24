@@ -691,6 +691,9 @@
                     // Show the reset password form
                     showResetPasswordForm();
                     
+                    // Add helpful message for password reset
+                    document.getElementById('authMessage').innerHTML = '<div class="message">Please enter your email address below to reset your password.</div>';
+                    
                     if (token) {
                         // Handle the token for password reset
                         handlePasswordResetToken(token);
@@ -799,8 +802,14 @@
             window.showResetPasswordForm = function() {
                 document.getElementById('authForm').style.display = 'none';
                 document.getElementById('resetPasswordForm').style.display = 'block';
-                document.getElementById('authMessage').innerHTML = '';
                 document.querySelector('.forgot-password').style.display = 'none';
+                
+                // Only clear the message if not coming from password reset email
+                const urlParams = new URLSearchParams(window.location.search);
+                const isReset = urlParams.get('reset');
+                if (isReset !== 'true') {
+                    document.getElementById('authMessage').innerHTML = '';
+                }
             };
 
             // Show the login form
