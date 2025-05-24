@@ -780,6 +780,16 @@
                 filterButton.textContent = 'Show Filters';
             }
             
+            // Ensure toggleFilters function is properly bound after section switch
+            setTimeout(() => {
+                const toggleButton = document.querySelector('.toggle-filter');
+                if (toggleButton) {
+                    // Remove any existing event listeners and re-add
+                    toggleButton.onclick = null;
+                    toggleButton.onclick = function() { window.toggleFilters(); };
+                }
+            }, 100);
+            
             viewAll(); // Load the shooting sessions
         };
 
