@@ -688,12 +688,21 @@
             // Check if URL contains password reset parameters
             async function checkPasswordResetURL() {
                 const urlParams = new URLSearchParams(window.location.search);
-                const hashParams = new URLSearchParams(window.location.hash.substring(1));
+                const hashFragment = window.location.hash.substring(1);
+                const hashParams = new URLSearchParams(hashFragment);
                 const isReset = urlParams.get('reset');
                 const token = urlParams.get('access_token') || hashParams.get('access_token');
                 const refreshToken = urlParams.get('refresh_token') || hashParams.get('refresh_token');
                 const type = urlParams.get('type') || hashParams.get('type');
                 const pathname = window.location.pathname;
+                
+                console.log('Hash parsing debug:', {
+                    rawHash: window.location.hash,
+                    hashFragment: hashFragment,
+                    hashToken: hashParams.get('access_token'),
+                    hashRefresh: hashParams.get('refresh_token'),
+                    hashType: hashParams.get('type')
+                });
                 
                 console.log('URL check:', { 
                     pathname, 
