@@ -2276,11 +2276,20 @@ window.resetPassword = async function() {
 
             window.loadBulletLibrary = async function() {
                 try {
+                    console.log('Loading bullet library, currentUser:', currentUser);
+                    
+                    if (!currentUser) {
+                        console.log('No current user available');
+                        return;
+                    }
+
                     const { data, error } = await supabase
                         .from('bullet_library')
                         .select('*')
                         .eq('user_id', currentUser.id)
                         .order('manufacturer_name', { ascending: true });
+
+                    console.log('Bullet library query result:', { data, error });
 
                     if (error) {
                         console.error('Error loading bullets:', error);
@@ -2290,6 +2299,8 @@ window.resetPassword = async function() {
                     const tableBody = document.getElementById('bulletTableBody');
                     const table = document.getElementById('bulletTable');
                     const noMessage = document.getElementById('noBulletsMessage');
+
+                    console.log('Found', data ? data.length : 0, 'bullets');
 
                     if (data && data.length > 0) {
                         table.style.display = 'table';
