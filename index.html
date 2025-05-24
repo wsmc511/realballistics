@@ -1956,6 +1956,7 @@ window.resetPassword = async function() {
                             console.log(`Verified session exists before update:`, existingRecord);
                             console.log(`Comparing IDs - editSessionId: ${editSessionId}, record ID: ${existingRecord.id}, match: ${editSessionId === existingRecord.id}`);
                             console.log(`Session data to update:`, sessionData);
+                            console.log(`Barrel twist rate in sessionData:`, sessionData.barrel_twist_rate);
 
                             console.log(`Updating session with ID: ${editSessionId}`);
                             operation = supabase.from('ballistic_sessions').update(sessionData).eq('id', editSessionId).eq('user_id', currentUser.id).select();
