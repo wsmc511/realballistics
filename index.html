@@ -690,8 +690,12 @@
                 const urlParams = new URLSearchParams(window.location.search);
                 const isReset = urlParams.get('reset');
                 const token = urlParams.get('access_token');
+                const refreshToken = urlParams.get('refresh_token');
+                const type = urlParams.get('type');
                 
-                if (isReset === 'true' || token) {
+                console.log('URL parameters detected:', { isReset, token, refreshToken, type });
+                
+                if (isReset === 'true' || token || type === 'recovery') {
                     console.log('Password reset detected, logging out current user and showing reset form');
                     
                     // Log out current user first
@@ -702,11 +706,14 @@
                     document.getElementById('loginForm').style.display = 'block';
                     document.getElementById('appContent').style.display = 'none';
                     
-                    if (token) {
+                    if (token || refreshToken || type === 'recovery') {
                         // User has token - show new password form
                         showNewPasswordForm();
                         document.getElementById('authMessage').innerHTML = '<div class="message">Please enter your new password below.</div>';
-                        handlePasswordResetToken(token);
+                        
+                        if (token) {
+                            handlePasswordResetToken(token);
+                        }
                     } else {
                         // User just has reset=true - show email form
                         showResetPasswordForm();
@@ -717,19 +724,26 @@
 
             // Handle password reset token from URL
             async function handlePasswordResetToken(token) {
-                console.log('Handling password reset token');
+                console.log('Handling password reset token:', token);
                 try {
-                    const { data, error } = await supabase.auth.verifyOtp({
-                        token_hash: token,
-                        type: 'recovery'
-                    });
+                    // For Supabase, the token handling is often automatic
+                    // Let's check if we're already authenticated after the redirect
+                    const { data: { session } } = await supabase.auth.getSession();
                     
-                    if (error) {
-                        console.error('Token verification error:', error);
-                        document.getElementById('authMessage').innerHTML = `<div class="error">Invalid or expired reset link. Please request a new password reset.</div>`;
-                    } else {
-                        console.log('Token verified successfully');
+                    if (session && session.user) {
+                        console.log('User session found after reset redirect:', session.user);
                         document.getElementById('authMessage').innerHTML = `<div class="message">Reset link verified! Please enter your new password below.</div>`;
+                    } else {
+                        // Try to exchange the token
+                        const { data, error } = await supabase.auth.getUser(token);
+                        
+                        if (error) {
+                            console.error('Token verification error:', error);
+                            document.getElementById('authMessage').innerHTML = `<div class="error">Invalid or expired reset link. Please request a new password reset.</div>`;
+                        } else {
+                            console.log('Token verified successfully:', data);
+                            document.getElementById('authMessage').innerHTML = `<div class="message">Reset link verified! Please enter your new password below.</div>`;
+                        }
                     }
                 } catch (e) {
                     console.error('Token handling error:', e);
