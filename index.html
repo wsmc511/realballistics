@@ -957,13 +957,14 @@
             }
         };
 
-        // Register Service Worker for PWA
+        // Temporarily disable Service Worker to fix caching issues
+        // Will re-enable after filter functionality is working
+        /*
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./service-worker.js?v=4')
                     .then(registration => {
                         console.log('Service Worker registered with scope:', registration.scope);
-                        // Force update to clear old cache
                         registration.update();
                     })
                     .catch(error => {
@@ -971,6 +972,7 @@
                     });
             });
         }
+        */
 
         // Bullet Library Functions - Global scope for button access (using the first definition above)
 
