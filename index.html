@@ -2347,8 +2347,11 @@ window.resetPassword = async function() {
                     const noMessage = document.getElementById('noBulletsMessage');
 
                     console.log('Found', data ? data.length : 0, 'bullets');
+                    console.log('Table element:', table);
+                    console.log('NoMessage element:', noMessage);
 
                     if (data && data.length > 0) {
+                        console.log('Showing table and hiding no-message');
                         table.style.display = 'table';
                         noMessage.style.display = 'none';
                         
