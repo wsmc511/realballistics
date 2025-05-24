@@ -672,13 +672,23 @@
             }
 
             // Check if URL contains password reset parameters
-            function checkPasswordResetURL() {
+            async function checkPasswordResetURL() {
                 const urlParams = new URLSearchParams(window.location.search);
                 const isReset = urlParams.get('reset');
                 const token = urlParams.get('access_token');
                 
                 if (isReset === 'true' || token) {
-                    console.log('Password reset detected, showing reset form');
+                    console.log('Password reset detected, logging out current user and showing reset form');
+                    
+                    // Log out current user first
+                    await supabase.auth.signOut();
+                    currentUser = null;
+                    
+                    // Show login form and then the reset form
+                    document.getElementById('loginForm').style.display = 'block';
+                    document.getElementById('appContent').style.display = 'none';
+                    
+                    // Show the reset password form
                     showResetPasswordForm();
                     
                     if (token) {
