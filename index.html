@@ -873,16 +873,7 @@
             });
         }
 
-        // Bullet Library Functions - Global scope for button access
-        window.showBulletLibrary = async function() {
-            document.getElementById('bulletLibrarySection').style.display = 'block';
-            document.getElementById('filterSection').style.display = 'none';
-            document.getElementById('ballisticForm').style.display = 'none';
-            document.getElementById('compareForm').style.display = 'none';
-            document.getElementById('compareResults').style.display = 'none';
-            document.getElementById('addBulletForm').style.display = 'none';
-            await loadBulletLibrary();
-        };
+        // Bullet Library Functions - Global scope for button access (using the first definition above)
 
         window.hideBulletLibrary = function() {
             document.getElementById('bulletLibrarySection').style.display = 'none';
