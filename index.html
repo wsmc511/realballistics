@@ -772,7 +772,11 @@
             document.getElementById('homePage').style.display = 'none';
             document.getElementById('shootingProfileSection').style.display = 'none';
             bulletSection.style.display = 'block';
-            console.log('Set bullet library section to display block');
+            bulletSection.style.visibility = 'visible';
+            bulletSection.style.opacity = '1';
+            bulletSection.style.position = 'relative';
+            bulletSection.style.zIndex = '1';
+            console.log('Set bullet library section to display block with visibility fixes');
             
             hideElement('filterSection');
             hideElement('ballisticForm');
