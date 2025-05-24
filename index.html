@@ -715,38 +715,36 @@
                 });
                 
                 if (isReset === 'true' || token || type === 'recovery' || pathname === '/password-reset') {
-                    console.log('Password reset detected, logging out current user and showing reset form');
+                    console.log('Password reset detected - waiting for Supabase to process tokens');
                     
-                    // Log out current user first
-                    await supabase.auth.signOut();
-                    currentUser = null;
+                    // Wait a moment for Supabase to process the authentication tokens
+                    await new Promise(resolve => setTimeout(resolve, 1000));
                     
-                    // Show login form and then the reset form
-                    document.getElementById('loginForm').style.display = 'block';
-                    document.getElementById('appContent').style.display = 'none';
+                    // Check if Supabase has automatically established a session after processing the tokens
+                    const { data: { session } } = await supabase.auth.getSession();
+                    console.log('Session check result after delay:', session ? 'SESSION FOUND' : 'NO SESSION');
                     
-                    if (token || refreshToken || type === 'recovery') {
-                        // User has tokens - show new password form
-                        console.log('Tokens found! Showing password reset form');
+                    if (session && session.user) {
+                        console.log('Found active session for password reset - user can update password');
+                        // Don't log out - user is authenticated and can update password
+                        currentUser = session.user;
+                        
+                        // Show login form with password reset form
+                        document.getElementById('loginForm').style.display = 'block';
+                        document.getElementById('appContent').style.display = 'none';
                         showNewPasswordForm();
                         document.getElementById('authMessage').innerHTML = '<div class="message">Please enter your new password below.</div>';
-                        
-                        if (token) {
-                            handlePasswordResetToken(token);
-                        }
                     } else {
-                        // Check if Supabase has automatically established a session after the redirect
-                        const { data: { session } } = await supabase.auth.getSession();
+                        console.log('No active session - showing email form');
+                        // Log out current user and show email form
+                        await supabase.auth.signOut();
+                        currentUser = null;
                         
-                        if (session && session.user) {
-                            console.log('Found active session for password reset:', session.user);
-                            showNewPasswordForm();
-                            document.getElementById('authMessage').innerHTML = '<div class="message">Please enter your new password below.</div>';
-                        } else {
-                            // No session or token found, show email form
-                            showResetPasswordForm();
-                            document.getElementById('authMessage').innerHTML = '<div class="message">Please enter your email address below to reset your password.</div>';
-                        }
+                        // Show login form and email reset form
+                        document.getElementById('loginForm').style.display = 'block';
+                        document.getElementById('appContent').style.display = 'none';
+                        showResetPasswordForm();
+                        document.getElementById('authMessage').innerHTML = '<div class="message">Please enter your email address below to reset your password.</div>';
                     }
                 }
             }
