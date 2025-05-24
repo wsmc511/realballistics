@@ -457,9 +457,33 @@
             <span id="userEmail"></span>
             <button class="logout" onclick="logout()">Logout</button>
         </div>
-        <h2>Ballistic Calculator Input 29</h2>
-        <button class="add-session" onclick="toggleForm()">Add New</button>
-        <button class="add-session" onclick="showBulletLibrary();" style="background-color: #28a745;">My Bullet Library</button>
+        <!-- Home Page Section -->
+        <div id="homePage" style="display: block;">
+            <div style="text-align: center; padding: 40px 20px;">
+                <h1 style="color: #333; margin-bottom: 10px;">Welcome to Real Ballistics</h1>
+                <p style="color: #666; margin-bottom: 40px; font-size: 1.1em;">Professional ballistic calculation and ammunition management system</p>
+                
+                <div style="display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;">
+                    <button class="home-nav-button" onclick="showShootingProfile()" style="background-color: #007BFF; color: white; padding: 20px 30px; font-size: 1.1em; border: none; border-radius: 8px; cursor: pointer; min-width: 200px;">
+                        📊 Shooting Profile
+                        <div style="font-size: 0.9em; margin-top: 5px; opacity: 0.9;">Calculate trajectories, manage sessions</div>
+                    </button>
+                    
+                    <button class="home-nav-button" onclick="showBulletLibrary()" style="background-color: #28a745; color: white; padding: 20px 30px; font-size: 1.1em; border: none; border-radius: 8px; cursor: pointer; min-width: 200px;">
+                        🎯 Bullet Library
+                        <div style="font-size: 0.9em; margin-top: 5px; opacity: 0.9;">Manage ammunition database</div>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Shooting Profile Section -->
+        <div id="shootingProfileSection" style="display: none;">
+            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+                <button class="back-to-home" onclick="showHomePage()" style="background-color: #6c757d; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer;">← Home</button>
+                <h2 style="margin: 0;">Shooting Profile</h2>
+            </div>
+            <button class="add-session" onclick="toggleForm()">Add New</button>
         <form id="ballisticForm">
             <div class="form-group">
                 <label>Shooter Name:</label>
@@ -539,9 +563,11 @@
 
         <!-- Bullet Library Section -->
         <div id="bulletLibrarySection" style="display: none;">
-            <h2>My Bullet Library</h2>
+            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+                <button class="back-to-home" onclick="showHomePage()" style="background-color: #6c757d; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer;">← Home</button>
+                <h2 style="margin: 0;">Bullet Library</h2>
+            </div>
             <button class="add-session" onclick="showAddBulletForm()">Add New Bullet</button>
-            <button class="back-to-login" onclick="hideBulletLibrary()">Back to Calculator</button>
             
             <!-- Add Bullet Form -->
             <form id="addBulletForm" style="display: none; margin-top: 15px; background-color: white; padding: 15px; border-radius: 5px;">
@@ -609,11 +635,11 @@
             </div>
         </div>
 
-        <div id="message"></div>
+            <div id="message"></div>
 
-        <h2>Filter</h2>
-        <button class="toggle-filter" onclick="toggleFilters()">Show Filters</button>
-        <div class="filter-section" id="filterSection">
+            <h2>Filter</h2>
+            <button class="toggle-filter" onclick="toggleFilters()">Show Filters</button>
+            <div class="filter-section" id="filterSection">
             <div class="session-controls">
                 <button class="view-all" onclick="viewAll()">View All</button>
                 <button class="clear-all" onclick="clearAll()">Clear All</button>
@@ -701,15 +727,37 @@
             <tbody id="trajectoryBody"></tbody>
         </table>
 
-        <h2 id="comparisonTitle" style="display: none;">Trajectory Comparison</h2>
-        <table id="comparisonTable" style="display: none;">
-            <thead id="comparisonTableHead"></thead>
-            <tbody id="comparisonTableBody"></tbody>
-        </table>
+            <h2 id="comparisonTitle" style="display: none;">Trajectory Comparison</h2>
+            <table id="comparisonTable" style="display: none;">
+                <thead id="comparisonTableHead"></thead>
+                <tbody id="comparisonTableBody"></tbody>
+            </table>
+        </div>
+        <!-- End Shooting Profile Section -->
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script>
+        // Navigation Functions
+        window.showHomePage = function() {
+            document.getElementById('homePage').style.display = 'block';
+            document.getElementById('shootingProfileSection').style.display = 'none';
+            document.getElementById('bulletLibrarySection').style.display = 'none';
+            document.getElementById('ballisticForm').style.display = 'none';
+            document.getElementById('addBulletForm').style.display = 'none';
+            const filterSection = document.getElementById('filterSection');
+            if (filterSection) filterSection.style.display = 'none';
+        };
+
+        window.showShootingProfile = function() {
+            document.getElementById('homePage').style.display = 'none';
+            document.getElementById('shootingProfileSection').style.display = 'block';
+            document.getElementById('bulletLibrarySection').style.display = 'none';
+            document.getElementById('ballisticForm').style.display = 'none';
+            document.getElementById('addBulletForm').style.display = 'none';
+            viewAll(); // Load the shooting sessions
+        };
+
         // Define bullet library functions first for immediate button access
         window.showBulletLibrary = async function() {
             const hideElement = (id) => {
@@ -717,6 +765,8 @@
                 if (element) element.style.display = 'none';
             };
             
+            document.getElementById('homePage').style.display = 'none';
+            document.getElementById('shootingProfileSection').style.display = 'none';
             document.getElementById('bulletLibrarySection').style.display = 'block';
             hideElement('filterSection');
             hideElement('ballisticForm');
