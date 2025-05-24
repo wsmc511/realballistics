@@ -695,7 +695,15 @@
                 const type = urlParams.get('type') || hashParams.get('type');
                 const pathname = window.location.pathname;
                 
-                console.log('URL check:', { pathname, isReset, token, refreshToken, type, fullURL: window.location.href });
+                console.log('URL check:', { 
+                    pathname, 
+                    isReset, 
+                    token: token ? 'FOUND' : null, 
+                    refreshToken: refreshToken ? 'FOUND' : null, 
+                    type, 
+                    hashFragment: window.location.hash,
+                    fullURL: window.location.href 
+                });
                 
                 if (isReset === 'true' || token || type === 'recovery' || pathname === '/password-reset') {
                     console.log('Password reset detected, logging out current user and showing reset form');
@@ -708,15 +716,9 @@
                     document.getElementById('loginForm').style.display = 'block';
                     document.getElementById('appContent').style.display = 'none';
                     
-                    // Check if Supabase has automatically established a session after the redirect
-                    const { data: { session } } = await supabase.auth.getSession();
-                    
-                    if (session && session.user) {
-                        console.log('Found active session for password reset:', session.user);
-                        showNewPasswordForm();
-                        document.getElementById('authMessage').innerHTML = '<div class="message">Please enter your new password below.</div>';
-                    } else if (token || refreshToken || type === 'recovery') {
-                        // User has token - show new password form
+                    if (token || refreshToken || type === 'recovery') {
+                        // User has tokens - show new password form
+                        console.log('Tokens found! Showing password reset form');
                         showNewPasswordForm();
                         document.getElementById('authMessage').innerHTML = '<div class="message">Please enter your new password below.</div>';
                         
@@ -724,9 +726,18 @@
                             handlePasswordResetToken(token);
                         }
                     } else {
-                        // No session or token found, show email form
-                        showResetPasswordForm();
-                        document.getElementById('authMessage').innerHTML = '<div class="message">Please enter your email address below to reset your password.</div>';
+                        // Check if Supabase has automatically established a session after the redirect
+                        const { data: { session } } = await supabase.auth.getSession();
+                        
+                        if (session && session.user) {
+                            console.log('Found active session for password reset:', session.user);
+                            showNewPasswordForm();
+                            document.getElementById('authMessage').innerHTML = '<div class="message">Please enter your new password below.</div>';
+                        } else {
+                            // No session or token found, show email form
+                            showResetPasswordForm();
+                            document.getElementById('authMessage').innerHTML = '<div class="message">Please enter your email address below to reset your password.</div>';
+                        }
                     }
                 }
             }
