@@ -435,6 +435,20 @@
             <button type="button" class="reset-password" onclick="resetPassword()">Reset Password</button>
             <button type="button" class="back-to-login" onclick="showLoginForm()">Back to Login</button>
         </form>
+
+        <form id="newPasswordForm" style="display: none;">
+            <h3>Set New Password</h3>
+            <div class="form-group">
+                <label>New Password:</label>
+                <input type="password" id="new_password" autocomplete="new-password" placeholder="Enter your new password">
+            </div>
+            <div class="form-group">
+                <label>Confirm Password:</label>
+                <input type="password" id="confirm_password" autocomplete="new-password" placeholder="Confirm your new password">
+            </div>
+            <button type="button" class="reset-password" onclick="updatePassword()">Update Password</button>
+            <button type="button" class="back-to-login" onclick="showLoginForm()">Back to Login</button>
+        </form>
         <div id="authMessage"></div>
     </div>
 
@@ -688,15 +702,15 @@
                     document.getElementById('loginForm').style.display = 'block';
                     document.getElementById('appContent').style.display = 'none';
                     
-                    // Show the reset password form
-                    showResetPasswordForm();
-                    
-                    // Add helpful message for password reset
-                    document.getElementById('authMessage').innerHTML = '<div class="message">Please enter your email address below to reset your password.</div>';
-                    
                     if (token) {
-                        // Handle the token for password reset
+                        // User has token - show new password form
+                        showNewPasswordForm();
+                        document.getElementById('authMessage').innerHTML = '<div class="message">Please enter your new password below.</div>';
                         handlePasswordResetToken(token);
+                    } else {
+                        // User just has reset=true - show email form
+                        showResetPasswordForm();
+                        document.getElementById('authMessage').innerHTML = '<div class="message">Please enter your email address below to reset your password.</div>';
                     }
                 }
             }
@@ -802,6 +816,7 @@
             window.showResetPasswordForm = function() {
                 document.getElementById('authForm').style.display = 'none';
                 document.getElementById('resetPasswordForm').style.display = 'block';
+                document.getElementById('newPasswordForm').style.display = 'none';
                 document.querySelector('.forgot-password').style.display = 'none';
                 
                 // Only clear the message if not coming from password reset email
@@ -809,6 +824,61 @@
                 const isReset = urlParams.get('reset');
                 if (isReset !== 'true') {
                     document.getElementById('authMessage').innerHTML = '';
+                }
+            };
+
+            // Show the new password form
+            window.showNewPasswordForm = function() {
+                document.getElementById('authForm').style.display = 'none';
+                document.getElementById('resetPasswordForm').style.display = 'none';
+                document.getElementById('newPasswordForm').style.display = 'block';
+                document.querySelector('.forgot-password').style.display = 'none';
+            };
+
+            // Handle password update
+            window.updatePassword = async function() {
+                const newPassword = document.getElementById('new_password').value.trim();
+                const confirmPassword = document.getElementById('confirm_password').value.trim();
+                const authMessage = document.getElementById('authMessage');
+
+                if (!newPassword || !confirmPassword) {
+                    authMessage.innerHTML = '<div class="error">Please enter both password fields.</div>';
+                    return;
+                }
+
+                if (newPassword !== confirmPassword) {
+                    authMessage.innerHTML = '<div class="error">Passwords do not match.</div>';
+                    return;
+                }
+
+                if (newPassword.length < 6) {
+                    authMessage.innerHTML = '<div class="error">Password must be at least 6 characters long.</div>';
+                    return;
+                }
+
+                try {
+                    const { data, error } = await supabase.auth.updateUser({
+                        password: newPassword
+                    });
+
+                    if (error) {
+                        authMessage.innerHTML = `<div class="error">Failed to update password: ${error.message}</div>`;
+                        return;
+                    }
+
+                    authMessage.innerHTML = '<div class="message">Password updated successfully! You can now log in with your new password.</div>';
+                    
+                    // Clear form and show login
+                    document.getElementById('new_password').value = '';
+                    document.getElementById('confirm_password').value = '';
+                    
+                    setTimeout(() => {
+                        showLoginForm();
+                        window.history.replaceState({}, document.title, window.location.pathname);
+                    }, 2000);
+                    
+                } catch (e) {
+                    authMessage.innerHTML = '<div class="error">An error occurred while updating your password. Please try again.</div>';
                 }
             };
 
