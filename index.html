@@ -2393,6 +2393,8 @@ window.resetPassword = async function() {
                                         <th style="border: 1px solid #ddd; padding: 8px;">Lot Number</th>
                                         <th style="border: 1px solid #ddd; padding: 8px;">Production Date</th>
                                         <th style="border: 1px solid #ddd; padding: 8px;">Purchase Date</th>
+                                        <th style="border: 1px solid #ddd; padding: 8px;">Muzzle Velocity (fps)</th>
+                                        <th style="border: 1px solid #ddd; padding: 8px;">Muzzle Energy (ft-lbs)</th>
                                         <th style="border: 1px solid #ddd; padding: 8px;">Actions</th>
                                     </tr>
                                 </thead>
@@ -2414,6 +2416,8 @@ window.resetPassword = async function() {
                                     <td style="border: 1px solid #ddd; padding: 8px;">${bullet.lot_number || '-'}</td>
                                     <td style="border: 1px solid #ddd; padding: 8px;">${bullet.production_date || '-'}</td>
                                     <td style="border: 1px solid #ddd; padding: 8px;">${bullet.purchase_date || '-'}</td>
+                                    <td style="border: 1px solid #ddd; padding: 8px;">${bullet.muzzle_velocity || '-'}</td>
+                                    <td style="border: 1px solid #ddd; padding: 8px;">${bullet.muzzle_energy || '-'}</td>
                                     <td style="border: 1px solid #ddd; padding: 8px;">
                                         <button onclick="editBulletDirect(${bullet.id})" style="background-color: #17a2b8; color: white; padding: 5px 10px; border: none; border-radius: 3px; cursor: pointer; margin-right: 5px;">Edit</button>
                                         <button onclick="deleteBulletDirect(${bullet.id})" style="background-color: #dc3545; color: white; padding: 5px 10px; border: none; border-radius: 3px; cursor: pointer;">Delete</button>
@@ -2476,6 +2480,14 @@ window.resetPassword = async function() {
                             <label style="display: block; margin-bottom: 5px;">Purchase Date:</label>
                             <input type="date" id="bullet_purchase_direct" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
                         </div>
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px;">Muzzle Velocity (fps):</label>
+                            <input type="number" id="bullet_velocity_direct" placeholder="e.g. 3020" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px;">Muzzle Energy (ft-lbs):</label>
+                            <input type="number" id="bullet_energy_direct" placeholder="e.g. 1255" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                        </div>
                         <div style="display: flex; gap: 10px;">
                             <button onclick="saveBulletDirect()" style="background-color: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">Save Bullet</button>
                             <button onclick="loadBulletLibraryDirect()" style="background-color: #6c757d; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">Cancel</button>
@@ -2496,7 +2508,9 @@ window.resetPassword = async function() {
                         bullet_type: document.getElementById('bullet_type_direct').value,
                         lot_number: document.getElementById('bullet_lot_direct').value,
                         production_date: document.getElementById('bullet_production_direct').value || null,
-                        purchase_date: document.getElementById('bullet_purchase_direct').value || null
+                        purchase_date: document.getElementById('bullet_purchase_direct').value || null,
+                        muzzle_velocity: parseFloat(document.getElementById('bullet_velocity_direct').value) || null,
+                        muzzle_energy: parseFloat(document.getElementById('bullet_energy_direct').value) || null
                     };
 
                     const { error } = await supabase
@@ -2593,6 +2607,14 @@ window.resetPassword = async function() {
                                 <label style="display: block; margin-bottom: 5px;">Purchase Date:</label>
                                 <input type="date" id="edit_bullet_purchase" value="${data.purchase_date || ''}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
                             </div>
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px;">Muzzle Velocity (fps):</label>
+                                <input type="number" id="edit_bullet_velocity" value="${data.muzzle_velocity || ''}" placeholder="e.g. 3020" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            </div>
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px;">Muzzle Energy (ft-lbs):</label>
+                                <input type="number" id="edit_bullet_energy" value="${data.muzzle_energy || ''}" placeholder="e.g. 1255" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            </div>
                             <div style="display: flex; gap: 10px;">
                                 <button onclick="updateBulletDirect(${bulletId})" style="background-color: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">Update Bullet</button>
                                 <button onclick="loadBulletLibraryDirect()" style="background-color: #6c757d; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">Cancel</button>
@@ -2615,7 +2637,9 @@ window.resetPassword = async function() {
                         bullet_type: document.getElementById('edit_bullet_type').value,
                         lot_number: document.getElementById('edit_bullet_lot').value,
                         production_date: document.getElementById('edit_bullet_production').value || null,
-                        purchase_date: document.getElementById('edit_bullet_purchase').value || null
+                        purchase_date: document.getElementById('edit_bullet_purchase').value || null,
+                        muzzle_velocity: parseFloat(document.getElementById('edit_bullet_velocity').value) || null,
+                        muzzle_energy: parseFloat(document.getElementById('edit_bullet_energy').value) || null
                     };
 
                     const { error } = await supabase
