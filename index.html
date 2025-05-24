@@ -514,6 +514,10 @@
                 <input type="number" step="0.1" name="barrel_length">
             </div>
             <div class="form-group">
+                <label>Barrel Twist Rate (e.g., 1:8):</label>
+                <input type="text" name="barrel_twist_rate" placeholder="1:8">
+            </div>
+            <div class="form-group">
                 <label>Load from Bullet Library:</label>
                 <select id="bulletLibrarySelect" onchange="loadBulletData()">
                     <option value="">Select a saved bullet (optional)</option>
@@ -708,6 +712,7 @@
                     <th>Optic</th>
                     <th>Caliber</th>
                     <th>Barrel</th>
+                    <th>Twist</th>
                     <th>Gr</th>
                     <th>Zero</th>
                     <th>Range</th>
@@ -1999,6 +2004,7 @@ window.resetPassword = async function() {
                     optic_name: form.optic_name.value,
                     caliber: form.caliber.value,
                     barrel_length: parseFloat(form.barrel_length.value) || null,
+                    barrel_twist_rate: form.barrel_twist_rate.value || null,
                     bullet_grain: parseInt(form.bullet_grain.value),
                     muzzle_velocity: parseFloat(form.muzzle_velocity.value),
                     ballistic_coefficient: parseFloat(form.ballistic_coefficient.value),
@@ -2060,6 +2066,7 @@ window.resetPassword = async function() {
                 form.optic_name.value = session.optic_name || '';
                 form.caliber.value = session.caliber || '';
                 form.barrel_length.value = session.barrel_length || '';
+                form.barrel_twist_rate.value = session.barrel_twist_rate || '';
                 form.bullet_grain.value = session.bullet_grain || '';
                 form.muzzle_velocity.value = session.muzzle_velocity || '';
                 form.ballistic_coefficient.value = session.ballistic_coefficient || '';
@@ -2116,6 +2123,7 @@ window.resetPassword = async function() {
                         <td>${session.optic_name || ''}</td>
                         <td>${session.caliber || ''}</td>
                         <td>${session.barrel_length ? session.barrel_length.toFixed(1) : ''}</td>
+                        <td>${session.barrel_twist_rate || ''}</td>
                         <td>${session.bullet_grain || ''}</td>
                         <td>${session.zero_distance || ''}</td>
                         <td>${session.max_distance_yards || ''}</td>
