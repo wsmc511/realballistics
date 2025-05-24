@@ -2051,6 +2051,7 @@ window.resetPassword = async function() {
 
                 inputs.muzzle_velocity = adjustMuzzleVelocity(inputs.caliber, inputs.barrel_length, inputs.muzzle_velocity);
                 console.log('Adjusted inputs:', inputs);
+                console.log('Barrel twist rate value:', inputs.barrel_twist_rate);
                 worker.postMessage({ inputs });
             };
 
