@@ -688,13 +688,14 @@
             // Check if URL contains password reset parameters
             async function checkPasswordResetURL() {
                 const urlParams = new URLSearchParams(window.location.search);
+                const hashParams = new URLSearchParams(window.location.hash.substring(1));
                 const isReset = urlParams.get('reset');
-                const token = urlParams.get('access_token');
-                const refreshToken = urlParams.get('refresh_token');
-                const type = urlParams.get('type');
+                const token = urlParams.get('access_token') || hashParams.get('access_token');
+                const refreshToken = urlParams.get('refresh_token') || hashParams.get('refresh_token');
+                const type = urlParams.get('type') || hashParams.get('type');
                 const pathname = window.location.pathname;
                 
-                console.log('URL check:', { pathname, isReset, token, refreshToken, type });
+                console.log('URL check:', { pathname, isReset, token, refreshToken, type, fullURL: window.location.href });
                 
                 if (isReset === 'true' || token || type === 'recovery' || pathname === '/password-reset') {
                     console.log('Password reset detected, logging out current user and showing reset form');
@@ -707,7 +708,14 @@
                     document.getElementById('loginForm').style.display = 'block';
                     document.getElementById('appContent').style.display = 'none';
                     
-                    if (token || refreshToken || type === 'recovery') {
+                    // Check if Supabase has automatically established a session after the redirect
+                    const { data: { session } } = await supabase.auth.getSession();
+                    
+                    if (session && session.user) {
+                        console.log('Found active session for password reset:', session.user);
+                        showNewPasswordForm();
+                        document.getElementById('authMessage').innerHTML = '<div class="message">Please enter your new password below.</div>';
+                    } else if (token || refreshToken || type === 'recovery') {
                         // User has token - show new password form
                         showNewPasswordForm();
                         document.getElementById('authMessage').innerHTML = '<div class="message">Please enter your new password below.</div>';
@@ -715,21 +723,8 @@
                         if (token) {
                             handlePasswordResetToken(token);
                         }
-                    } else if (pathname === '/password-reset') {
-                        // Check if Supabase has established a session automatically
-                        const { data: { session } } = await supabase.auth.getSession();
-                        
-                        if (session && session.user) {
-                            console.log('Found active session for password reset:', session.user);
-                            showNewPasswordForm();
-                            document.getElementById('authMessage').innerHTML = '<div class="message">Please enter your new password below.</div>';
-                        } else {
-                            // No session found, show email form
-                            showResetPasswordForm();
-                            document.getElementById('authMessage').innerHTML = '<div class="message">Please enter your email address below to reset your password.</div>';
-                        }
                     } else {
-                        // User just has reset=true - show email form
+                        // No session or token found, show email form
                         showResetPasswordForm();
                         document.getElementById('authMessage').innerHTML = '<div class="message">Please enter your email address below to reset your password.</div>';
                     }
@@ -931,7 +926,7 @@ window.resetPassword = async function() {
 
         console.log('Attempting to reset password for email:', email);
         const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-            redirectTo: 'https://realballistics.com/password-reset'
+            redirectTo: 'https://realballistics.com/?reset=true'
         });
 
         console.log('Password reset response:', { data, error });
