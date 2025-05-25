@@ -2246,7 +2246,7 @@ window.resetPassword = async function() {
                 const selectedSessions = selectedRows.map(row => ({
                     results_grid: JSON.parse(row.dataset.resultsGrid),
                     description: row.dataset.description,
-                    grain: row.cells[7].textContent // Get grain from the Gr column (index 7)
+                    grain: row.cells[8].textContent // Get grain from the Gr column (index 8)
                 }));
 
                 const distances = Array.from(
@@ -2258,7 +2258,7 @@ window.resetPassword = async function() {
                     const grid = session.results_grid;
                     return {
                         description: session.description,
-                        grain: session.grain,
+                        bullet_grain: session.grain,
                         trajectory: distances.map(distance => {
                             const point = grid.find(p => parseFloat(p.distance_yd) === distance);
                             if (point) {
