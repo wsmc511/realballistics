@@ -2995,6 +2995,7 @@ window.resetPassword = async function() {
                     const rangeUnit = document.getElementById('range_unit').value;
                     
                     if (!engagementDate || !rangeTarget || !rangeUnit) {
+                        console.log('Validation failed:', {engagementDate, rangeTarget, rangeUnit});
                         alert('Please fill in all required fields: Date, Range, and Range Unit.');
                         return;
                     }
@@ -3002,7 +3003,7 @@ window.resetPassword = async function() {
                     const dopeData = {
                         user_id: currentUser.id,
                         shooting_profile_id: document.getElementById('dope_shooting_profile').value || null,
-                        bullet_library_id: parseInt(document.getElementById('dope_bullet_library').value) || null,
+                        bullet_library_id: document.getElementById('dope_bullet_library').value || null,
                         engagement_date: engagementDate,
                         engagement_time: document.getElementById('engagement_time').value || null,
                         range_to_target: parseFloat(document.getElementById('range_to_target').value),
@@ -3016,6 +3017,8 @@ window.resetPassword = async function() {
                         notes: document.getElementById('engagement_notes').value || null
                     };
 
+                    console.log('About to save DOPE data:', dopeData);
+
                     const { data, error } = await supabase
                         .from('dope_engagements')
                         .insert([dopeData])
@@ -3023,8 +3026,10 @@ window.resetPassword = async function() {
 
                     if (error) {
                         console.error('Error saving DOPE engagement:', error);
-                        alert('Error saving engagement. Please try again.');
+                        console.error('Full error details:', error);
+                        alert(`Error saving engagement: ${error.message || 'Unknown error'}. Please try again.`);
                     } else {
+                        console.log('DOPE engagement saved successfully:', data);
                         alert('Engagement saved successfully!');
                         cancelDopeForm();
                     }
