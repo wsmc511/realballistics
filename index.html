@@ -2945,7 +2945,7 @@ window.resetPassword = async function() {
                     // Load the dropdowns after creating the form
                     setTimeout(() => {
                         loadDopeDropdownsDirect();
-                    }, 100);
+                    }, 500);
                 }
             };
 
@@ -3123,6 +3123,8 @@ window.resetPassword = async function() {
                                 profileSelect.appendChild(option);
                             });
                             console.log('Profile dropdown populated with', profiles.length, 'items');
+                            console.log('Profile dropdown now has', profileSelect.children.length, 'total options');
+                            console.log('First few options:', Array.from(profileSelect.children).slice(0, 3).map(opt => opt.textContent));
                         } else {
                             console.log('Profile select element not found');
                         }
@@ -3152,6 +3154,7 @@ window.resetPassword = async function() {
                                 });
                             }
                             console.log('Bullet dropdown populated with', bullets ? bullets.length : 0, 'items');
+                            console.log('Bullet dropdown now has', bulletSelect.children.length, 'total options');
                         } else {
                             console.log('Bullet select element not found');
                         }
