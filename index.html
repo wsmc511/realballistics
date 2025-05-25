@@ -2844,43 +2844,10 @@ window.resetPassword = async function() {
                 // TODO: Implement auto-population
             };
 
-            window.showAddDopeFormDirect = async function() {
+            window.showAddDopeFormDirect = function() {
                 console.log('Show add DOPE form direct');
                 const dopeContent = document.getElementById('dopeContent');
                 if (dopeContent) {
-                    
-                    // Load dropdown data first
-                    let profileOptionsHTML = '<option value="">Select a shooting profile...</option>';
-                    let bulletOptionsHTML = '<option value="">Select a bullet...</option>';
-                    
-                    try {
-                        // Load shooting profiles
-                        const { data: profiles, error: profileError } = await supabase
-                            .from('shooting_profiles')
-                            .select('*')
-                            .eq('user_id', (await supabase.auth.getUser()).data.user.id);
-                        
-                        if (profiles && profiles.length > 0) {
-                            profiles.forEach(profile => {
-                                profileOptionsHTML += `<option value="${profile.id}">${profile.shooter_name} - ${profile.firearm_name} (${profile.caliber})</option>`;
-                            });
-                        }
-                        
-                        // Load bullet library
-                        const { data: bullets, error: bulletError } = await supabase
-                            .from('bullet_library')
-                            .select('*')
-                            .eq('user_id', (await supabase.auth.getUser()).data.user.id);
-                        
-                        if (bullets && bullets.length > 0) {
-                            bullets.forEach(bullet => {
-                                bulletOptionsHTML += `<option value="${bullet.id}">${bullet.manufacturer_name} ${bullet.caliber} ${bullet.grain}gr</option>`;
-                            });
-                        }
-                    } catch (error) {
-                        console.error('Error loading dropdown data:', error);
-                    }
-                    
                     dopeContent.innerHTML = `
                         <div style="background-color: white; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
                             <h3>Log New Engagement</h3>
@@ -2888,16 +2855,12 @@ window.resetPassword = async function() {
                             <!-- Reference Data Selection -->
                             <div class="form-group" style="margin-bottom: 15px;">
                                 <label style="display: block; margin-bottom: 5px; font-weight: bold;">Shooting Profile (Optional):</label>
-                                <select id="dope_shooting_profile" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: white !important; color: black !important; font-size: 14px !important; z-index: 9999; position: relative;">
-                                    ${profileOptionsHTML}
-                                </select>
+                                <input type="text" id="dope_shooting_profile" placeholder="Shooting profile name (optional)" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
                             </div>
                             
                             <div class="form-group" style="margin-bottom: 15px;">
                                 <label style="display: block; margin-bottom: 5px; font-weight: bold;">Bullet Library (Optional):</label>
-                                <select id="dope_bullet_library" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: white !important; color: black !important; font-size: 14px !important;">
-                                    ${bulletOptionsHTML}
-                                </select>
+                                <input type="text" id="dope_bullet_library" placeholder="Bullet description (optional)" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
                             </div>
                             
                             <!-- Date and Time -->
