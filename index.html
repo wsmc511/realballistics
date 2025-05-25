@@ -2581,13 +2581,19 @@ window.resetPassword = async function() {
 
             // DOPE Functions
             window.showDOPE = function() {
-                document.getElementById('homePage').style.display = 'none';
-                document.getElementById('shootingProfileSection').style.display = 'none';
-                document.getElementById('bulletLibrarySection').style.display = 'none';
-                document.getElementById('dopeSection').style.display = 'block';
-                
-                loadDopeDropdowns();
-                loadDopeEngagements();
+                console.log('showDOPE function called');
+                try {
+                    document.getElementById('homePage').style.display = 'none';
+                    document.getElementById('shootingProfileSection').style.display = 'none';
+                    document.getElementById('bulletLibrarySection').style.display = 'none';
+                    document.getElementById('dopeSection').style.display = 'block';
+                    console.log('DOPE section should now be visible');
+                    
+                    loadDopeDropdowns();
+                    loadDopeEngagements();
+                } catch (error) {
+                    console.error('Error in showDOPE function:', error);
+                }
             };
 
             window.showAddDopeForm = function() {
@@ -2613,9 +2619,14 @@ window.resetPassword = async function() {
             };
 
             window.loadDopeDropdowns = async function() {
+                console.log('loadDopeDropdowns called');
                 try {
-                    if (!currentUser) return;
+                    if (!currentUser) {
+                        console.log('No current user, skipping dropdown load');
+                        return;
+                    }
 
+                    console.log('Loading shooting profiles...');
                     // Load shooting profiles
                     const { data: profiles, error: profileError } = await supabase
                         .from('ballistic_sessions')
@@ -2623,33 +2634,28 @@ window.resetPassword = async function() {
                         .eq('user_id', currentUser.id)
                         .order('shooter_name', { ascending: true });
 
-                    if (!profileError && profiles) {
+                    if (profileError) {
+                        console.error('Profile error:', profileError);
+                    } else {
+                        console.log('Profiles loaded:', profiles);
                         const profileSelect = document.getElementById('dope_shooting_profile');
-                        profileSelect.innerHTML = '<option value="">Select a shooting profile...</option>';
-                        profiles.forEach(profile => {
-                            const option = document.createElement('option');
-                            option.value = profile.id;
-                            option.textContent = `${profile.shooter_name} - ${profile.firearm_name} (${profile.caliber})`;
-                            profileSelect.appendChild(option);
-                        });
+                        if (profileSelect) {
+                            profileSelect.innerHTML = '<option value="">Select a shooting profile...</option>';
+                            profiles.forEach(profile => {
+                                const option = document.createElement('option');
+                                option.value = profile.id;
+                                option.textContent = `${profile.shooter_name} - ${profile.firearm_name} (${profile.caliber})`;
+                                profileSelect.appendChild(option);
+                            });
+                        }
                     }
 
-                    // Load bullet library
-                    const { data: bullets, error: bulletError } = await supabase
-                        .from('bullet_library')
-                        .select('id, manufacturer_name, caliber, grain')
-                        .eq('user_id', currentUser.id)
-                        .order('manufacturer_name', { ascending: true });
-
-                    if (!bulletError && bullets) {
-                        const bulletSelect = document.getElementById('dope_bullet_library');
+                    console.log('Loading bullet library...');
+                    // Load bullet library - skip this for now to test
+                    console.log('Skipping bullet library load to avoid errors');
+                    const bulletSelect = document.getElementById('dope_bullet_library');
+                    if (bulletSelect) {
                         bulletSelect.innerHTML = '<option value="">Select a bullet...</option>';
-                        bullets.forEach(bullet => {
-                            const option = document.createElement('option');
-                            option.value = bullet.id;
-                            option.textContent = `${bullet.manufacturer_name} ${bullet.caliber} ${bullet.grain}gr`;
-                            bulletSelect.appendChild(option);
-                        });
                     }
                 } catch (error) {
                     console.error('Error loading DOPE dropdowns:', error);
