@@ -2852,6 +2852,21 @@ window.resetPassword = async function() {
                         <div style="background-color: white; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
                             <h3>Log New Engagement</h3>
                             
+                            <!-- Reference Data Selection -->
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Shooting Profile (Optional):</label>
+                                <select id="dope_shooting_profile" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                    <option value="">Select a shooting profile...</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Bullet Library (Optional):</label>
+                                <select id="dope_bullet_library" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                    <option value="">Select a bullet...</option>
+                                </select>
+                            </div>
+                            
                             <!-- Date and Time -->
                             <div class="form-group" style="margin-bottom: 15px;">
                                 <label style="display: block; margin-bottom: 5px; font-weight: bold;">Engagement Date:</label>
@@ -2926,6 +2941,9 @@ window.resetPassword = async function() {
                             <button onclick="cancelDopeForm()" style="background-color: #6c757d; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">Cancel</button>
                         </div>
                     `;
+                    
+                    // Load the dropdowns after creating the form
+                    loadDopeDropdownsDirect();
                 }
             };
 
@@ -2944,9 +2962,21 @@ window.resetPassword = async function() {
                         return;
                     }
 
+                    // Validate required fields
+                    const engagementDate = document.getElementById('engagement_date').value;
+                    const rangeTarget = document.getElementById('range_to_target').value;
+                    const rangeUnit = document.getElementById('range_unit').value;
+                    
+                    if (!engagementDate || !rangeTarget || !rangeUnit) {
+                        alert('Please fill in all required fields: Date, Range, and Range Unit.');
+                        return;
+                    }
+
                     const dopeData = {
                         user_id: currentUser.id,
-                        engagement_date: document.getElementById('engagement_date').value,
+                        shooting_profile_id: document.getElementById('dope_shooting_profile').value || null,
+                        bullet_library_id: parseInt(document.getElementById('dope_bullet_library').value) || null,
+                        engagement_date: engagementDate,
                         engagement_time: document.getElementById('engagement_time').value || null,
                         range_to_target: parseFloat(document.getElementById('range_to_target').value),
                         range_unit: document.getElementById('range_unit').value,
@@ -3058,6 +3088,41 @@ window.resetPassword = async function() {
                 } catch (error) {
                     console.error('Error:', error);
                     alert('Error deleting engagement. Please try again.');
+                }
+            };
+
+            window.loadDopeDropdownsDirect = async function() {
+                try {
+                    if (!currentUser) return;
+
+                    // Load shooting profiles
+                    const { data: profiles, error: profileError } = await supabase
+                        .from('ballistic_sessions')
+                        .select('id, shooter_name, firearm_name, caliber')
+                        .eq('user_id', currentUser.id)
+                        .order('shooter_name', { ascending: true });
+
+                    if (!profileError && profiles) {
+                        const profileSelect = document.getElementById('dope_shooting_profile');
+                        if (profileSelect) {
+                            profileSelect.innerHTML = '<option value="">Select a shooting profile...</option>';
+                            profiles.forEach(profile => {
+                                const option = document.createElement('option');
+                                option.value = profile.id;
+                                option.textContent = `${profile.shooter_name} - ${profile.firearm_name} (${profile.caliber})`;
+                                profileSelect.appendChild(option);
+                            });
+                        }
+                    }
+
+                    // Load bullet library - simplified to avoid errors
+                    const bulletSelect = document.getElementById('dope_bullet_library');
+                    if (bulletSelect) {
+                        bulletSelect.innerHTML = '<option value="">Select a bullet...</option>';
+                        // Note: Bullet library loading disabled temporarily due to field name issues
+                    }
+                } catch (error) {
+                    console.error('Error loading DOPE dropdowns:', error);
                 }
             };
 
