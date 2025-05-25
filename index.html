@@ -2855,8 +2855,10 @@ window.resetPassword = async function() {
                             <!-- Reference Data Selection -->
                             <div class="form-group" style="margin-bottom: 15px;">
                                 <label style="display: block; margin-bottom: 5px; font-weight: bold;">Shooting Profile (Optional):</label>
-                                <select id="dope_shooting_profile" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: white; color: black; font-size: 14px;">
+                                <select id="dope_shooting_profile" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: white !important; color: black !important; font-size: 14px !important; z-index: 9999; position: relative;">
                                     <option value="">Select a shooting profile...</option>
+                                    <option value="test">Test Option 1</option>
+                                    <option value="test2">Test Option 2</option>
                                 </select>
                             </div>
                             
