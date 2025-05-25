@@ -715,7 +715,7 @@
         <table id="sessionsTable">
             <thead>
                 <tr>
-                    <th>Select</th>
+                    <th><input type="checkbox" id="selectAllSessions" onchange="toggleSelectAllSessions()"> Select</th>
                     <th>Shooter</th>
                     <th>Firearm Type</th>
                     <th>Firearm</th>
@@ -2298,7 +2298,7 @@ window.resetPassword = async function() {
                 headerRow.innerHTML = '<th>Distance (yd)</th>';
                 comparisonData.forEach((session, index) => {
                     const th = document.createElement('th');
-                    th.textContent = `${session.description} - ${session.grain}gr`;
+                    th.textContent = `${session.description} - ${session.bullet_grain}gr`;
                     if (index === flattestIndex) {
                         th.classList.add('flattest-trajectory');
                     }
@@ -2344,6 +2344,15 @@ window.resetPassword = async function() {
                 if (formElement.style.display === 'block') {
                     toggleForm();
                 }
+            };
+
+            window.toggleSelectAllSessions = function() {
+                const selectAllCheckbox = document.getElementById('selectAllSessions');
+                const sessionCheckboxes = document.querySelectorAll('.select-session');
+                
+                sessionCheckboxes.forEach(checkbox => {
+                    checkbox.checked = selectAllCheckbox.checked;
+                });
             };
 
             window.searchSessions = async function() {
