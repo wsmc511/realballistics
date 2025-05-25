@@ -2637,7 +2637,7 @@ window.resetPassword = async function() {
                     // Load bullet library
                     const { data: bullets, error: bulletError } = await supabase
                         .from('bullet_library')
-                        .select('id, manufacturer_name, caliber, grain_weight')
+                        .select('id, manufacturer_name, caliber, grain')
                         .eq('user_id', currentUser.id)
                         .order('manufacturer_name', { ascending: true });
 
@@ -2647,7 +2647,7 @@ window.resetPassword = async function() {
                         bullets.forEach(bullet => {
                             const option = document.createElement('option');
                             option.value = bullet.id;
-                            option.textContent = `${bullet.manufacturer_name} ${bullet.caliber} ${bullet.grain_weight}gr`;
+                            option.textContent = `${bullet.manufacturer_name} ${bullet.caliber} ${bullet.grain}gr`;
                             bulletSelect.appendChild(option);
                         });
                     }
