@@ -2854,17 +2854,21 @@ window.resetPassword = async function() {
                             
                             <!-- Reference Data Selection -->
                             <div class="form-group" style="margin-bottom: 15px;">
-                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Shooting Profile (Optional):</label>
-                                <select id="dope_shooting_profile" onchange="populateFromShootingProfile()" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: white; color: black;">
-                                    <option value="">Select a shooting profile...</option>
-                                </select>
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Shooting Profile:</label>
+                                <div style="display: flex; gap: 10px;">
+                                    <button type="button" onclick="showProfilePicker()" style="padding: 8px 15px; border: 1px solid #007bff; background-color: #007bff; color: white; border-radius: 4px; cursor: pointer;">Select Profile</button>
+                                    <span id="selected_profile" style="padding: 8px; color: #666;">None selected</span>
+                                </div>
+                                <input type="hidden" id="dope_shooting_profile" value="">
                             </div>
                             
                             <div class="form-group" style="margin-bottom: 15px;">
-                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Bullet Library (Optional):</label>
-                                <select id="dope_bullet_library" onchange="populateFromBulletLibrary()" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: white; color: black;">
-                                    <option value="">Select a bullet...</option>
-                                </select>
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Bullet Library:</label>
+                                <div style="display: flex; gap: 10px;">
+                                    <button type="button" onclick="showBulletPicker()" style="padding: 8px 15px; border: 1px solid #28a745; background-color: #28a745; color: white; border-radius: 4px; cursor: pointer;">Select Bullet</button>
+                                    <span id="selected_bullet" style="padding: 8px; color: #666;">None selected</span>
+                                </div>
+                                <input type="hidden" id="dope_bullet_library" value="">
                             </div>
                             
                             <!-- Auto-populated fields from selected profile/bullet -->
@@ -3138,30 +3142,22 @@ window.resetPassword = async function() {
                         console.log('Profile select element:', profileSelect);
                         if (profileSelect) {
                             console.log('About to populate profiles...');
-                            // Clear dropdown first
-                            profileSelect.innerHTML = '';
+                            // Test with simple static options first to confirm dropdown works
+                            profileSelect.innerHTML = `
+                                <option value="">Select a shooting profile...</option>
+                                <option value="test1">Test Profile 1</option>
+                                <option value="test2">Test Profile 2</option>
+                            `;
                             
-                            // Add default option
-                            const defaultOption = document.createElement('option');
-                            defaultOption.value = '';
-                            defaultOption.textContent = 'Select a shooting profile...';
-                            profileSelect.appendChild(defaultOption);
-                            
-                            // Add profile options one by one
-                            profiles.forEach(profile => {
-                                const option = document.createElement('option');
-                                option.value = profile.id;
-                                option.textContent = `${profile.shooter_name} - ${profile.firearm_name} (${profile.caliber})`;
-                                option.style.display = 'block';
-                                option.style.color = 'black';
-                                option.style.backgroundColor = 'white';
-                                profileSelect.appendChild(option);
-                            });
-                            
-                            // Force refresh
-                            profileSelect.style.display = 'none';
-                            profileSelect.offsetHeight; // Force reflow
-                            profileSelect.style.display = 'block';
+                            // Then add real data immediately after
+                            setTimeout(() => {
+                                let html = '<option value="">Select a shooting profile...</option>';
+                                profiles.forEach(profile => {
+                                    html += `<option value="${profile.id}">${profile.shooter_name} - ${profile.firearm_name} (${profile.caliber})</option>`;
+                                });
+                                profileSelect.innerHTML = html;
+                                console.log('Final profile HTML:', profileSelect.innerHTML.length, 'characters');
+                            }, 100);
                             console.log('Profile dropdown HTML set:', profileSelect.innerHTML.substring(0, 200));
                             console.log('Profile dropdown now has', profileSelect.children.length, 'total options');
                         } else {
