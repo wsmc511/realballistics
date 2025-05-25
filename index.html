@@ -3274,7 +3274,14 @@ window.resetPassword = async function() {
                 // Add selection function
                 window.selectProfile = function(profileId, profileName) {
                     document.getElementById('dope_shooting_profile').value = profileId;
-                    document.getElementById('profile_details').value = profileName;
+                    
+                    // Find the selected profile data
+                    const selectedProfile = window.loadedProfiles.find(p => p.id === profileId);
+                    if (selectedProfile) {
+                        document.getElementById('shooter_name').value = selectedProfile.shooter_name;
+                        document.getElementById('firearm_info').value = `${selectedProfile.firearm_type} - ${selectedProfile.firearm_name}`;
+                        document.getElementById('optic_name').value = selectedProfile.optic_name || '';
+                    }
                 };
                 
 
