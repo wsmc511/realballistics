@@ -3218,9 +3218,16 @@ window.resetPassword = async function() {
                     return;
                 }
                 
-                let options = window.loadedProfiles.map((profile, index) => 
-                    `${index + 1}. ${profile.shooter_name} - ${profile.firearm_name} (${profile.caliber})`
-                ).join('\n');
+                // Create detailed view with all profile data
+                let options = window.loadedProfiles.map((profile, index) => {
+                    return `${index + 1}. ${profile.shooter_name} - ${profile.firearm_name}
+   Caliber: ${profile.caliber}
+   Firearm: ${profile.firearm_type}
+   Optic: ${profile.optic_name || 'None'}
+   Barrel: ${profile.barrel_length || 'Unknown'}" 
+   Zero: ${profile.zero_distance || 'Unknown'}yds
+   Twist Rate: ${profile.barrel_twist_rate || 'Unknown'}`;
+                }).join('\n\n');
                 
                 let selection = prompt(`Select a shooting profile:\n\n${options}\n\nEnter the number (1-${window.loadedProfiles.length}) or 0 to cancel:`);
                 
@@ -3246,9 +3253,15 @@ window.resetPassword = async function() {
                     return;
                 }
                 
-                let options = window.loadedBullets.map((bullet, index) => 
-                    `${index + 1}. ${bullet.manufacturer_name} ${bullet.caliber} ${bullet.grain}gr (BC: ${bullet.ballistic_coefficient})`
-                ).join('\n');
+                // Create detailed view with all bullet data
+                let options = window.loadedBullets.map((bullet, index) => {
+                    return `${index + 1}. ${bullet.manufacturer_name} ${bullet.caliber} ${bullet.grain}gr
+   Type: ${bullet.bullet_type}
+   BC: ${bullet.ballistic_coefficient}
+   Drag Model: ${bullet.drag_model}
+   MV: ${bullet.muzzle_velocity || 'Unknown'} fps
+   Length: ${bullet.bullet_length || 'Unknown'}"`;
+                }).join('\n\n');
                 
                 let selection = prompt(`Select a bullet:\n\n${options}\n\nEnter the number (1-${window.loadedBullets.length}) or 0 to cancel:`);
                 
