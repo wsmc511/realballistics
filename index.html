@@ -3138,6 +3138,8 @@ window.resetPassword = async function() {
                         console.error('Profile error:', profileError);
                     } else {
                         console.log('Profiles loaded for DOPE:', profiles);
+                        // Store profiles for picker button
+                        window.loadedProfiles = profiles;
                         const profileSelect = document.getElementById('dope_shooting_profile');
                         console.log('Profile select element:', profileSelect);
                         if (profileSelect) {
@@ -3178,6 +3180,8 @@ window.resetPassword = async function() {
                         console.error('Bullet error:', bulletError);
                     } else {
                         console.log('Bullets loaded for DOPE:', bullets);
+                        // Store bullets for picker button
+                        window.loadedBullets = bullets;
                         const bulletSelect = document.getElementById('dope_bullet_library');
                         if (bulletSelect) {
                             bulletSelect.innerHTML = '<option value="">Select a bullet...</option>';
@@ -3201,6 +3205,64 @@ window.resetPassword = async function() {
                     }
                 } catch (error) {
                     console.error('Error loading DOPE dropdowns:', error);
+                }
+            };
+
+            // Store loaded data for picker buttons
+            window.loadedProfiles = [];
+            window.loadedBullets = [];
+            
+            window.showProfilePicker = function() {
+                if (!window.loadedProfiles || window.loadedProfiles.length === 0) {
+                    alert('No shooting profiles found. Please create some profiles first.');
+                    return;
+                }
+                
+                let options = window.loadedProfiles.map((profile, index) => 
+                    `${index + 1}. ${profile.shooter_name} - ${profile.firearm_name} (${profile.caliber})`
+                ).join('\n');
+                
+                let selection = prompt(`Select a shooting profile:\n\n${options}\n\nEnter the number (1-${window.loadedProfiles.length}) or 0 to cancel:`);
+                
+                if (selection && selection !== '0') {
+                    let index = parseInt(selection) - 1;
+                    if (index >= 0 && index < window.loadedProfiles.length) {
+                        let profile = window.loadedProfiles[index];
+                        document.getElementById('dope_shooting_profile').value = profile.id;
+                        document.getElementById('selected_profile').textContent = `${profile.shooter_name} - ${profile.firearm_name} (${profile.caliber})`;
+                        document.getElementById('selected_profile').style.color = '#333';
+                        
+                        // Auto-populate profile fields
+                        document.getElementById('shooter_name').value = profile.shooter_name;
+                        document.getElementById('firearm_info').value = `${profile.firearm_type} - ${profile.firearm_name}`;
+                        document.getElementById('optic_name').value = profile.optic_name || '';
+                    }
+                }
+            };
+            
+            window.showBulletPicker = function() {
+                if (!window.loadedBullets || window.loadedBullets.length === 0) {
+                    alert('No bullets found. Please create some bullets in your library first.');
+                    return;
+                }
+                
+                let options = window.loadedBullets.map((bullet, index) => 
+                    `${index + 1}. ${bullet.manufacturer_name} ${bullet.caliber} ${bullet.grain}gr (BC: ${bullet.ballistic_coefficient})`
+                ).join('\n');
+                
+                let selection = prompt(`Select a bullet:\n\n${options}\n\nEnter the number (1-${window.loadedBullets.length}) or 0 to cancel:`);
+                
+                if (selection && selection !== '0') {
+                    let index = parseInt(selection) - 1;
+                    if (index >= 0 && index < window.loadedBullets.length) {
+                        let bullet = window.loadedBullets[index];
+                        document.getElementById('dope_bullet_library').value = bullet.id;
+                        document.getElementById('selected_bullet').textContent = `${bullet.manufacturer_name} ${bullet.caliber} ${bullet.grain}gr`;
+                        document.getElementById('selected_bullet').style.color = '#333';
+                        
+                        // Auto-populate bullet details
+                        document.getElementById('bullet_details').value = `${bullet.manufacturer_name} ${bullet.caliber} ${bullet.grain}gr ${bullet.bullet_type} (BC: ${bullet.ballistic_coefficient})`;
+                    }
                 }
             };
 
