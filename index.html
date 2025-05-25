@@ -661,7 +661,7 @@
         </div>
 
         <!-- DOPE Section -->
-        <div id="dopeSection" style="display: none;">
+        <div id="dopeSection" style="display: none; padding: 20px; background-color: white; min-height: 400px;">
             <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
                 <button class="back-to-home" onclick="showHomePage()" style="background-color: #6c757d; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer;">← Home</button>
                 <h2 style="margin: 0;">DOPE - Data On Previous Engagements</h2>
@@ -2599,6 +2599,8 @@ window.resetPassword = async function() {
                     if (dopeSection) {
                         dopeSection.style.display = 'block';
                         console.log('DOPE section found and set to visible');
+                        console.log('DOPE section content:', dopeSection.innerHTML.substring(0, 200));
+                        console.log('DOPE section computed style:', window.getComputedStyle(dopeSection).display);
                     } else {
                         console.error('DOPE section not found!');
                         return;
