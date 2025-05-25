@@ -3277,20 +3277,7 @@ window.resetPassword = async function() {
                     document.getElementById('profile_details').value = profileName;
                 };
                 
-                if (selection && selection !== '0') {
-                    let index = parseInt(selection) - 1;
-                    if (index >= 0 && index < window.loadedProfiles.length) {
-                        let profile = window.loadedProfiles[index];
-                        document.getElementById('dope_shooting_profile').value = profile.id;
-                        document.getElementById('selected_profile').textContent = `${profile.shooter_name} - ${profile.firearm_name} (${profile.caliber})`;
-                        document.getElementById('selected_profile').style.color = '#333';
-                        
-                        // Auto-populate profile fields
-                        document.getElementById('shooter_name').value = profile.shooter_name;
-                        document.getElementById('firearm_info').value = `${profile.firearm_type} - ${profile.firearm_name}`;
-                        document.getElementById('optic_name').value = profile.optic_name || '';
-                    }
-                }
+
             };
             
             window.showBulletPicker = function() {
@@ -3309,20 +3296,44 @@ window.resetPassword = async function() {
    Length: ${bullet.bullet_length || 'Unknown'}"`;
                 }).join('\n\n');
                 
-                let selection = prompt(`Select a bullet:\n\n${options}\n\nEnter the number (1-${window.loadedBullets.length}) or 0 to cancel:`);
+                // Create a proper modal popup for bullet selection
+                const modal = document.createElement('div');
+                modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 10000; display: flex; align-items: center; justify-content: center;';
                 
-                if (selection && selection !== '0') {
-                    let index = parseInt(selection) - 1;
-                    if (index >= 0 && index < window.loadedBullets.length) {
-                        let bullet = window.loadedBullets[index];
-                        document.getElementById('dope_bullet_library').value = bullet.id;
-                        document.getElementById('selected_bullet').textContent = `${bullet.manufacturer_name} ${bullet.caliber} ${bullet.grain}gr`;
-                        document.getElementById('selected_bullet').style.color = '#333';
-                        
-                        // Auto-populate bullet details
-                        document.getElementById('bullet_details').value = `${bullet.manufacturer_name} ${bullet.caliber} ${bullet.grain}gr ${bullet.bullet_type} (BC: ${bullet.ballistic_coefficient})`;
-                    }
-                }
+                const content = document.createElement('div');
+                content.style.cssText = 'background: white; padding: 20px; border-radius: 8px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto;';
+                
+                content.innerHTML = `
+                    <h3 style="margin-top: 0;">Select a Bullet</h3>
+                    <div style="max-height: 60vh; overflow-y: auto; border: 1px solid #ddd; padding: 10px;">
+                        ${window.loadedBullets.map((bullet, index) => `
+                            <div style="padding: 10px; border-bottom: 1px solid #eee; cursor: pointer;" 
+                                 onmouseover="this.style.backgroundColor='#f5f5f5'" 
+                                 onmouseout="this.style.backgroundColor='white'"
+                                 onclick="selectBullet('${bullet.id}', '${bullet.manufacturer_name} ${bullet.caliber} ${bullet.grain}gr ${bullet.bullet_type}'); document.body.removeChild(this.closest('div[style*=position]'));">
+                                <strong>${index + 1}. ${bullet.manufacturer_name} ${bullet.caliber} ${bullet.grain}gr</strong><br>
+                                Type: ${bullet.bullet_type}<br>
+                                BC: ${bullet.ballistic_coefficient}<br>
+                                Drag Model: ${bullet.drag_model}<br>
+                                MV: ${bullet.muzzle_velocity || 'Unknown'} fps<br>
+                                Length: ${bullet.bullet_length || 'Unknown'}"
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div style="margin-top: 15px; text-align: center;">
+                        <button onclick="document.body.removeChild(this.closest('div[style*=position]'));" 
+                                style="padding: 8px 20px; background: #666; color: white; border: none; border-radius: 4px; cursor: pointer;">Cancel</button>
+                    </div>
+                `;
+                
+                modal.appendChild(content);
+                document.body.appendChild(modal);
+                
+                // Add selection function
+                window.selectBullet = function(bulletId, bulletDetails) {
+                    document.getElementById('dope_bullet_library').value = bulletId;
+                    document.getElementById('bullet_details').value = bulletDetails;
+                };
             };
 
             window.searchSessions = async function() {
