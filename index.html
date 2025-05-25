@@ -2844,6 +2844,223 @@ window.resetPassword = async function() {
                 // TODO: Implement auto-population
             };
 
+            window.showAddDopeFormDirect = function() {
+                console.log('Show add DOPE form direct');
+                const dopeContent = document.getElementById('dopeContent');
+                if (dopeContent) {
+                    dopeContent.innerHTML = `
+                        <div style="background-color: white; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+                            <h3>Log New Engagement</h3>
+                            
+                            <!-- Date and Time -->
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Engagement Date:</label>
+                                <input type="date" id="engagement_date" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" value="${new Date().toISOString().split('T')[0]}">
+                            </div>
+                            
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Engagement Time:</label>
+                                <input type="time" id="engagement_time" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            </div>
+                            
+                            <!-- Range Data -->
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Range to Target:</label>
+                                <div style="display: flex; gap: 10px;">
+                                    <input type="number" id="range_to_target" step="0.01" placeholder="Distance" required style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                    <select id="range_unit" required style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                        <option value="">Unit</option>
+                                        <option value="meters">Meters</option>
+                                        <option value="yards">Yards</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <!-- Wind Conditions -->
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Wind Speed:</label>
+                                <input type="number" id="wind_speed" step="0.1" placeholder="Speed (mph/kph)" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            </div>
+                            
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Wind Direction (degrees):</label>
+                                <input type="number" id="wind_direction" min="0" max="360" step="0.1" placeholder="0-360" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            </div>
+                            
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Wind Type:</label>
+                                <select id="wind_type" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                    <option value="">Select Type</option>
+                                    <option value="Crosswind">Crosswind</option>
+                                    <option value="Headwind">Headwind</option>
+                                    <option value="Tailwind">Tailwind</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Temperature -->
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Temperature:</label>
+                                <div style="display: flex; gap: 10px;">
+                                    <input type="number" id="temperature" step="0.1" placeholder="Temperature" style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                    <select id="temperature_unit" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                        <option value="">Unit</option>
+                                        <option value="C">Celsius</option>
+                                        <option value="F">Fahrenheit</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <!-- Engagement Outcome -->
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Engagement Outcome:</label>
+                                <input type="text" id="engagement_outcome" placeholder="e.g. Hit center, Miss high, First round hit" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            </div>
+                            
+                            <!-- Notes -->
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Notes:</label>
+                                <textarea id="engagement_notes" placeholder="Additional notes about the engagement..." style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; height: 80px; resize: vertical;"></textarea>
+                            </div>
+                            
+                            <button onclick="saveDopeEngagement()" style="background-color: #dc3545; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin-right: 10px;">Save Engagement</button>
+                            <button onclick="cancelDopeForm()" style="background-color: #6c757d; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">Cancel</button>
+                        </div>
+                    `;
+                }
+            };
+
+            window.cancelDopeForm = function() {
+                const dopeContent = document.getElementById('dopeContent');
+                if (dopeContent) {
+                    dopeContent.innerHTML = 'Loading your engagements...';
+                    loadDopeEngagementsDirect();
+                }
+            };
+
+            window.saveDopeEngagement = async function() {
+                try {
+                    if (!currentUser) {
+                        alert('Please log in to save engagement data.');
+                        return;
+                    }
+
+                    const dopeData = {
+                        user_id: currentUser.id,
+                        engagement_date: document.getElementById('engagement_date').value,
+                        engagement_time: document.getElementById('engagement_time').value || null,
+                        range_to_target: parseFloat(document.getElementById('range_to_target').value),
+                        range_unit: document.getElementById('range_unit').value,
+                        wind_speed: parseFloat(document.getElementById('wind_speed').value) || null,
+                        wind_direction: parseFloat(document.getElementById('wind_direction').value) || null,
+                        wind_type: document.getElementById('wind_type').value || null,
+                        temperature: parseFloat(document.getElementById('temperature').value) || null,
+                        temperature_unit: document.getElementById('temperature_unit').value || null,
+                        engagement_outcome: document.getElementById('engagement_outcome').value || null,
+                        notes: document.getElementById('engagement_notes').value || null
+                    };
+
+                    const { data, error } = await supabase
+                        .from('dope_engagements')
+                        .insert([dopeData])
+                        .select();
+
+                    if (error) {
+                        console.error('Error saving DOPE engagement:', error);
+                        alert('Error saving engagement. Please try again.');
+                    } else {
+                        alert('Engagement saved successfully!');
+                        cancelDopeForm();
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Error saving engagement. Please try again.');
+                }
+            };
+
+            window.loadDopeEngagementsDirect = async function() {
+                try {
+                    if (!currentUser) return;
+
+                    const { data, error } = await supabase
+                        .from('dope_engagements')
+                        .select('*')
+                        .eq('user_id', currentUser.id)
+                        .order('engagement_date', { ascending: false });
+
+                    const dopeContent = document.getElementById('dopeContent');
+                    if (!dopeContent) return;
+
+                    if (error) {
+                        console.error('Error loading DOPE engagements:', error);
+                        dopeContent.innerHTML = '<p>Error loading engagements. Please try again.</p>';
+                        return;
+                    }
+
+                    if (data && data.length > 0) {
+                        let tableHTML = `
+                            <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+                                <thead>
+                                    <tr style="background-color: #f5f5f5;">
+                                        <th style="border: 1px solid #ddd; padding: 8px;">Date</th>
+                                        <th style="border: 1px solid #ddd; padding: 8px;">Range</th>
+                                        <th style="border: 1px solid #ddd; padding: 8px;">Wind</th>
+                                        <th style="border: 1px solid #ddd; padding: 8px;">Temperature</th>
+                                        <th style="border: 1px solid #ddd; padding: 8px;">Outcome</th>
+                                        <th style="border: 1px solid #ddd; padding: 8px;">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                        `;
+
+                        data.forEach(engagement => {
+                            tableHTML += `
+                                <tr>
+                                    <td style="border: 1px solid #ddd; padding: 8px;">${engagement.engagement_date}</td>
+                                    <td style="border: 1px solid #ddd; padding: 8px;">${engagement.range_to_target} ${engagement.range_unit}</td>
+                                    <td style="border: 1px solid #ddd; padding: 8px;">${engagement.wind_speed ? `${engagement.wind_speed} ${engagement.wind_type || ''}` : 'N/A'}</td>
+                                    <td style="border: 1px solid #ddd; padding: 8px;">${engagement.temperature ? `${engagement.temperature}°${engagement.temperature_unit}` : 'N/A'}</td>
+                                    <td style="border: 1px solid #ddd; padding: 8px;">${engagement.engagement_outcome || 'N/A'}</td>
+                                    <td style="border: 1px solid #ddd; padding: 8px;">
+                                        <button onclick="deleteDopeEngagement('${engagement.id}')" style="background-color: #dc3545; color: white; padding: 4px 8px; border: none; border-radius: 4px; cursor: pointer;">Delete</button>
+                                    </td>
+                                </tr>
+                            `;
+                        });
+
+                        tableHTML += '</tbody></table>';
+                        dopeContent.innerHTML = tableHTML;
+                    } else {
+                        dopeContent.innerHTML = '<p style="text-align: center; padding: 20px; color: #666;">No engagements logged yet. Click "Log New Engagement" to get started!</p>';
+                    }
+                } catch (error) {
+                    console.error('Error loading DOPE engagements:', error);
+                }
+            };
+
+            window.deleteDopeEngagement = async function(engagementId) {
+                if (!confirm('Are you sure you want to delete this engagement?')) {
+                    return;
+                }
+
+                try {
+                    const { error } = await supabase
+                        .from('dope_engagements')
+                        .delete()
+                        .eq('id', engagementId)
+                        .eq('user_id', currentUser.id);
+
+                    if (error) {
+                        console.error('Error deleting engagement:', error);
+                        alert('Error deleting engagement. Please try again.');
+                    } else {
+                        loadDopeEngagementsDirect();
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Error deleting engagement. Please try again.');
+                }
+            };
+
             window.searchSessions = async function() {
                 console.warn('searchSessions function started');
                 const shooterName = document.getElementById('search_shooter_name').value.trim().toLowerCase();
