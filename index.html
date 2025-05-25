@@ -473,6 +473,11 @@
                         🎯 Bullet Library
                         <div style="font-size: 0.9em; margin-top: 5px; opacity: 0.9;">Manage ammunition database</div>
                     </button>
+                    
+                    <button class="home-nav-button" onclick="showDOPE()" style="background-color: #dc3545; color: white; padding: 20px 30px; font-size: 1.1em; border: none; border-radius: 8px; cursor: pointer; min-width: 200px;">
+                        📋 DOPE
+                        <div style="font-size: 0.9em; margin-top: 5px; opacity: 0.9;">Data On Previous Engagements</div>
+                    </button>
                 </div>
             </div>
         </div>
@@ -651,6 +656,225 @@
                 </table>
                 <div id="noBulletsMessage" style="text-align: center; padding: 20px; color: #666;">
                     No bullets in your library yet. Click "Add New Bullet" to get started!
+                </div>
+            </div>
+        </div>
+
+        <!-- DOPE Section -->
+        <div id="dopeSection" style="display: none;">
+            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+                <button class="back-to-home" onclick="showHomePage()" style="background-color: #6c757d; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer;">← Home</button>
+                <h2 style="margin: 0;">DOPE - Data On Previous Engagements</h2>
+            </div>
+            <button class="add-session" onclick="showAddDopeForm()">Log New Engagement</button>
+            
+            <!-- Add DOPE Form -->
+            <form id="addDopeForm" style="display: none; margin-top: 15px; background-color: white; padding: 15px; border-radius: 5px;">
+                <h3>Log New Engagement</h3>
+                
+                <!-- Reference Data Selection -->
+                <div class="form-group">
+                    <label>Shooting Profile (Optional):</label>
+                    <select id="dope_shooting_profile" onchange="populateFromShootingProfile()">
+                        <option value="">Select a shooting profile...</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Bullet Library (Optional):</label>
+                    <select id="dope_bullet_library" onchange="populateFromBulletLibrary()">
+                        <option value="">Select a bullet...</option>
+                    </select>
+                </div>
+                
+                <!-- Date and Time -->
+                <div class="form-group">
+                    <label>Engagement Date:</label>
+                    <input type="date" id="engagement_date" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Engagement Time:</label>
+                    <input type="time" id="engagement_time">
+                </div>
+                
+                <!-- Range Data -->
+                <div class="form-group">
+                    <label>Range to Target:</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="number" id="range_to_target" step="0.01" placeholder="Distance" required>
+                        <select id="range_unit" required>
+                            <option value="">Unit</option>
+                            <option value="meters">Meters</option>
+                            <option value="yards">Yards</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Wind Conditions -->
+                <div class="form-group">
+                    <label>Wind Speed:</label>
+                    <input type="number" id="wind_speed" step="0.1" placeholder="Speed (mph/kph)">
+                </div>
+                
+                <div class="form-group">
+                    <label>Wind Direction (degrees):</label>
+                    <input type="number" id="wind_direction" min="0" max="360" step="0.1" placeholder="0-360">
+                </div>
+                
+                <div class="form-group">
+                    <label>Wind Type:</label>
+                    <select id="wind_type">
+                        <option value="">Select Type</option>
+                        <option value="Crosswind">Crosswind</option>
+                        <option value="Headwind">Headwind</option>
+                        <option value="Tailwind">Tailwind</option>
+                    </select>
+                </div>
+                
+                <!-- Environmental Conditions -->
+                <div class="form-group">
+                    <label>Temperature:</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="number" id="temperature" step="0.1" placeholder="Temperature">
+                        <select id="temperature_unit">
+                            <option value="">Unit</option>
+                            <option value="C">Celsius</option>
+                            <option value="F">Fahrenheit</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Barometric Pressure:</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="number" id="barometric_pressure" step="0.01" placeholder="Pressure">
+                        <select id="pressure_unit">
+                            <option value="">Unit</option>
+                            <option value="inHg">inHg</option>
+                            <option value="mb">mb</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Humidity (%):</label>
+                    <input type="number" id="humidity" min="0" max="100" step="0.1" placeholder="0-100">
+                </div>
+                
+                <div class="form-group">
+                    <label>Altitude:</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="number" id="altitude" step="0.1" placeholder="Meters">
+                        <select id="altitude_reference">
+                            <option value="">Reference</option>
+                            <option value="ASL">ASL (Above Sea Level)</option>
+                            <option value="BSL">BSL (Below Sea Level)</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Ballistic Factors -->
+                <div class="form-group">
+                    <label>Angle of Fire (degrees):</label>
+                    <input type="number" id="angle_of_fire" min="-90" max="90" step="0.01" placeholder="-90 to 90">
+                </div>
+                
+                <div class="form-group">
+                    <label>Spin Drift:</label>
+                    <input type="number" id="spin_drift" step="0.0001" placeholder="Drift value">
+                </div>
+                
+                <div class="form-group">
+                    <label>Coriolis Effect:</label>
+                    <input type="number" id="coriolis_effect" step="0.0001" placeholder="Effect value">
+                </div>
+                
+                <!-- Target Movement -->
+                <div class="form-group">
+                    <label>Target Movement Speed:</label>
+                    <input type="number" id="target_movement_speed" step="0.01" placeholder="Speed">
+                </div>
+                
+                <div class="form-group">
+                    <label>Target Movement Direction (degrees):</label>
+                    <input type="number" id="target_movement_direction" min="0" max="360" step="0.1" placeholder="0-360">
+                </div>
+                
+                <!-- Equipment Settings -->
+                <div class="form-group">
+                    <label>Optic Magnification:</label>
+                    <input type="number" id="optic_magnification" step="0.1" placeholder="e.g. 4.5">
+                </div>
+                
+                <div class="form-group">
+                    <label>Optic Adjustment Units:</label>
+                    <select id="optic_adjustment_units">
+                        <option value="">Select Units</option>
+                        <option value="MOA">MOA</option>
+                        <option value="MRAD">MRAD</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Parallax Setting (meters):</label>
+                    <input type="number" id="parallax_setting" step="0.1" placeholder="Distance">
+                </div>
+                
+                <!-- Conditions and Outcome -->
+                <div class="form-group">
+                    <label>Atmospheric Conditions:</label>
+                    <textarea id="atmospheric_conditions" placeholder="Describe atmospheric conditions..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>Barrel Condition:</label>
+                    <input type="text" id="barrel_condition" placeholder="e.g. Clean, Fouled, Hot">
+                </div>
+                
+                <div class="form-group">
+                    <label>Time of Flight (seconds):</label>
+                    <input type="number" id="time_of_flight" step="0.001" placeholder="Flight time">
+                </div>
+                
+                <div class="form-group">
+                    <label>Light Conditions:</label>
+                    <input type="text" id="light_conditions" placeholder="e.g. Bright sun, Overcast, Dawn">
+                </div>
+                
+                <div class="form-group">
+                    <label>Engagement Outcome:</label>
+                    <input type="text" id="engagement_outcome" placeholder="e.g. Hit center, Miss high, First round hit">
+                </div>
+                
+                <div class="form-group">
+                    <label>Notes:</label>
+                    <textarea id="engagement_notes" placeholder="Additional notes about the engagement..."></textarea>
+                </div>
+                
+                <button type="button" onclick="saveDope()" class="add-session">Save Engagement</button>
+                <button type="button" onclick="cancelAddDope()" class="back-to-login">Cancel</button>
+            </form>
+
+            <!-- DOPE Table -->
+            <div id="dopeTable" style="margin-top: 15px;">
+                <h3>Previous Engagements</h3>
+                <table id="dopeEngagementsTable">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Range</th>
+                            <th>Wind</th>
+                            <th>Temperature</th>
+                            <th>Outcome</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dopeTableBody">
+                    </tbody>
+                </table>
+                <div id="noDopeMessage" style="text-align: center; padding: 20px; color: #666;">
+                    No engagements logged yet. Click "Log New Engagement" to get started!
                 </div>
             </div>
         </div>
@@ -2353,6 +2577,217 @@ window.resetPassword = async function() {
                 sessionCheckboxes.forEach(checkbox => {
                     checkbox.checked = selectAllCheckbox.checked;
                 });
+            };
+
+            // DOPE Functions
+            window.showDOPE = function() {
+                document.getElementById('homePage').style.display = 'none';
+                document.getElementById('shootingProfileSection').style.display = 'none';
+                document.getElementById('bulletLibrarySection').style.display = 'none';
+                document.getElementById('dopeSection').style.display = 'block';
+                
+                loadDopeDropdowns();
+                loadDopeEngagements();
+            };
+
+            window.showAddDopeForm = function() {
+                document.getElementById('addDopeForm').style.display = 'block';
+                // Set today's date as default
+                document.getElementById('engagement_date').value = new Date().toISOString().split('T')[0];
+                clearDopeForm();
+            };
+
+            window.cancelAddDope = function() {
+                document.getElementById('addDopeForm').style.display = 'none';
+                clearDopeForm();
+            };
+
+            window.clearDopeForm = function() {
+                const form = document.getElementById('addDopeForm');
+                const inputs = form.querySelectorAll('input, select, textarea');
+                inputs.forEach(input => {
+                    if (input.type !== 'date') {
+                        input.value = '';
+                    }
+                });
+            };
+
+            window.loadDopeDropdowns = async function() {
+                try {
+                    if (!currentUser) return;
+
+                    // Load shooting profiles
+                    const { data: profiles, error: profileError } = await supabase
+                        .from('ballistic_sessions')
+                        .select('id, shooter_name, firearm_name, caliber')
+                        .eq('user_id', currentUser.id)
+                        .order('shooter_name', { ascending: true });
+
+                    if (!profileError && profiles) {
+                        const profileSelect = document.getElementById('dope_shooting_profile');
+                        profileSelect.innerHTML = '<option value="">Select a shooting profile...</option>';
+                        profiles.forEach(profile => {
+                            const option = document.createElement('option');
+                            option.value = profile.id;
+                            option.textContent = `${profile.shooter_name} - ${profile.firearm_name} (${profile.caliber})`;
+                            profileSelect.appendChild(option);
+                        });
+                    }
+
+                    // Load bullet library
+                    const { data: bullets, error: bulletError } = await supabase
+                        .from('bullet_library')
+                        .select('id, manufacturer_name, caliber, grain_weight')
+                        .eq('user_id', currentUser.id)
+                        .order('manufacturer_name', { ascending: true });
+
+                    if (!bulletError && bullets) {
+                        const bulletSelect = document.getElementById('dope_bullet_library');
+                        bulletSelect.innerHTML = '<option value="">Select a bullet...</option>';
+                        bullets.forEach(bullet => {
+                            const option = document.createElement('option');
+                            option.value = bullet.id;
+                            option.textContent = `${bullet.manufacturer_name} ${bullet.caliber} ${bullet.grain_weight}gr`;
+                            bulletSelect.appendChild(option);
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error loading DOPE dropdowns:', error);
+                }
+            };
+
+            window.saveDope = async function() {
+                try {
+                    if (!currentUser) {
+                        alert('Please log in to save engagement data.');
+                        return;
+                    }
+
+                    const dopeData = {
+                        user_id: currentUser.id,
+                        shooting_profile_id: document.getElementById('dope_shooting_profile').value || null,
+                        bullet_library_id: parseInt(document.getElementById('dope_bullet_library').value) || null,
+                        engagement_date: document.getElementById('engagement_date').value,
+                        engagement_time: document.getElementById('engagement_time').value || null,
+                        range_to_target: parseFloat(document.getElementById('range_to_target').value),
+                        range_unit: document.getElementById('range_unit').value,
+                        wind_speed: parseFloat(document.getElementById('wind_speed').value) || null,
+                        wind_direction: parseFloat(document.getElementById('wind_direction').value) || null,
+                        wind_type: document.getElementById('wind_type').value || null,
+                        temperature: parseFloat(document.getElementById('temperature').value) || null,
+                        temperature_unit: document.getElementById('temperature_unit').value || null,
+                        barometric_pressure: parseFloat(document.getElementById('barometric_pressure').value) || null,
+                        pressure_unit: document.getElementById('pressure_unit').value || null,
+                        humidity: parseFloat(document.getElementById('humidity').value) || null,
+                        altitude: parseFloat(document.getElementById('altitude').value) || null,
+                        altitude_reference: document.getElementById('altitude_reference').value || null,
+                        angle_of_fire: parseFloat(document.getElementById('angle_of_fire').value) || null,
+                        spin_drift: parseFloat(document.getElementById('spin_drift').value) || null,
+                        coriolis_effect: parseFloat(document.getElementById('coriolis_effect').value) || null,
+                        target_movement_speed: parseFloat(document.getElementById('target_movement_speed').value) || null,
+                        target_movement_direction: parseFloat(document.getElementById('target_movement_direction').value) || null,
+                        optic_magnification: parseFloat(document.getElementById('optic_magnification').value) || null,
+                        optic_adjustment_units: document.getElementById('optic_adjustment_units').value || null,
+                        parallax_setting: parseFloat(document.getElementById('parallax_setting').value) || null,
+                        atmospheric_conditions: document.getElementById('atmospheric_conditions').value || null,
+                        barrel_condition: document.getElementById('barrel_condition').value || null,
+                        time_of_flight: parseFloat(document.getElementById('time_of_flight').value) || null,
+                        light_conditions: document.getElementById('light_conditions').value || null,
+                        engagement_outcome: document.getElementById('engagement_outcome').value || null,
+                        notes: document.getElementById('engagement_notes').value || null
+                    };
+
+                    const { data, error } = await supabase
+                        .from('dope_engagements')
+                        .insert([dopeData])
+                        .select();
+
+                    if (error) {
+                        console.error('Error saving DOPE engagement:', error);
+                        alert('Error saving engagement. Please try again.');
+                    } else {
+                        alert('Engagement saved successfully!');
+                        document.getElementById('addDopeForm').style.display = 'none';
+                        clearDopeForm();
+                        loadDopeEngagements();
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Error saving engagement. Please try again.');
+                }
+            };
+
+            window.loadDopeEngagements = async function() {
+                try {
+                    if (!currentUser) return;
+
+                    const { data, error } = await supabase
+                        .from('dope_engagements')
+                        .select('*')
+                        .eq('user_id', currentUser.id)
+                        .order('engagement_date', { ascending: false });
+
+                    const tableBody = document.getElementById('dopeTableBody');
+                    const noMessage = document.getElementById('noDopeMessage');
+                    const table = document.getElementById('dopeEngagementsTable');
+
+                    if (error) {
+                        console.error('Error loading DOPE engagements:', error);
+                        return;
+                    }
+
+                    tableBody.innerHTML = '';
+
+                    if (data && data.length > 0) {
+                        table.style.display = 'table';
+                        noMessage.style.display = 'none';
+
+                        data.forEach(engagement => {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td>${engagement.engagement_date}</td>
+                                <td>${engagement.range_to_target} ${engagement.range_unit}</td>
+                                <td>${engagement.wind_speed ? `${engagement.wind_speed} ${engagement.wind_type || ''}` : 'N/A'}</td>
+                                <td>${engagement.temperature ? `${engagement.temperature}°${engagement.temperature_unit}` : 'N/A'}</td>
+                                <td>${engagement.engagement_outcome || 'N/A'}</td>
+                                <td>
+                                    <button onclick="viewDopeDetails('${engagement.id}')" class="view-session">View</button>
+                                    <button onclick="deleteDope('${engagement.id}')" class="back-to-login">Delete</button>
+                                </td>
+                            `;
+                            tableBody.appendChild(row);
+                        });
+                    } else {
+                        table.style.display = 'none';
+                        noMessage.style.display = 'block';
+                    }
+                } catch (error) {
+                    console.error('Error loading DOPE engagements:', error);
+                }
+            };
+
+            window.deleteDope = async function(engagementId) {
+                if (!confirm('Are you sure you want to delete this engagement?')) {
+                    return;
+                }
+
+                try {
+                    const { error } = await supabase
+                        .from('dope_engagements')
+                        .delete()
+                        .eq('id', engagementId)
+                        .eq('user_id', currentUser.id);
+
+                    if (error) {
+                        console.error('Error deleting engagement:', error);
+                        alert('Error deleting engagement. Please try again.');
+                    } else {
+                        loadDopeEngagements();
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Error deleting engagement. Please try again.');
+                }
             };
 
             window.searchSessions = async function() {
