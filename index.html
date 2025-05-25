@@ -2855,14 +2855,14 @@ window.resetPassword = async function() {
                             <!-- Reference Data Selection -->
                             <div class="form-group" style="margin-bottom: 15px;">
                                 <label style="display: block; margin-bottom: 5px; font-weight: bold;">Shooting Profile (Optional):</label>
-                                <select id="dope_shooting_profile" onchange="populateProfileData()" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: white; color: black;">
+                                <select id="dope_shooting_profile" onchange="populateFromShootingProfile()" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: white; color: black;">
                                     <option value="">Select a shooting profile...</option>
                                 </select>
                             </div>
                             
                             <div class="form-group" style="margin-bottom: 15px;">
                                 <label style="display: block; margin-bottom: 5px; font-weight: bold;">Bullet Library (Optional):</label>
-                                <select id="dope_bullet_library" onchange="populateBulletData()" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: white; color: black;">
+                                <select id="dope_bullet_library" onchange="populateFromBulletLibrary()" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: white; color: black;">
                                     <option value="">Select a bullet...</option>
                                 </select>
                             </div>
@@ -3138,12 +3138,30 @@ window.resetPassword = async function() {
                         console.log('Profile select element:', profileSelect);
                         if (profileSelect) {
                             console.log('About to populate profiles...');
-                            // Clear and rebuild completely
-                            let optionsHtml = '<option value="">Select a shooting profile...</option>';
+                            // Clear dropdown first
+                            profileSelect.innerHTML = '';
+                            
+                            // Add default option
+                            const defaultOption = document.createElement('option');
+                            defaultOption.value = '';
+                            defaultOption.textContent = 'Select a shooting profile...';
+                            profileSelect.appendChild(defaultOption);
+                            
+                            // Add profile options one by one
                             profiles.forEach(profile => {
-                                optionsHtml += `<option value="${profile.id}">${profile.shooter_name} - ${profile.firearm_name} (${profile.caliber})</option>`;
+                                const option = document.createElement('option');
+                                option.value = profile.id;
+                                option.textContent = `${profile.shooter_name} - ${profile.firearm_name} (${profile.caliber})`;
+                                option.style.display = 'block';
+                                option.style.color = 'black';
+                                option.style.backgroundColor = 'white';
+                                profileSelect.appendChild(option);
                             });
-                            profileSelect.innerHTML = optionsHtml;
+                            
+                            // Force refresh
+                            profileSelect.style.display = 'none';
+                            profileSelect.offsetHeight; // Force reflow
+                            profileSelect.style.display = 'block';
                             console.log('Profile dropdown HTML set:', profileSelect.innerHTML.substring(0, 200));
                             console.log('Profile dropdown now has', profileSelect.children.length, 'total options');
                         } else {
