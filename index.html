@@ -2996,6 +2996,11 @@ window.resetPassword = async function() {
                     
                     if (!engagementDate || !rangeTarget || !rangeUnit) {
                         console.log('Validation failed:', {engagementDate, rangeTarget, rangeUnit});
+                        console.log('Form elements found:', {
+                            dateEl: document.getElementById('engagement_date'),
+                            rangeEl: document.getElementById('range_to_target'),
+                            unitEl: document.getElementById('range_unit')
+                        });
                         alert('Please fill in all required fields: Date, Range, and Range Unit.');
                         return;
                     }
@@ -3234,7 +3239,43 @@ window.resetPassword = async function() {
    Twist Rate: ${profile.barrel_twist_rate || 'Unknown'}`;
                 }).join('\n\n');
                 
-                let selection = prompt(`Select a shooting profile:\n\n${options}\n\nEnter the number (1-${window.loadedProfiles.length}) or 0 to cancel:`);
+                // Create a proper modal popup instead of prompt for better display
+                const modal = document.createElement('div');
+                modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 10000; display: flex; align-items: center; justify-content: center;';
+                
+                const content = document.createElement('div');
+                content.style.cssText = 'background: white; padding: 20px; border-radius: 8px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto;';
+                
+                content.innerHTML = `
+                    <h3 style="margin-top: 0;">Select a Shooting Profile</h3>
+                    <div style="max-height: 60vh; overflow-y: auto; border: 1px solid #ddd; padding: 10px;">
+                        ${window.loadedProfiles.map((profile, index) => `
+                            <div style="padding: 10px; border-bottom: 1px solid #eee; cursor: pointer; hover: background-color: #f5f5f5;" 
+                                 onclick="selectProfile('${profile.id}', '${profile.shooter_name} - ${profile.firearm_name}'); document.body.removeChild(this.closest('div[style*=position]'));">
+                                <strong>${index + 1}. ${profile.shooter_name} - ${profile.firearm_name}</strong><br>
+                                Caliber: ${profile.caliber}<br>
+                                Firearm: ${profile.firearm_type}<br>
+                                Optic: ${profile.optic_name || 'None'}<br>
+                                Barrel: ${profile.barrel_length || 'Unknown'}"<br>
+                                Zero: ${profile.zero_distance || 'Unknown'}yds<br>
+                                Twist Rate: ${profile.barrel_twist_rate || 'Unknown'}
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div style="margin-top: 15px; text-align: center;">
+                        <button onclick="document.body.removeChild(this.closest('div[style*=position]'));" 
+                                style="padding: 8px 20px; background: #666; color: white; border: none; border-radius: 4px; cursor: pointer;">Cancel</button>
+                    </div>
+                `;
+                
+                modal.appendChild(content);
+                document.body.appendChild(modal);
+                
+                // Add selection function
+                window.selectProfile = function(profileId, profileName) {
+                    document.getElementById('dope_shooting_profile').value = profileId;
+                    document.getElementById('profile_details').value = profileName;
+                };
                 
                 if (selection && selection !== '0') {
                     let index = parseInt(selection) - 1;
