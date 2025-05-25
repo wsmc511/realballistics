@@ -661,7 +661,7 @@
         </div>
 
         <!-- DOPE Section -->
-        <div id="dopeSection" style="display: none; padding: 20px; background-color: white; min-height: 400px;">
+        <div id="dopeSection" style="display: none; padding: 20px; background-color: white; min-height: 400px; position: relative; z-index: 1000;">
             <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
                 <button class="back-to-home" onclick="showHomePage()" style="background-color: #6c757d; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer;">← Home</button>
                 <h2 style="margin: 0;">DOPE - Data On Previous Engagements</h2>
@@ -2580,7 +2580,7 @@ window.resetPassword = async function() {
             };
 
             // DOPE Functions
-            window.showDOPE = function() {
+            window.showDOPE = async function() {
                 console.log('showDOPE function called');
                 try {
                     // Hide all other sections
@@ -2588,26 +2588,41 @@ window.resetPassword = async function() {
                     document.getElementById('shootingProfileSection').style.display = 'none';
                     document.getElementById('bulletLibrarySection').style.display = 'none';
                     
-                    // Hide any active bullet library that might be showing
-                    const activeBulletLibrary = document.getElementById('activeBulletLibrary');
-                    if (activeBulletLibrary) {
-                        activeBulletLibrary.style.display = 'none';
-                    }
+                    // Hide any active sections
+                    const hideElement = (id) => {
+                        const element = document.getElementById(id);
+                        if (element) element.style.display = 'none';
+                    };
+                    hideElement('activeBulletLibrary');
+                    hideElement('dopeSection');
+                    hideElement('filterSection');
+                    hideElement('ballisticForm');
+                    hideElement('compareForm');
+                    hideElement('compareResults');
                     
-                    // Show DOPE section
-                    const dopeSection = document.getElementById('dopeSection');
-                    if (dopeSection) {
-                        dopeSection.style.display = 'block';
-                        console.log('DOPE section found and set to visible');
-                        console.log('DOPE section content:', dopeSection.innerHTML.substring(0, 200));
-                        console.log('DOPE section computed style:', window.getComputedStyle(dopeSection).display);
-                    } else {
-                        console.error('DOPE section not found!');
-                        return;
-                    }
+                    // Create DOPE content directly in the main app content (similar to bullet library)
+                    const appContent = document.getElementById('appContent');
+                    const dopeContent = document.createElement('div');
+                    dopeContent.id = 'activeDopeSection';
+                    dopeContent.innerHTML = `
+                        <div style="padding: 20px;">
+                            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+                                <button onclick="showHomePage()" style="background-color: #6c757d; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer;">← Home</button>
+                                <h2 style="margin: 0;">DOPE - Data On Previous Engagements</h2>
+                            </div>
+                            <button onclick="showAddDopeFormDirect()" style="background-color: #dc3545; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin-bottom: 15px;">Log New Engagement</button>
+                            <div id="dopeContent">Loading your engagements...</div>
+                        </div>
+                    `;
                     
-                    loadDopeDropdowns();
-                    loadDopeEngagements();
+                    // Remove any existing active DOPE section
+                    const existing = document.getElementById('activeDopeSection');
+                    if (existing) existing.remove();
+                    
+                    // Add the new DOPE content
+                    appContent.appendChild(dopeContent);
+                    console.log('DOPE content created and added to page');
+                    
                 } catch (error) {
                     console.error('Error in showDOPE function:', error);
                 }
