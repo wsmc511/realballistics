@@ -2583,11 +2583,26 @@ window.resetPassword = async function() {
             window.showDOPE = function() {
                 console.log('showDOPE function called');
                 try {
+                    // Hide all other sections
                     document.getElementById('homePage').style.display = 'none';
                     document.getElementById('shootingProfileSection').style.display = 'none';
                     document.getElementById('bulletLibrarySection').style.display = 'none';
-                    document.getElementById('dopeSection').style.display = 'block';
-                    console.log('DOPE section should now be visible');
+                    
+                    // Hide any active bullet library that might be showing
+                    const activeBulletLibrary = document.getElementById('activeBulletLibrary');
+                    if (activeBulletLibrary) {
+                        activeBulletLibrary.style.display = 'none';
+                    }
+                    
+                    // Show DOPE section
+                    const dopeSection = document.getElementById('dopeSection');
+                    if (dopeSection) {
+                        dopeSection.style.display = 'block';
+                        console.log('DOPE section found and set to visible');
+                    } else {
+                        console.error('DOPE section not found!');
+                        return;
+                    }
                     
                     loadDopeDropdowns();
                     loadDopeEngagements();
@@ -2794,6 +2809,22 @@ window.resetPassword = async function() {
                     console.error('Error:', error);
                     alert('Error deleting engagement. Please try again.');
                 }
+            };
+
+            window.viewDopeDetails = function(engagementId) {
+                console.log('View DOPE details for:', engagementId);
+                // TODO: Implement detailed view
+                alert('Detailed view coming soon!');
+            };
+
+            window.populateFromShootingProfile = function() {
+                console.log('Populate from shooting profile');
+                // TODO: Implement auto-population
+            };
+
+            window.populateFromBulletLibrary = function() {
+                console.log('Populate from bullet library');
+                // TODO: Implement auto-population
             };
 
             window.searchSessions = async function() {
