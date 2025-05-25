@@ -2857,8 +2857,6 @@ window.resetPassword = async function() {
                                 <label style="display: block; margin-bottom: 5px; font-weight: bold;">Shooting Profile (Optional):</label>
                                 <select id="dope_shooting_profile" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: white !important; color: black !important; font-size: 14px !important; z-index: 9999; position: relative;">
                                     <option value="">Select a shooting profile...</option>
-                                    <option value="test">Test Option 1</option>
-                                    <option value="test2">Test Option 2</option>
                                 </select>
                             </div>
                             
@@ -3117,11 +3115,19 @@ window.resetPassword = async function() {
                         console.log('Profiles loaded for DOPE:', profiles);
                         const profileSelect = document.getElementById('dope_shooting_profile');
                         if (profileSelect) {
-                            let optionsHTML = '<option value="">Select a shooting profile...</option>';
+                            // Keep the default option and remove test options
+                            profileSelect.innerHTML = '<option value="">Select a shooting profile...</option>';
+                            
+                            // Add actual profile data
                             profiles.forEach(profile => {
-                                optionsHTML += `<option value="${profile.id}">${profile.shooter_name} - ${profile.firearm_name} (${profile.caliber})</option>`;
+                                const option = document.createElement('option');
+                                option.value = profile.id;
+                                option.textContent = `${profile.shooter_name} - ${profile.firearm_name} (${profile.caliber})`;
+                                option.style.color = 'black';
+                                option.style.backgroundColor = 'white';
+                                profileSelect.appendChild(option);
                             });
-                            profileSelect.innerHTML = optionsHTML;
+                            
                             console.log('Profile dropdown populated with', profiles.length, 'items');
                             console.log('Profile dropdown now has', profileSelect.children.length, 'total options');
                             console.log('First few options:', Array.from(profileSelect.children).slice(0, 3).map(opt => opt.textContent));
@@ -3144,13 +3150,19 @@ window.resetPassword = async function() {
                         console.log('Bullets loaded for DOPE:', bullets);
                         const bulletSelect = document.getElementById('dope_bullet_library');
                         if (bulletSelect) {
-                            let optionsHTML = '<option value="">Select a bullet...</option>';
+                            bulletSelect.innerHTML = '<option value="">Select a bullet...</option>';
+                            
                             if (bullets && bullets.length > 0) {
                                 bullets.forEach(bullet => {
-                                    optionsHTML += `<option value="${bullet.id}">${bullet.manufacturer_name} ${bullet.caliber} ${bullet.grain}gr</option>`;
+                                    const option = document.createElement('option');
+                                    option.value = bullet.id;
+                                    option.textContent = `${bullet.manufacturer_name} ${bullet.caliber} ${bullet.grain}gr`;
+                                    option.style.color = 'black';
+                                    option.style.backgroundColor = 'white';
+                                    bulletSelect.appendChild(option);
                                 });
                             }
-                            bulletSelect.innerHTML = optionsHTML;
+                            
                             console.log('Bullet dropdown populated with', bullets ? bullets.length : 0, 'items');
                             console.log('Bullet dropdown now has', bulletSelect.children.length, 'total options');
                         } else {
