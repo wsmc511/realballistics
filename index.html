@@ -2855,16 +2855,37 @@ window.resetPassword = async function() {
                             <!-- Reference Data Selection -->
                             <div class="form-group" style="margin-bottom: 15px;">
                                 <label style="display: block; margin-bottom: 5px; font-weight: bold;">Shooting Profile (Optional):</label>
-                                <select id="dope_shooting_profile" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: white; color: black;">
+                                <select id="dope_shooting_profile" onchange="populateProfileData()" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: white; color: black;">
                                     <option value="">Select a shooting profile...</option>
                                 </select>
                             </div>
                             
                             <div class="form-group" style="margin-bottom: 15px;">
                                 <label style="display: block; margin-bottom: 5px; font-weight: bold;">Bullet Library (Optional):</label>
-                                <select id="dope_bullet_library" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: white; color: black;">
+                                <select id="dope_bullet_library" onchange="populateBulletData()" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: white; color: black;">
                                     <option value="">Select a bullet...</option>
                                 </select>
+                            </div>
+                            
+                            <!-- Auto-populated fields from selected profile/bullet -->
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Shooter Name:</label>
+                                <input type="text" id="shooter_name" readonly style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: #f5f5f5;">
+                            </div>
+                            
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Firearm:</label>
+                                <input type="text" id="firearm_info" readonly style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: #f5f5f5;">
+                            </div>
+                            
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Optic:</label>
+                                <input type="text" id="optic_name" readonly style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: #f5f5f5;">
+                            </div>
+                            
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Bullet Details:</label>
+                                <input type="text" id="bullet_details" readonly style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: #f5f5f5;">
                             </div>
                             
                             <!-- Date and Time -->
@@ -2945,7 +2966,7 @@ window.resetPassword = async function() {
                     // Load the dropdowns after creating the form
                     setTimeout(() => {
                         loadDopeDropdownsDirect();
-                    }, 500);
+                    }, 1000);
                 }
             };
 
@@ -3114,25 +3135,20 @@ window.resetPassword = async function() {
                     } else {
                         console.log('Profiles loaded for DOPE:', profiles);
                         const profileSelect = document.getElementById('dope_shooting_profile');
+                        console.log('Profile select element:', profileSelect);
                         if (profileSelect) {
-                            // Keep the default option and remove test options
-                            profileSelect.innerHTML = '<option value="">Select a shooting profile...</option>';
-                            
-                            // Add actual profile data
+                            console.log('About to populate profiles...');
+                            // Clear and rebuild completely
+                            let optionsHtml = '<option value="">Select a shooting profile...</option>';
                             profiles.forEach(profile => {
-                                const option = document.createElement('option');
-                                option.value = profile.id;
-                                option.textContent = `${profile.shooter_name} - ${profile.firearm_name} (${profile.caliber})`;
-                                option.style.color = 'black';
-                                option.style.backgroundColor = 'white';
-                                profileSelect.appendChild(option);
+                                optionsHtml += `<option value="${profile.id}">${profile.shooter_name} - ${profile.firearm_name} (${profile.caliber})</option>`;
                             });
-                            
-                            console.log('Profile dropdown populated with', profiles.length, 'items');
+                            profileSelect.innerHTML = optionsHtml;
+                            console.log('Profile dropdown HTML set:', profileSelect.innerHTML.substring(0, 200));
                             console.log('Profile dropdown now has', profileSelect.children.length, 'total options');
-                            console.log('First few options:', Array.from(profileSelect.children).slice(0, 3).map(opt => opt.textContent));
                         } else {
-                            console.log('Profile select element not found');
+                            console.log('Profile select element not found - checking page...');
+                            console.log('All selects on page:', document.querySelectorAll('select'));
                         }
                     }
 
