@@ -3097,8 +3097,8 @@ window.resetPassword = async function() {
                         return;
                     }
 
-                    // Use the same Supabase reference as other working functions
-                    const { data, error } = await supabase
+                    // Use the global window Supabase client that works in other functions
+                    const { data, error } = await window._supabaseClient
                         .from('dope_engagements')
                         .select('*')
                         .eq('user_id', currentUser.id)
@@ -4021,17 +4021,9 @@ window.resetPassword = async function() {
         window.viewDopeEngagement = async function(engagementId) {
             try {
                 console.log('Loading engagement:', engagementId);
-                console.log('Supabase object:', typeof supabase);
                 
-                // Check if supabase is available
-                if (typeof supabase === 'undefined') {
-                    console.error('Supabase is not defined');
-                    alert('Database connection not available. Please refresh the page.');
-                    return;
-                }
-                
-                // Use the same Supabase reference as other working functions
-                const { data, error } = await supabase
+                // Use the global window Supabase client that works in other functions
+                const { data, error } = await window._supabaseClient
                     .from('dope_engagements')
                     .select('*')
                     .eq('id', engagementId)
@@ -4105,8 +4097,8 @@ window.resetPassword = async function() {
 
         window.editDopeEngagement = async function(engagementId) {
             try {
-                // Use the same Supabase reference as other working functions
-                const { data, error } = await supabase
+                // Use the global window Supabase client that works in other functions
+                const { data, error } = await window._supabaseClient
                     .from('dope_engagements')
                     .select('*')
                     .eq('id', engagementId)
