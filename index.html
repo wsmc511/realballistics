@@ -2840,6 +2840,128 @@ window.resetPassword = async function() {
                 alert('Detailed view coming soon!');
             };
 
+            window.showFirearmPicker = async function() {
+                try {
+                    if (!currentUser) {
+                        alert('Please log in to access firearm profiles.');
+                        return;
+                    }
+
+                    // Load all firearm profiles for the current user
+                    const { data: firearms, error } = await supabase
+                        .from('firearm_profile')
+                        .select('*')
+                        .eq('user_id', currentUser.id);
+
+                    if (error) {
+                        console.error('Error loading firearm profiles:', error);
+                        alert('Error loading firearm profiles. Please ensure the firearm_profile table exists in your Supabase database.');
+                        return;
+                    }
+
+                    if (!firearms || firearms.length === 0) {
+                        alert('No firearm profiles found. Please create some firearm profiles first.');
+                        return;
+                    }
+
+                    // Create a modal to select from available firearms
+                    const firearmHTML = firearms.map(firearm => `
+                        <div onclick="selectFirearm('${firearm.id}')" style="padding: 10px; border: 1px solid #ddd; margin: 5px 0; cursor: pointer; border-radius: 4px; background-color: #f9f9f9;">
+                            <strong>${firearm.profile_name}</strong><br>
+                            <span style="color: #666;">Shooter: ${firearm.shooter_name} | ${firearm.firearm_type}: ${firearm.firearm_name}</span><br>
+                            <span style="color: #666;">Caliber: ${firearm.caliber} | Barrel: ${firearm.barrel_length}" | Zero: ${firearm.zero_distance}yds</span>
+                        </div>
+                    `).join('');
+
+                    const modalHTML = `
+                        <div id="firearmPickerModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center;">
+                            <div style="background: white; padding: 20px; border-radius: 8px; max-width: 600px; max-height: 70vh; overflow-y: auto; width: 90%;">
+                                <h3>Select Firearm Profile</h3>
+                                <div style="margin: 15px 0;">
+                                    ${firearmHTML}
+                                </div>
+                                <div style="text-align: center; margin-top: 15px;">
+                                    <button onclick="closeFirearmPicker()" style="background-color: #6c757d; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">Cancel</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                    document.body.insertAdjacentHTML('beforeend', modalHTML);
+                } catch (error) {
+                    console.error('Error in showFirearmPicker:', error);
+                    alert('Error loading firearm profiles');
+                }
+            };
+
+            window.selectFirearm = async function(firearmId) {
+                try {
+                    console.log('Selecting firearm with ID:', firearmId);
+                    
+                    // Load the selected firearm data
+                    const { data: firearm, error } = await supabase
+                        .from('firearm_profile')
+                        .select('*')
+                        .eq('id', firearmId)
+                        .single();
+
+                    if (error) {
+                        console.error('Error loading firearm:', error);
+                        alert('Error loading firearm data');
+                        return;
+                    }
+
+                    console.log('Firearm data loaded:', firearm);
+
+                    // Close the picker first
+                    closeFirearmPicker();
+
+                    // Set the hidden field and display text
+                    document.getElementById('dope_firearm_profile').value = firearmId;
+                    document.getElementById('selected_firearm').textContent = `${firearm.profile_name} - ${firearm.firearm_name}`;
+
+                    // Wait a moment for DOM to update, then populate fields
+                    setTimeout(() => {
+                        try {
+                            const setFieldValue = (fieldId, value) => {
+                                const field = document.getElementById(fieldId);
+                                if (field) {
+                                    field.value = value || '';
+                                    console.log(`Set ${fieldId} to: ${value}`);
+                                } else {
+                                    console.warn(`Field ${fieldId} not found`);
+                                }
+                            };
+                            
+                            // Populate firearm-specific data from firearm_profile table
+                            setFieldValue('shooter_name', firearm.shooter_name);
+                            setFieldValue('firearm_type', firearm.firearm_type);
+                            setFieldValue('firearm_name', firearm.firearm_name);
+                            setFieldValue('rifle_caliber', firearm.caliber);
+                            setFieldValue('optic_name', firearm.optic_name);
+                            setFieldValue('barrel_length', firearm.barrel_length ? `${firearm.barrel_length} inches` : '');
+                            setFieldValue('barrel_twist_rate', firearm.barrel_twist_rate);
+                            setFieldValue('zero_distance', firearm.zero_distance ? `${firearm.zero_distance} yards` : '');
+                            setFieldValue('height_over_bore', firearm.height_over_bore ? `${firearm.height_over_bore} inches` : '');
+
+                            console.log('Firearm data populated successfully');
+                        } catch (innerError) {
+                            console.error('Error populating firearm fields:', innerError);
+                        }
+                    }, 100);
+                } catch (error) {
+                    console.error('Error selecting firearm:', error);
+                    alert('Error selecting firearm');
+                }
+            };
+
+            window.closeFirearmPicker = function() {
+                const modal = document.getElementById('firearmPickerModal');
+                if (modal) {
+                    modal.remove();
+                }
+            };
+
             window.showProfilePicker = async function() {
                 try {
                     if (!currentUser) {
@@ -3127,12 +3249,12 @@ window.resetPassword = async function() {
                             
                             <!-- Reference Data Selection -->
                             <div class="form-group" style="margin-bottom: 15px;">
-                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Shooting Profile:</label>
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Firearm Profile:</label>
                                 <div style="display: flex; gap: 10px;">
-                                    <button type="button" onclick="showProfilePicker()" style="padding: 8px 15px; border: 1px solid #007bff; background-color: #007bff; color: white; border-radius: 4px; cursor: pointer;">Select Profile</button>
-                                    <span id="selected_profile" style="padding: 8px; color: #666;">None selected</span>
+                                    <button type="button" onclick="showFirearmPicker()" style="padding: 8px 15px; border: 1px solid #007bff; background-color: #007bff; color: white; border-radius: 4px; cursor: pointer;">Select Firearm</button>
+                                    <span id="selected_firearm" style="padding: 8px; color: #666;">None selected</span>
                                 </div>
-                                <input type="hidden" id="dope_shooting_profile" value="">
+                                <input type="hidden" id="dope_firearm_profile" value="">
                             </div>
                             
                             <div class="form-group" style="margin-bottom: 15px;">
