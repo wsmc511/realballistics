@@ -3122,79 +3122,90 @@ window.resetPassword = async function() {
                         return;
                     }
 
-                    // Validate required fields - get fresh values at save time
-                    const dateField = document.getElementById('engagement_date');
-                    const rangeField = document.getElementById('range_to_target');  
-                    const unitField = document.getElementById('range_unit');
+                    // Add small delay to ensure form is fully rendered and capture fresh values
+                    await new Promise(resolve => setTimeout(resolve, 100));
                     
-                    const engagementDate = dateField ? dateField.value : '';
-                    const rangeTarget = rangeField ? rangeField.value : '';
-                    const rangeUnit = unitField ? unitField.value : '';
+                    // Get ALL form field values with better error handling
+                    const getFieldValue = (id) => {
+                        const element = document.getElementById(id);
+                        if (!element) {
+                            console.warn(`Field ${id} not found`);
+                            return null;
+                        }
+                        return element.value || null;
+                    };
                     
-                    console.log('Field elements found:', {
-                        dateField: dateField,
-                        rangeField: rangeField,
-                        unitField: unitField
-                    });
+                    const getNumericValue = (id) => {
+                        const value = getFieldValue(id);
+                        return value ? parseFloat(value) : null;
+                    };
                     
-                    console.log('Field values check:', {
-                        dateValue: engagementDate,
-                        rangeValue: rangeTarget, 
-                        unitValue: rangeUnit,
-                        dateFieldValue: dateField?.value,
-                        rangeFieldValue: rangeField?.value,
-                        unitFieldValue: unitField?.value,
-                        allInputs: Array.from(document.querySelectorAll('input, select')).map(el => ({id: el.id, value: el.value, type: el.type}))
+                    // Validate required fields
+                    const engagementDate = getFieldValue('engagement_date');
+                    const rangeTarget = getNumericValue('range_to_target');
+                    const rangeUnit = getFieldValue('range_unit');
+                    
+                    console.log('Field validation:', {
+                        engagementDate,
+                        rangeTarget,
+                        rangeUnit
                     });
 
-                    // Only validate date field - range/unit have capture issues but show filled data
                     if (!engagementDate) {
                         alert('Please fill in the engagement date.');
                         return;
                     }
                     
-                    // Use fallback values for range/unit if capture fails
-                    const finalRangeTarget = rangeTarget || document.getElementById('range_to_target')?.value || '300';
-                    const finalRangeUnit = rangeUnit || document.getElementById('range_unit')?.value || 'yards';
+                    if (!rangeTarget || rangeTarget <= 0) {
+                        alert('Please enter a valid range to target.');
+                        return;
+                    }
+                    
+                    if (!rangeUnit) {
+                        alert('Please select a range unit.');
+                        return;
+                    }
 
                     const dopeData = {
                         user_id: currentUser.id,
-                        shooting_profile_id: document.getElementById('dope_shooting_profile').value || null,
-                        bullet_library_id: document.getElementById('dope_bullet_library').value || null,
+                        shooting_profile_id: getFieldValue('dope_shooting_profile'),
+                        bullet_library_id: getNumericValue('dope_bullet_library'),
                         engagement_date: engagementDate,
-                        engagement_time: document.getElementById('engagement_time').value || null,
-                        range_to_target: parseFloat(finalRangeTarget) || 0,
-                        range_unit: finalRangeUnit,
-                        wind_speed: parseFloat(document.getElementById('wind_speed').value) || null,
-                        wind_direction: parseFloat(document.getElementById('wind_direction').value) || null,
-                        wind_type: document.getElementById('wind_type').value || null,
-                        temperature: parseFloat(document.getElementById('temperature').value) || null,
-                        temperature_unit: document.getElementById('temperature_unit').value || null,
+                        engagement_time: getFieldValue('engagement_time'),
+                        range_to_target: rangeTarget,
+                        range_unit: rangeUnit,
+                        // Wind conditions
+                        wind_speed: getNumericValue('wind_speed'),
+                        wind_direction: getNumericValue('wind_direction'),
+                        wind_type: getFieldValue('wind_type'),
+                        // Temperature
+                        temperature: getNumericValue('temperature'),
+                        temperature_unit: getFieldValue('temperature_unit'),
                         // Environmental data
-                        humidity: parseFloat(document.getElementById('humidity').value) || null,
-                        barometric_pressure: parseFloat(document.getElementById('barometric_pressure').value) || null,
-                        pressure_unit: document.getElementById('pressure_unit').value || null,
-                        altitude: parseFloat(document.getElementById('altitude').value) || null,
-                        altitude_reference: document.getElementById('altitude_reference').value || null,
-                        angle_of_fire: parseFloat(document.getElementById('angle_of_fire').value) || null,
+                        humidity: getNumericValue('humidity'),
+                        barometric_pressure: getNumericValue('barometric_pressure'),
+                        pressure_unit: getFieldValue('pressure_unit'),
+                        altitude: getNumericValue('altitude'),
+                        altitude_reference: getFieldValue('altitude_reference'),
+                        angle_of_fire: getNumericValue('angle_of_fire'),
                         // Ballistic effects
-                        coriolis_effect: parseFloat(document.getElementById('coriolis_effect').value) || null,
-                        spin_drift: parseFloat(document.getElementById('spin_drift').value) || null,
+                        coriolis_effect: getNumericValue('coriolis_effect'),
+                        spin_drift: getNumericValue('spin_drift'),
                         // Target movement
-                        target_movement_speed: parseFloat(document.getElementById('target_movement_speed').value) || null,
-                        target_movement_direction: parseFloat(document.getElementById('target_movement_direction').value) || null,
+                        target_movement_speed: getNumericValue('target_movement_speed'),
+                        target_movement_direction: getNumericValue('target_movement_direction'),
                         // Optic settings
-                        optic_magnification: parseFloat(document.getElementById('optic_magnification').value) || null,
-                        optic_adjustment_units: document.getElementById('optic_adjustment_units').value || null,
-                        parallax_setting: parseFloat(document.getElementById('parallax_setting').value) || null,
+                        optic_magnification: getNumericValue('optic_magnification'),
+                        optic_adjustment_units: getFieldValue('optic_adjustment_units'),
+                        parallax_setting: getNumericValue('parallax_setting'),
                         // Time and conditions
-                        time_of_flight: parseFloat(document.getElementById('time_of_flight').value) || null,
-                        atmospheric_conditions: document.getElementById('atmospheric_conditions').value || null,
-                        light_conditions: document.getElementById('light_conditions').value || null,
-                        barrel_condition: document.getElementById('barrel_condition').value || null,
+                        time_of_flight: getNumericValue('time_of_flight'),
+                        atmospheric_conditions: getFieldValue('atmospheric_conditions'),
+                        light_conditions: getFieldValue('light_conditions'),
+                        barrel_condition: getFieldValue('barrel_condition'),
                         // Outcome and notes
-                        engagement_outcome: document.getElementById('engagement_outcome').value || null,
-                        notes: document.getElementById('engagement_notes').value || null
+                        engagement_outcome: getFieldValue('engagement_outcome'),
+                        notes: getFieldValue('engagement_notes')
                     };
 
                     console.log('About to save DOPE data:', dopeData);
