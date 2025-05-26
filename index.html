@@ -3928,7 +3928,7 @@ window.resetPassword = async function() {
                 const appContent = document.getElementById('appContent');
                 const firearmContent = document.createElement('div');
                 firearmContent.id = 'activeFirearmLibrary';
-                firearmContent.innerHTML = \`
+                firearmContent.innerHTML = `
                     <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
                         <button onclick="showHomePage()" style="background-color: #6c757d; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer;">🏠 Home</button>
                         <h2 style="margin: 0;">Firearm Library</h2>
@@ -4001,7 +4001,7 @@ window.resetPassword = async function() {
                             <p>Loading firearm profiles...</p>
                         </div>
                     </div>
-                \`;
+                `;
                 
                 appContent.appendChild(firearmContent);
                 
@@ -4085,26 +4085,26 @@ window.resetPassword = async function() {
                         return;
                     }
 
-                    const firearmHTML = firearms.map(firearm => \`
+                    const firearmHTML = firearms.map(firearm => `
                         <div style="border: 1px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 5px;">
-                            <h4 style="margin: 0 0 10px 0; color: #007bff;">\${firearm.profile_name}</h4>
+                            <h4 style="margin: 0 0 10px 0; color: #007bff;">${firearm.profile_name}</h4>
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.9em;">
-                                <div><strong>Shooter:</strong> \${firearm.shooter_name}</div>
-                                <div><strong>Type:</strong> \${firearm.firearm_type}</div>
-                                <div><strong>Firearm:</strong> \${firearm.firearm_name}</div>
-                                <div><strong>Caliber:</strong> \${firearm.caliber}</div>
-                                <div><strong>Barrel:</strong> \${firearm.barrel_length ? firearm.barrel_length + '"' : 'Not specified'}</div>
-                                <div><strong>Twist Rate:</strong> \${firearm.barrel_twist_rate || 'Not specified'}</div>
-                                <div><strong>Optic:</strong> \${firearm.optic_name || 'Not specified'}</div>
-                                <div><strong>Zero:</strong> \${firearm.zero_distance ? firearm.zero_distance + 'yds' : 'Not specified'}</div>
-                                <div><strong>Height Over Bore:</strong> \${firearm.height_over_bore ? firearm.height_over_bore + '"' : 'Not specified'}</div>
+                                <div><strong>Shooter:</strong> ${firearm.shooter_name}</div>
+                                <div><strong>Type:</strong> ${firearm.firearm_type}</div>
+                                <div><strong>Firearm:</strong> ${firearm.firearm_name}</div>
+                                <div><strong>Caliber:</strong> ${firearm.caliber}</div>
+                                <div><strong>Barrel:</strong> ${firearm.barrel_length ? firearm.barrel_length + '"' : 'Not specified'}</div>
+                                <div><strong>Twist Rate:</strong> ${firearm.barrel_twist_rate || 'Not specified'}</div>
+                                <div><strong>Optic:</strong> ${firearm.optic_name || 'Not specified'}</div>
+                                <div><strong>Zero:</strong> ${firearm.zero_distance ? firearm.zero_distance + 'yds' : 'Not specified'}</div>
+                                <div><strong>Height Over Bore:</strong> ${firearm.height_over_bore ? firearm.height_over_bore + '"' : 'Not specified'}</div>
                             </div>
                             <div style="margin-top: 10px;">
-                                <button onclick="editFirearm('\${firearm.id}')" style="background-color: #ffc107; color: black; padding: 5px 10px; border: none; border-radius: 3px; cursor: pointer; margin-right: 5px;">Edit</button>
-                                <button onclick="deleteFirearm('\${firearm.id}')" style="background-color: #dc3545; color: white; padding: 5px 10px; border: none; border-radius: 3px; cursor: pointer;">Delete</button>
+                                <button onclick="editFirearm('${firearm.id}')" style="background-color: #ffc107; color: black; padding: 5px 10px; border: none; border-radius: 3px; cursor: pointer; margin-right: 5px;">Edit</button>
+                                <button onclick="deleteFirearm('${firearm.id}')" style="background-color: #dc3545; color: white; padding: 5px 10px; border: none; border-radius: 3px; cursor: pointer;">Delete</button>
                             </div>
                         </div>
-                    \`).join('');
+                    `).join('');
 
                     document.getElementById('firearmResults').innerHTML = firearmHTML;
                 } catch (error) {
