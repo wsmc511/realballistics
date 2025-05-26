@@ -3085,11 +3085,11 @@ window.resetPassword = async function() {
                             // Ammunition-specific data from bullet_library table
                             setFieldValue('manufacturer_name', bullet.manufacturer_name);
                             setFieldValue('caliber', bullet.caliber);
-                            setFieldValue('grain_weight', bullet.grain_weight ? `${bullet.grain_weight}gr` : '');
+                            setFieldValue('grain_weight', bullet.grain ? `${bullet.grain}gr` : '');
                             setFieldValue('ballistic_coefficient', bullet.ballistic_coefficient);
                             setFieldValue('drag_model', bullet.drag_model);
                             setFieldValue('bullet_type', bullet.bullet_type);
-                            setFieldValue('lot_number', bullet.lot_number);
+                            setFieldValue('lot_number', bullet.lot_number || '');
                             setFieldValue('muzzle_velocity', bullet.muzzle_velocity ? `${bullet.muzzle_velocity} fps` : '');
                             setFieldValue('muzzle_energy', bullet.muzzle_energy ? `${bullet.muzzle_energy} ft-lbs` : '');
 
