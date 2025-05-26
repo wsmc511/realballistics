@@ -3131,8 +3131,10 @@ window.resetPassword = async function() {
             window.loadDopeDropdownsDirect = async function() {
                 console.log('loadDopeDropdownsDirect called');
                 try {
+                    const currentUser = (await supabase.auth.getUser()).data.user;
                     if (!currentUser) {
                         console.log('No current user for dropdowns');
+                        alert('Please log in to access your shooting profiles and bullets.');
                         return;
                     }
 
@@ -3146,10 +3148,12 @@ window.resetPassword = async function() {
 
                     if (profileError) {
                         console.error('Profile error:', profileError);
+                        window.loadedProfiles = [];
                     } else {
                         console.log('Profiles loaded for DOPE:', profiles);
+                        console.log('Number of profiles found:', profiles?.length || 0);
                         // Store profiles for picker button
-                        window.loadedProfiles = profiles;
+                        window.loadedProfiles = profiles || [];
                         const profileSelect = document.getElementById('dope_shooting_profile');
                         console.log('Profile select element:', profileSelect);
                         if (profileSelect) {
