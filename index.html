@@ -4975,18 +4975,53 @@ window.resetPassword = async function() {
             }
             
             // Clear any lingering form content by removing dynamic elements
-            const existingFirearmLibrary = document.querySelector('#firearmLibrarySection');
-            const existingDopeSection = document.querySelector('#dopeSection');
+            const sectionsToRemove = ['#firearmLibrarySection', '#dopeSection', '#bulletLibrarySection'];
+            sectionsToRemove.forEach(selector => {
+                const existingSection = document.querySelector(selector);
+                if (existingSection && existingSection.parentNode) {
+                    existingSection.parentNode.removeChild(existingSection);
+                }
+            });
             
-            if (existingFirearmLibrary && existingFirearmLibrary.parentNode) {
-                existingFirearmLibrary.parentNode.removeChild(existingFirearmLibrary);
-            }
-            if (existingDopeSection && existingDopeSection.parentNode) {
-                existingDopeSection.parentNode.removeChild(existingDopeSection);
+            // Also clear any dynamically added content from the home page
+            const homePage = document.getElementById('homePage');
+            if (homePage) {
+                // Remove any tables or forms that don't belong on the home page
+                const tables = homePage.querySelectorAll('table');
+                const forms = homePage.querySelectorAll('form');
+                const sections = homePage.querySelectorAll('section');
+                
+                tables.forEach(table => {
+                    if (!table.closest('.home-nav-button')) {
+                        table.remove();
+                    }
+                });
+                forms.forEach(form => form.remove());
+                sections.forEach(section => {
+                    if (section.id !== 'homePage') {
+                        section.remove();
+                    }
+                });
             }
             
             // Show home page
-            document.getElementById('homePage').style.display = 'block';
+            const homePageElement = document.getElementById('homePage');
+            if (homePageElement) {
+                homePageElement.style.display = 'block';
+                
+                // Make sure only the original home page content is visible
+                const homeButtons = homePageElement.querySelector('.home-nav-button');
+                if (homeButtons) {
+                    // Find all content after the buttons that shouldn't be there
+                    const allChildren = Array.from(homePageElement.children);
+                    allChildren.forEach((child, index) => {
+                        // Keep only the first div (which contains the welcome text and buttons)
+                        if (index > 0) {
+                            child.remove();
+                        }
+                    });
+                }
+            }
             
             // Fix button text issues
             fixButtonTextAndCleanup();
