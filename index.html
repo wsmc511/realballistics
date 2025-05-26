@@ -1389,6 +1389,9 @@
                 'https://pgiqojcohovoguwxleij.supabase.co',
                 supabaseKey
             );
+            
+            // Make supabase globally accessible for DOPE functions
+            window.supabaseClient = supabase;
 
             let editSessionId = null;
             let currentUser = null;
@@ -4022,8 +4025,8 @@ window.resetPassword = async function() {
             try {
                 console.log('Loading engagement:', engagementId);
                 
-                // Use the same supabase constant as other working functions
-                const { data, error } = await supabase
+                // Use the globally accessible supabase client
+                const { data, error } = await window.supabaseClient
                     .from('dope_engagements')
                     .select('*')
                     .eq('id', engagementId)
@@ -4097,8 +4100,8 @@ window.resetPassword = async function() {
 
         window.editDopeEngagement = async function(engagementId) {
             try {
-                // Use the same supabase constant as other working functions
-                const { data, error } = await supabase
+                // Use the globally accessible supabase client
+                const { data, error } = await window.supabaseClient
                     .from('dope_engagements')
                     .select('*')
                     .eq('id', engagementId)
