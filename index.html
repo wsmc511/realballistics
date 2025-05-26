@@ -2994,13 +2994,17 @@ window.resetPassword = async function() {
                     const rangeTarget = document.getElementById('range_to_target').value;
                     const rangeUnit = document.getElementById('range_unit').value;
                     
+                    console.log('Field values check:', {
+                        dateValue: engagementDate,
+                        rangeValue: rangeTarget, 
+                        unitValue: rangeUnit,
+                        dateElement: document.getElementById('engagement_date')?.value,
+                        rangeElement: document.getElementById('range_to_target')?.value,
+                        unitElement: document.getElementById('range_unit')?.value
+                    });
+
                     if (!engagementDate || !rangeTarget || !rangeUnit) {
                         console.log('Validation failed:', {engagementDate, rangeTarget, rangeUnit});
-                        console.log('Form elements found:', {
-                            dateEl: document.getElementById('engagement_date'),
-                            rangeEl: document.getElementById('range_to_target'),
-                            unitEl: document.getElementById('range_unit')
-                        });
                         alert('Please fill in all required fields: Date, Range, and Range Unit.');
                         return;
                     }
