@@ -2943,19 +2943,15 @@ window.resetPassword = async function() {
                                 }
                             };
                             
+                            // Only rifle-specific data from ballistic_sessions table
                             setFieldValue('shooter_name', profile.shooter_name);
                             setFieldValue('firearm_type', profile.firearm_type);
                             setFieldValue('firearm_name', profile.firearm_name);
-                            setFieldValue('caliber', profile.caliber);
+                            setFieldValue('optic_name', profile.optic_name);
                             setFieldValue('barrel_length', profile.barrel_length ? `${profile.barrel_length} inches` : '');
                             setFieldValue('barrel_twist_rate', profile.barrel_twist_rate);
-                            setFieldValue('optic_name', profile.optic_name);
-                            setFieldValue('bullet_grain', profile.bullet_grain);
-                            setFieldValue('muzzle_velocity', profile.muzzle_velocity);
-                            setFieldValue('ballistic_coefficient', profile.ballistic_coefficient);
-                            setFieldValue('zero_distance', profile.zero_distance);
-                            setFieldValue('height_over_bore', profile.height_over_bore);
-                            setFieldValue('drag_model', profile.drag_model);
+                            setFieldValue('zero_distance', profile.zero_distance ? `${profile.zero_distance} yards` : '');
+                            setFieldValue('height_over_bore', profile.height_over_bore ? `${profile.height_over_bore} inches` : '');
 
                             console.log('Profile data populated successfully');
                         } catch (innerError) {
@@ -2981,9 +2977,142 @@ window.resetPassword = async function() {
                 // The actual population now happens through showProfilePicker
             };
 
+            window.showBulletPicker = async function() {
+                try {
+                    if (!currentUser) {
+                        alert('Please log in to access bullet library.');
+                        return;
+                    }
+
+                    // Load all bullets for the current user
+                    const { data: bullets, error } = await supabase
+                        .from('bullet_library')
+                        .select('*')
+                        .eq('user_id', currentUser.id);
+
+                    if (error) {
+                        console.error('Error loading bullets:', error);
+                        alert('Error loading bullet library');
+                        return;
+                    }
+
+                    if (!bullets || bullets.length === 0) {
+                        alert('No bullets found. Please create some bullets in your library first.');
+                        return;
+                    }
+
+                    // Create a modal to select from available bullets
+                    const bulletHTML = bullets.map(bullet => `
+                        <div onclick="selectBullet('${bullet.id}')" style="padding: 10px; border: 1px solid #ddd; margin: 5px 0; cursor: pointer; border-radius: 4px; background-color: #f9f9f9;">
+                            <strong>${bullet.manufacturer_name} ${bullet.caliber}</strong><br>
+                            <span style="color: #666;">${bullet.grain_weight}gr ${bullet.bullet_type} - BC: ${bullet.ballistic_coefficient}</span>
+                        </div>
+                    `).join('');
+
+                    const modalHTML = `
+                        <div id="bulletPickerModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center;">
+                            <div style="background: white; padding: 20px; border-radius: 8px; max-width: 600px; max-height: 70vh; overflow-y: auto; width: 90%;">
+                                <h3>Select Bullet</h3>
+                                <div style="margin: 15px 0;">
+                                    ${bulletHTML}
+                                </div>
+                                <div style="text-align: center; margin-top: 15px;">
+                                    <button onclick="closeBulletPicker()" style="background-color: #6c757d; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">Cancel</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                    document.body.insertAdjacentHTML('beforeend', modalHTML);
+                } catch (error) {
+                    console.error('Error in showBulletPicker:', error);
+                    alert('Error loading bullet library');
+                }
+            };
+
+            window.selectBullet = async function(bulletId) {
+                try {
+                    console.log('Selecting bullet with ID:', bulletId);
+                    
+                    // Load the selected bullet data
+                    const { data: bullet, error } = await supabase
+                        .from('bullet_library')
+                        .select('*')
+                        .eq('id', bulletId)
+                        .single();
+
+                    if (error) {
+                        console.error('Error loading bullet:', error);
+                        alert('Error loading bullet data');
+                        return;
+                    }
+
+                    console.log('Bullet data loaded:', bullet);
+
+                    // Close the picker first
+                    closeBulletPicker();
+
+                    // Wait a moment for the DOM to update
+                    setTimeout(() => {
+                        try {
+                            // Set the hidden field and display text
+                            const bulletField = document.getElementById('dope_bullet_library');
+                            const selectedText = document.getElementById('selected_bullet');
+                            
+                            if (bulletField) {
+                                bulletField.value = bulletId;
+                                console.log('Set bullet ID:', bulletId);
+                            }
+                            
+                            if (selectedText) {
+                                selectedText.textContent = `${bullet.manufacturer_name} ${bullet.caliber} ${bullet.grain_weight}gr`;
+                                console.log('Set selected bullet text');
+                            }
+
+                            // Auto-populate bullet-specific fields from bullet_library
+                            const setFieldValue = (fieldId, value) => {
+                                const element = document.getElementById(fieldId);
+                                if (element) {
+                                    element.value = value || '';
+                                    console.log(`Set ${fieldId} to: ${value}`);
+                                } else {
+                                    console.warn(`Field ${fieldId} not found`);
+                                }
+                            };
+                            
+                            // Ammunition-specific data from bullet_library table
+                            setFieldValue('manufacturer_name', bullet.manufacturer_name);
+                            setFieldValue('caliber', bullet.caliber);
+                            setFieldValue('grain_weight', bullet.grain_weight ? `${bullet.grain_weight}gr` : '');
+                            setFieldValue('ballistic_coefficient', bullet.ballistic_coefficient);
+                            setFieldValue('drag_model', bullet.drag_model);
+                            setFieldValue('bullet_type', bullet.bullet_type);
+                            setFieldValue('lot_number', bullet.lot_number);
+                            setFieldValue('muzzle_velocity', bullet.muzzle_velocity ? `${bullet.muzzle_velocity} fps` : '');
+                            setFieldValue('muzzle_energy', bullet.muzzle_energy ? `${bullet.muzzle_energy} ft-lbs` : '');
+
+                            console.log('Bullet data populated successfully');
+                        } catch (innerError) {
+                            console.error('Error populating bullet fields:', innerError);
+                        }
+                    }, 100);
+                } catch (error) {
+                    console.error('Error selecting bullet:', error);
+                    alert('Error selecting bullet');
+                }
+            };
+
+            window.closeBulletPicker = function() {
+                const modal = document.getElementById('bulletPickerModal');
+                if (modal) {
+                    modal.remove();
+                }
+            };
+
             window.populateFromBulletLibrary = function() {
                 console.log('Populate from bullet library');
-                // TODO: Implement auto-population
+                // This function is kept for backward compatibility
+                // The actual population now happens through showBulletPicker
             };
 
             window.showAddDopeFormDirect = function() {
@@ -3049,14 +3178,20 @@ window.resetPassword = async function() {
                                 <input type="text" id="optic_name" readonly style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: #f5f5f5;">
                             </div>
                             
+                            <!-- Bullet-specific fields from bullet_library table -->
                             <div class="form-group" style="margin-bottom: 15px;">
-                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Bullet Grain:</label>
-                                <input type="text" id="bullet_grain" readonly style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: #f5f5f5;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Manufacturer Name:</label>
+                                <input type="text" id="manufacturer_name" readonly style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: #f5f5f5;">
                             </div>
                             
                             <div class="form-group" style="margin-bottom: 15px;">
-                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Muzzle Velocity:</label>
-                                <input type="text" id="muzzle_velocity" readonly style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: #f5f5f5;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Caliber:</label>
+                                <input type="text" id="caliber" readonly style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: #f5f5f5;">
+                            </div>
+                            
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Grain Weight:</label>
+                                <input type="text" id="grain_weight" readonly style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: #f5f5f5;">
                             </div>
                             
                             <div class="form-group" style="margin-bottom: 15px;">
@@ -3065,18 +3200,28 @@ window.resetPassword = async function() {
                             </div>
                             
                             <div class="form-group" style="margin-bottom: 15px;">
-                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Zero Distance:</label>
-                                <input type="text" id="zero_distance" readonly style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: #f5f5f5;">
-                            </div>
-                            
-                            <div class="form-group" style="margin-bottom: 15px;">
-                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Height Over Bore:</label>
-                                <input type="text" id="height_over_bore" readonly style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: #f5f5f5;">
-                            </div>
-                            
-                            <div class="form-group" style="margin-bottom: 15px;">
                                 <label style="display: block; margin-bottom: 5px; font-weight: bold;">Drag Model:</label>
                                 <input type="text" id="drag_model" readonly style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: #f5f5f5;">
+                            </div>
+                            
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Bullet Type:</label>
+                                <input type="text" id="bullet_type" readonly style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: #f5f5f5;">
+                            </div>
+                            
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Lot Number:</label>
+                                <input type="text" id="lot_number" readonly style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: #f5f5f5;">
+                            </div>
+                            
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Muzzle Velocity:</label>
+                                <input type="text" id="muzzle_velocity" readonly style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: #f5f5f5;">
+                            </div>
+                            
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Muzzle Energy:</label>
+                                <input type="text" id="muzzle_energy" readonly style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: #f5f5f5;">
                             </div>
                             
                             <!-- Date and Time -->
