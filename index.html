@@ -465,17 +465,17 @@
                 
                 <div style="display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;">
                     <button class="home-nav-button" onclick="showShootingProfile()" style="background-color: #007BFF; color: white; padding: 20px 30px; font-size: 1.1em; border: none; border-radius: 8px; cursor: pointer; min-width: 200px;">
-                        📊 Shooting Profile
+                        ?  Shooting Profile
                         <div style="font-size: 0.9em; margin-top: 5px; opacity: 0.9;">Calculate trajectories, manage sessions</div>
                     </button>
                     
                     <button class="home-nav-button" onclick="showBulletLibrary()" style="background-color: #28a745; color: white; padding: 20px 30px; font-size: 1.1em; border: none; border-radius: 8px; cursor: pointer; min-width: 200px;">
-                        🎯 Bullet Library
+                        ?  Bullet Library
                         <div style="font-size: 0.9em; margin-top: 5px; opacity: 0.9;">Manage ammunition database</div>
                     </button>
                     
                     <button class="home-nav-button" onclick="showDOPE()" style="background-color: #dc3545; color: white; padding: 20px 30px; font-size: 1.1em; border: none; border-radius: 8px; cursor: pointer; min-width: 200px;">
-                        📋 DOPE
+                        ?  DOPE
                         <div style="font-size: 0.9em; margin-top: 5px; opacity: 0.9;">Data On Previous Engagements</div>
                     </button>
                 </div>
@@ -485,7 +485,7 @@
         <!-- Shooting Profile Section -->
         <div id="shootingProfileSection" style="display: none;">
             <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
-                <button class="back-to-home" onclick="showHomePage()" style="background-color: #6c757d; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer;">← Home</button>
+                <button class="back-to-home" onclick="showHomePage()" style="background-color: #6c757d; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer;">? Home</button>
                 <h2 style="margin: 0;">Shooting Profile</h2>
             </div>
             <button class="add-session" onclick="toggleForm()">Add New</button>
@@ -589,7 +589,7 @@
         <!-- Bullet Library Section -->
         <div id="bulletLibrarySection" style="display: none;">
             <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
-                <button class="back-to-home" onclick="showHomePage()" style="background-color: #6c757d; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer;">← Home</button>
+                <button class="back-to-home" onclick="showHomePage()" style="background-color: #6c757d; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer;">? Home</button>
                 <h2 style="margin: 0;">Bullet Library</h2>
             </div>
             <button class="add-session" onclick="showAddBulletForm()">Add New Bullet</button>
@@ -663,7 +663,7 @@
         <!-- DOPE Section -->
         <div id="dopeSection" style="display: none; padding: 20px; background-color: white; min-height: 400px; position: relative; z-index: 1000;">
             <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
-                <button class="back-to-home" onclick="showHomePage()" style="background-color: #6c757d; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer;">← Home</button>
+                <button class="back-to-home" onclick="showHomePage()" style="background-color: #6c757d; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer;">? Home</button>
                 <h2 style="margin: 0;">DOPE - Data On Previous Engagements</h2>
             </div>
             <button class="add-session" onclick="showAddDopeForm()">Log New Engagement</button>
@@ -1069,7 +1069,7 @@
             bulletContent.innerHTML = `
                 <div style="padding: 20px;">
                     <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
-                        <button onclick="showHomePage()" style="background-color: #6c757d; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer;">← Home</button>
+                        <button onclick="showHomePage()" style="background-color: #6c757d; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer;">? Home</button>
                         <h2 style="margin: 0;">Bullet Library</h2>
                     </div>
                     <button onclick="showAddBulletFormDirect()" style="background-color: #007BFF; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin-bottom: 15px;">Add New Bullet</button>
@@ -2607,7 +2607,7 @@ window.resetPassword = async function() {
                     dopeContent.innerHTML = `
                         <div style="padding: 20px;">
                             <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
-                                <button onclick="showHomePage()" style="background-color: #6c757d; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer;">← Home</button>
+                                <button onclick="showHomePage()" style="background-color: #6c757d; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer;">? Home</button>
                                 <h2 style="margin: 0;">DOPE - Data On Previous Engagements</h2>
                             </div>
                             <button onclick="showAddDopeFormDirect()" style="background-color: #dc3545; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin-bottom: 15px;">Log New Engagement</button>
