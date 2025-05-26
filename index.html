@@ -3007,7 +3007,7 @@ window.resetPassword = async function() {
                     const bulletHTML = bullets.map(bullet => `
                         <div onclick="selectBullet('${bullet.id}')" style="padding: 10px; border: 1px solid #ddd; margin: 5px 0; cursor: pointer; border-radius: 4px; background-color: #f9f9f9;">
                             <strong>${bullet.manufacturer_name} ${bullet.caliber}</strong><br>
-                            <span style="color: #666;">${bullet.grain_weight}gr ${bullet.bullet_type} - BC: ${bullet.ballistic_coefficient}</span>
+                            <span style="color: #666;">${bullet.grain || 'Unknown'}gr ${bullet.bullet_type || 'Unknown'} - BC: ${bullet.ballistic_coefficient || 'Unknown'}</span>
                         </div>
                     `).join('');
 
