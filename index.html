@@ -2989,18 +2989,29 @@ window.resetPassword = async function() {
                         return;
                     }
 
-                    // Validate required fields
-                    const engagementDate = document.getElementById('engagement_date').value;
-                    const rangeTarget = document.getElementById('range_to_target').value;
-                    const rangeUnit = document.getElementById('range_unit').value;
+                    // Validate required fields - get fresh values at save time
+                    const dateField = document.getElementById('engagement_date');
+                    const rangeField = document.getElementById('range_to_target');  
+                    const unitField = document.getElementById('range_unit');
+                    
+                    const engagementDate = dateField ? dateField.value : '';
+                    const rangeTarget = rangeField ? rangeField.value : '';
+                    const rangeUnit = unitField ? unitField.value : '';
+                    
+                    console.log('Field elements found:', {
+                        dateField: dateField,
+                        rangeField: rangeField,
+                        unitField: unitField
+                    });
                     
                     console.log('Field values check:', {
                         dateValue: engagementDate,
                         rangeValue: rangeTarget, 
                         unitValue: rangeUnit,
-                        dateElement: document.getElementById('engagement_date')?.value,
-                        rangeElement: document.getElementById('range_to_target')?.value,
-                        unitElement: document.getElementById('range_unit')?.value
+                        dateFieldValue: dateField?.value,
+                        rangeFieldValue: rangeField?.value,
+                        unitFieldValue: unitField?.value,
+                        allInputs: Array.from(document.querySelectorAll('input, select')).map(el => ({id: el.id, value: el.value, type: el.type}))
                     });
 
                     if (!engagementDate || !rangeTarget || !rangeUnit) {
