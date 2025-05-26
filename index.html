@@ -3172,6 +3172,29 @@ window.resetPassword = async function() {
                         wind_type: document.getElementById('wind_type').value || null,
                         temperature: parseFloat(document.getElementById('temperature').value) || null,
                         temperature_unit: document.getElementById('temperature_unit').value || null,
+                        // Environmental data
+                        humidity: parseFloat(document.getElementById('humidity').value) || null,
+                        barometric_pressure: parseFloat(document.getElementById('barometric_pressure').value) || null,
+                        pressure_unit: document.getElementById('pressure_unit').value || null,
+                        altitude: parseFloat(document.getElementById('altitude').value) || null,
+                        altitude_reference: document.getElementById('altitude_reference').value || null,
+                        angle_of_fire: parseFloat(document.getElementById('angle_of_fire').value) || null,
+                        // Ballistic effects
+                        coriolis_effect: parseFloat(document.getElementById('coriolis_effect').value) || null,
+                        spin_drift: parseFloat(document.getElementById('spin_drift').value) || null,
+                        // Target movement
+                        target_movement_speed: parseFloat(document.getElementById('target_movement_speed').value) || null,
+                        target_movement_direction: parseFloat(document.getElementById('target_movement_direction').value) || null,
+                        // Optic settings
+                        optic_magnification: parseFloat(document.getElementById('optic_magnification').value) || null,
+                        optic_adjustment_units: document.getElementById('optic_adjustment_units').value || null,
+                        parallax_setting: parseFloat(document.getElementById('parallax_setting').value) || null,
+                        // Time and conditions
+                        time_of_flight: parseFloat(document.getElementById('time_of_flight').value) || null,
+                        atmospheric_conditions: document.getElementById('atmospheric_conditions').value || null,
+                        light_conditions: document.getElementById('light_conditions').value || null,
+                        barrel_condition: document.getElementById('barrel_condition').value || null,
+                        // Outcome and notes
                         engagement_outcome: document.getElementById('engagement_outcome').value || null,
                         notes: document.getElementById('engagement_notes').value || null
                     };
