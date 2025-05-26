@@ -2623,6 +2623,9 @@ window.resetPassword = async function() {
                     appContent.appendChild(dopeContent);
                     console.log('DOPE content created and added to page');
                     
+                    // Load the engagements after the content is added
+                    setTimeout(() => loadDopeEngagementsDirect(), 200);
+                    
                 } catch (error) {
                     console.error('Error in showDOPE function:', error);
                 }
@@ -2984,7 +2987,7 @@ window.resetPassword = async function() {
                 const dopeContent = document.getElementById('dopeContent');
                 if (dopeContent) {
                     dopeContent.innerHTML = 'Loading your engagements...';
-                    loadDopeEngagementsDirect();
+                    setTimeout(() => loadDopeEngagementsDirect(), 100);
                 }
             };
 
@@ -3077,7 +3080,7 @@ window.resetPassword = async function() {
                     } else {
                         console.log('DOPE engagement saved successfully:', data);
                         alert('Engagement saved successfully!');
-                        cancelDopeForm();
+                        setTimeout(() => loadDopeEngagementsDirect(), 200);
                     }
                 } catch (error) {
                     console.error('Error:', error);
@@ -4011,6 +4014,8 @@ window.resetPassword = async function() {
         // DOPE Engagement View and Edit Functions
         window.viewDopeEngagement = async function(engagementId) {
             try {
+                console.log('Loading engagement:', engagementId);
+                
                 const { data, error } = await supabase
                     .from('dope_engagements')
                     .select('*')
@@ -4019,9 +4024,11 @@ window.resetPassword = async function() {
 
                 if (error) {
                     console.error('Error loading engagement:', error);
-                    alert('Error loading engagement details.');
+                    alert('Error loading engagement details: ' + error.message);
                     return;
                 }
+
+                console.log('Engagement data loaded:', data);
 
                 const modalHTML = `
                     <div id="viewEngagementModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center;">
