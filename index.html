@@ -3618,29 +3618,7 @@ window.resetPassword = async function() {
             window.loadedProfiles = [];
             window.loadedBullets = [];
             
-            window.showProfilePicker = function() {
-                if (!window.loadedProfiles || window.loadedProfiles.length === 0) {
-                    alert('No shooting profiles found. Please create some profiles first.');
-                    return;
-                }
-                
-                // Create detailed view with all profile data
-                let options = window.loadedProfiles.map((profile, index) => {
-                    return `${index + 1}. ${profile.shooter_name} - ${profile.firearm_name}
-   Caliber: ${profile.caliber}
-   Firearm: ${profile.firearm_type}
-   Optic: ${profile.optic_name || 'None'}
-   Barrel: ${profile.barrel_length || 'Unknown'}" 
-   Zero: ${profile.zero_distance || 'Unknown'}yds
-   Twist Rate: ${profile.barrel_twist_rate || 'Unknown'}`;
-                }).join('\n\n');
-                
-                // Use the new showProfilePicker function instead
-                console.log('Using new profile picker system');
-                showProfilePicker();
-                
-
-            };
+            // This old function has been replaced by the new showProfilePicker above
             
             window.showBulletPicker = function() {
                 if (!window.loadedBullets || window.loadedBullets.length === 0) {
