@@ -2864,11 +2864,12 @@ window.resetPassword = async function() {
                         return;
                     }
 
-                    // Create a modal to select from available profiles
+                    // Create a modal to select from available profiles with more details
                     const profileHTML = profiles.map(profile => `
                         <div onclick="selectProfile('${profile.id}')" style="padding: 10px; border: 1px solid #ddd; margin: 5px 0; cursor: pointer; border-radius: 4px; background-color: #f9f9f9;">
                             <strong>${profile.shooter_name}</strong><br>
-                            <span style="color: #666;">${profile.firearm_type} - ${profile.firearm_name} (${profile.caliber})</span>
+                            <span style="color: #666;">${profile.firearm_type} - ${profile.firearm_name}</span><br>
+                            <span style="color: #888; font-size: 0.9em;">Caliber: ${profile.caliber || 'N/A'} | Barrel: ${profile.barrel_length || 'N/A'}" | Zero: ${profile.zero_distance || 'N/A'}yds</span>
                         </div>
                     `).join('');
 
@@ -2947,6 +2948,7 @@ window.resetPassword = async function() {
                             setFieldValue('shooter_name', profile.shooter_name);
                             setFieldValue('firearm_type', profile.firearm_type);
                             setFieldValue('firearm_name', profile.firearm_name);
+                            setFieldValue('rifle_caliber', profile.caliber);
                             setFieldValue('optic_name', profile.optic_name);
                             setFieldValue('barrel_length', profile.barrel_length ? `${profile.barrel_length} inches` : '');
                             setFieldValue('barrel_twist_rate', profile.barrel_twist_rate);
@@ -3156,6 +3158,11 @@ window.resetPassword = async function() {
                             <div class="form-group" style="margin-bottom: 15px;">
                                 <label style="display: block; margin-bottom: 5px; font-weight: bold;">Firearm Name:</label>
                                 <input type="text" id="firearm_name" readonly style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: #f5f5f5;">
+                            </div>
+                            
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Rifle Caliber:</label>
+                                <input type="text" id="rifle_caliber" readonly style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: #f5f5f5;">
                             </div>
                             
                             <div class="form-group" style="margin-bottom: 15px;">
@@ -3765,21 +3772,7 @@ window.resetPassword = async function() {
             
             // This old function has been replaced by the new showProfilePicker above
             
-            window.showBulletPicker = function() {
-                if (!window.loadedBullets || window.loadedBullets.length === 0) {
-                    alert('No bullets found. Please create some bullets in your library first.');
-                    return;
-                }
-                
-                // Create detailed view with all bullet data
-                let options = window.loadedBullets.map((bullet, index) => {
-                    return `${index + 1}. ${bullet.manufacturer_name} ${bullet.caliber} ${bullet.grain}gr
-   Type: ${bullet.bullet_type}
-   BC: ${bullet.ballistic_coefficient}
-   Drag Model: ${bullet.drag_model}
-   MV: ${bullet.muzzle_velocity || 'Unknown'} fps
-   Length: ${bullet.bullet_length || 'Unknown'}"`;
-                }).join('\n\n');
+            // This old function has been replaced by the new showBulletPicker above
                 
                 // Create a proper modal popup for bullet selection
                 const modal = document.createElement('div');
