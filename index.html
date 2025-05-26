@@ -2904,23 +2904,39 @@ window.resetPassword = async function() {
                     }
 
                     // Populate all the fields with profile data
-                    document.getElementById('dope_shooting_profile').value = profileId;
-                    document.getElementById('selected_profile').textContent = `${profile.shooter_name} - ${profile.firearm_name}`;
+                    const setFieldValue = (fieldId, value) => {
+                        const element = document.getElementById(fieldId);
+                        if (element) {
+                            element.value = value || '';
+                            console.log(`Set ${fieldId} to: ${value}`);
+                        } else {
+                            console.warn(`Field ${fieldId} not found`);
+                        }
+                    };
+
+                    setFieldValue('dope_shooting_profile', profileId);
                     
-                    // Auto-populate all the ballistic fields
-                    document.getElementById('shooter_name').value = profile.shooter_name || '';
-                    document.getElementById('firearm_type').value = profile.firearm_type || '';
-                    document.getElementById('firearm_name').value = profile.firearm_name || '';
-                    document.getElementById('caliber').value = profile.caliber || '';
-                    document.getElementById('barrel_length').value = profile.barrel_length ? `${profile.barrel_length} inches` : '';
-                    document.getElementById('barrel_twist_rate').value = profile.barrel_twist_rate || '';
-                    document.getElementById('optic_name').value = profile.optic_name || '';
-                    document.getElementById('bullet_grain').value = profile.bullet_grain || '';
-                    document.getElementById('muzzle_velocity').value = profile.muzzle_velocity || '';
-                    document.getElementById('ballistic_coefficient').value = profile.ballistic_coefficient || '';
-                    document.getElementById('zero_distance').value = profile.zero_distance || '';
-                    document.getElementById('height_over_bore').value = profile.height_over_bore || '';
-                    document.getElementById('drag_model').value = profile.drag_model || '';
+                    const selectedProfileElement = document.getElementById('selected_profile');
+                    if (selectedProfileElement) {
+                        selectedProfileElement.textContent = `${profile.shooter_name} - ${profile.firearm_name}`;
+                    }
+                    
+                    // Auto-populate all the ballistic fields with error checking
+                    setFieldValue('shooter_name', profile.shooter_name);
+                    setFieldValue('firearm_type', profile.firearm_type);
+                    setFieldValue('firearm_name', profile.firearm_name);
+                    setFieldValue('caliber', profile.caliber);
+                    setFieldValue('barrel_length', profile.barrel_length ? `${profile.barrel_length} inches` : '');
+                    setFieldValue('barrel_twist_rate', profile.barrel_twist_rate);
+                    setFieldValue('optic_name', profile.optic_name);
+                    setFieldValue('bullet_grain', profile.bullet_grain);
+                    setFieldValue('muzzle_velocity', profile.muzzle_velocity);
+                    setFieldValue('ballistic_coefficient', profile.ballistic_coefficient);
+                    setFieldValue('zero_distance', profile.zero_distance);
+                    setFieldValue('height_over_bore', profile.height_over_bore);
+                    setFieldValue('drag_model', profile.drag_model);
+
+                    console.log('Profile data populated successfully');
 
                     closeProfilePicker();
                 } catch (error) {
