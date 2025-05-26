@@ -4696,7 +4696,7 @@ window.resetPassword = async function() {
                     }
 
                     const successMessage = bulletCount === 1 
-                        ? 'Bullet deleted successfully!' 
+                        📊'Bullet deleted successfully!' 
                         : `${bulletCount} bullets deleted successfully!`;
                     
                     alert(successMessage);
@@ -4925,6 +4925,59 @@ window.resetPassword = async function() {
             }
         };
 
+        
+        // Fix button text and form carryover issues
+        function fixButtonTextAndCleanup() {
+            // Fix question mark characters in button text
+            const buttons = document.querySelectorAll('.home-nav-button');
+            buttons.forEach(button => {
+                const text = button.innerHTML;
+                if (text.includes('?  Shooting Profile')) {
+                    button.innerHTML = text.replace('?  Shooting Profile', '📊 Zero Profile');
+                } else if (text.includes('?  Bullet Library')) {
+                    button.innerHTML = text.replace('?  Bullet Library', '🎯 Bullet Library');
+                } else if (text.includes('?  DOPE')) {
+                    button.innerHTML = text.replace('?  DOPE', '📋 DOPE');
+                }
+            });
+        }
+        
+        // Enhanced showHomePage function to prevent form carryover
+        const originalShowHomePage = window.showHomePage;
+        window.showHomePage = function() {
+            // Hide all sections properly
+            hideAllSections();
+            
+            // Clear any lingering form content by removing dynamic elements
+            const existingFirearmLibrary = document.querySelector('#firearmLibrarySection');
+            const existingDopeSection = document.querySelector('#dopeSection');
+            
+            if (existingFirearmLibrary && existingFirearmLibrary.parentNode) {
+                existingFirearmLibrary.parentNode.removeChild(existingFirearmLibrary);
+            }
+            if (existingDopeSection && existingDopeSection.parentNode) {
+                existingDopeSection.parentNode.removeChild(existingDopeSection);
+            }
+            
+            // Show home page
+            document.getElementById('homePage').style.display = 'block';
+            
+            // Fix button text issues
+            fixButtonTextAndCleanup();
+        };
+        
+        // Run fixes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            fixButtonTextAndCleanup();
+        });
+        
+        // Also run when page becomes visible (for navigation)
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) {
+                setTimeout(fixButtonTextAndCleanup, 100);
+            }
+        });
+        
     </script>
 </body>
 </html>
