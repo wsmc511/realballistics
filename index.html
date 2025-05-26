@@ -4021,6 +4021,14 @@ window.resetPassword = async function() {
         window.viewDopeEngagement = async function(engagementId) {
             try {
                 console.log('Loading engagement:', engagementId);
+                console.log('Supabase object:', typeof supabase);
+                
+                // Check if supabase is available
+                if (typeof supabase === 'undefined') {
+                    console.error('Supabase is not defined');
+                    alert('Database connection not available. Please refresh the page.');
+                    return;
+                }
                 
                 // Use the same Supabase reference as other working functions
                 const { data, error } = await supabase
@@ -4088,8 +4096,10 @@ window.resetPassword = async function() {
 
                 document.body.insertAdjacentHTML('beforeend', modalHTML);
             } catch (error) {
-                console.error('Error:', error);
-                alert('Error loading engagement details.');
+                console.error('Error in viewDopeEngagement:', error);
+                console.error('Error message:', error.message);
+                console.error('Error stack:', error.stack);
+                alert('Error loading engagement details: ' + (error.message || 'Unknown error'));
             }
         };
 
