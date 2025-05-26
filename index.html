@@ -4931,22 +4931,48 @@ window.resetPassword = async function() {
             // Fix question mark characters in button text
             const buttons = document.querySelectorAll('.home-nav-button');
             buttons.forEach(button => {
-                const text = button.innerHTML;
-                if (text.includes('?  Shooting Profile')) {
-                    button.innerHTML = text.replace('?  Shooting Profile', '📊 Zero Profile');
-                } else if (text.includes('?  Bullet Library')) {
-                    button.innerHTML = text.replace('?  Bullet Library', '🎯 Bullet Library');
-                } else if (text.includes('?  DOPE')) {
-                    button.innerHTML = text.replace('?  DOPE', '📋 DOPE');
+                let text = button.innerHTML;
+                
+                // More aggressive replacement for various question mark patterns
+                if (text.includes('Shooting Profile') || text.includes('? Shooting')) {
+                    button.innerHTML = text.replace(/\?\s*Shooting Profile/g, '📊 Zero Profile').replace(/\?\s*Shooting/g, '📊 Zero');
+                }
+                if (text.includes('Bullet Library') || text.includes('? Bullet')) {
+                    button.innerHTML = text.replace(/\?\s*Bullet Library/g, '🎯 Bullet Library').replace(/\?\s*Bullet/g, '🎯 Bullet');
+                }
+                if (text.includes('DOPE') && text.includes('?')) {
+                    button.innerHTML = text.replace(/\?\s*DOPE/g, '📋 DOPE');
+                }
+                
+                // Force specific text replacements
+                if (button.onclick && button.onclick.toString().includes('showZeroProfile')) {
+                    const newHTML = button.innerHTML.replace(/^[^a-zA-Z]*/, '📊 ').replace('Shooting Profile', 'Zero Profile');
+                    button.innerHTML = newHTML;
+                }
+                if (button.onclick && button.onclick.toString().includes('showBulletLibrary')) {
+                    const newHTML = button.innerHTML.replace(/^[^a-zA-Z]*/, '🎯 ');
+                    button.innerHTML = newHTML;
+                }
+                if (button.onclick && button.onclick.toString().includes('showDOPE')) {
+                    const newHTML = button.innerHTML.replace(/^[^a-zA-Z]*/, '📋 ');
+                    button.innerHTML = newHTML;
                 }
             });
         }
         
         // Enhanced showHomePage function to prevent form carryover
-        const originalShowHomePage = window.showHomePage;
         window.showHomePage = function() {
             // Hide all sections properly
-            hideAllSections();
+            if (typeof hideAllSections === 'function') {
+                hideAllSections();
+            } else {
+                // Manual section hiding if function doesn't exist
+                const sections = ['shootingProfileSection', 'firearmLibrarySection', 'dopeSection', 'bulletLibrarySection'];
+                sections.forEach(id => {
+                    const element = document.getElementById(id);
+                    if (element) element.style.display = 'none';
+                });
+            }
             
             // Clear any lingering form content by removing dynamic elements
             const existingFirearmLibrary = document.querySelector('#firearmLibrarySection');
@@ -4968,7 +4994,7 @@ window.resetPassword = async function() {
         
         // Run fixes on page load
         document.addEventListener('DOMContentLoaded', function() {
-            fixButtonTextAndCleanup();
+            setTimeout(fixButtonTextAndCleanup, 100);
         });
         
         // Also run when page becomes visible (for navigation)
@@ -4977,6 +5003,9 @@ window.resetPassword = async function() {
                 setTimeout(fixButtonTextAndCleanup, 100);
             }
         });
+        
+        // Run periodically to catch any missed updates
+        setInterval(fixButtonTextAndCleanup, 2000);
         
     </script>
 </body>
