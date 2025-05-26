@@ -2842,8 +2842,13 @@ window.resetPassword = async function() {
 
             window.showProfilePicker = async function() {
                 try {
-                    // Load all shooting profiles for the current user
-                    const { data: profiles, error } = await window.supabaseClient
+                    if (!currentUser) {
+                        alert('Please log in to access shooting profiles.');
+                        return;
+                    }
+
+                    // Load all shooting profiles for the current user - use the same client as other functions
+                    const { data: profiles, error } = await supabase
                         .from('ballistic_sessions')
                         .select('*')
                         .eq('user_id', currentUser.id);
@@ -2890,8 +2895,10 @@ window.resetPassword = async function() {
 
             window.selectProfile = async function(profileId) {
                 try {
-                    // Load the selected profile data
-                    const { data: profile, error } = await window.supabaseClient
+                    console.log('Selecting profile with ID:', profileId);
+                    
+                    // Load the selected profile data - use the same client as other functions
+                    const { data: profile, error } = await supabase
                         .from('ballistic_sessions')
                         .select('*')
                         .eq('id', profileId)
@@ -2903,42 +2910,58 @@ window.resetPassword = async function() {
                         return;
                     }
 
-                    // Populate all the fields with profile data
-                    const setFieldValue = (fieldId, value) => {
-                        const element = document.getElementById(fieldId);
-                        if (element) {
-                            element.value = value || '';
-                            console.log(`Set ${fieldId} to: ${value}`);
-                        } else {
-                            console.warn(`Field ${fieldId} not found`);
-                        }
-                    };
+                    console.log('Profile data loaded:', profile);
 
-                    setFieldValue('dope_shooting_profile', profileId);
-                    
-                    const selectedProfileElement = document.getElementById('selected_profile');
-                    if (selectedProfileElement) {
-                        selectedProfileElement.textContent = `${profile.shooter_name} - ${profile.firearm_name}`;
-                    }
-                    
-                    // Auto-populate all the ballistic fields with error checking
-                    setFieldValue('shooter_name', profile.shooter_name);
-                    setFieldValue('firearm_type', profile.firearm_type);
-                    setFieldValue('firearm_name', profile.firearm_name);
-                    setFieldValue('caliber', profile.caliber);
-                    setFieldValue('barrel_length', profile.barrel_length ? `${profile.barrel_length} inches` : '');
-                    setFieldValue('barrel_twist_rate', profile.barrel_twist_rate);
-                    setFieldValue('optic_name', profile.optic_name);
-                    setFieldValue('bullet_grain', profile.bullet_grain);
-                    setFieldValue('muzzle_velocity', profile.muzzle_velocity);
-                    setFieldValue('ballistic_coefficient', profile.ballistic_coefficient);
-                    setFieldValue('zero_distance', profile.zero_distance);
-                    setFieldValue('height_over_bore', profile.height_over_bore);
-                    setFieldValue('drag_model', profile.drag_model);
-
-                    console.log('Profile data populated successfully');
-
+                    // Close the picker first to avoid any interference
                     closeProfilePicker();
+
+                    // Wait a moment for the DOM to update
+                    setTimeout(() => {
+                        try {
+                            // Set the hidden field and display text
+                            const profileField = document.getElementById('dope_shooting_profile');
+                            const selectedText = document.getElementById('selected_profile');
+                            
+                            if (profileField) {
+                                profileField.value = profileId;
+                                console.log('Set profile ID:', profileId);
+                            }
+                            
+                            if (selectedText) {
+                                selectedText.textContent = `${profile.shooter_name} - ${profile.firearm_name}`;
+                                console.log('Set selected text');
+                            }
+
+                            // Populate all the ballistic fields with error checking
+                            const setFieldValue = (fieldId, value) => {
+                                const element = document.getElementById(fieldId);
+                                if (element) {
+                                    element.value = value || '';
+                                    console.log(`Set ${fieldId} to: ${value}`);
+                                } else {
+                                    console.warn(`Field ${fieldId} not found`);
+                                }
+                            };
+                            
+                            setFieldValue('shooter_name', profile.shooter_name);
+                            setFieldValue('firearm_type', profile.firearm_type);
+                            setFieldValue('firearm_name', profile.firearm_name);
+                            setFieldValue('caliber', profile.caliber);
+                            setFieldValue('barrel_length', profile.barrel_length ? `${profile.barrel_length} inches` : '');
+                            setFieldValue('barrel_twist_rate', profile.barrel_twist_rate);
+                            setFieldValue('optic_name', profile.optic_name);
+                            setFieldValue('bullet_grain', profile.bullet_grain);
+                            setFieldValue('muzzle_velocity', profile.muzzle_velocity);
+                            setFieldValue('ballistic_coefficient', profile.ballistic_coefficient);
+                            setFieldValue('zero_distance', profile.zero_distance);
+                            setFieldValue('height_over_bore', profile.height_over_bore);
+                            setFieldValue('drag_model', profile.drag_model);
+
+                            console.log('Profile data populated successfully');
+                        } catch (innerError) {
+                            console.error('Error populating fields:', innerError);
+                        }
+                    }, 100);
                 } catch (error) {
                     console.error('Error selecting profile:', error);
                     alert('Error selecting profile');
@@ -3612,50 +3635,9 @@ window.resetPassword = async function() {
    Twist Rate: ${profile.barrel_twist_rate || 'Unknown'}`;
                 }).join('\n\n');
                 
-                // Create a proper modal popup instead of prompt for better display
-                const modal = document.createElement('div');
-                modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 10000; display: flex; align-items: center; justify-content: center;';
-                
-                const content = document.createElement('div');
-                content.style.cssText = 'background: white; padding: 20px; border-radius: 8px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto;';
-                
-                content.innerHTML = `
-                    <h3 style="margin-top: 0;">Select a Shooting Profile</h3>
-                    <div style="max-height: 60vh; overflow-y: auto; border: 1px solid #ddd; padding: 10px;">
-                        ${window.loadedProfiles.map((profile, index) => `
-                            <div style="padding: 10px; border-bottom: 1px solid #eee; cursor: pointer; hover: background-color: #f5f5f5;" 
-                                 onclick="selectProfile('${profile.id}', '${profile.shooter_name} - ${profile.firearm_name}'); document.body.removeChild(this.closest('div[style*=position]'));">
-                                <strong>${index + 1}. ${profile.shooter_name} - ${profile.firearm_name}</strong><br>
-                                Caliber: ${profile.caliber}<br>
-                                Firearm: ${profile.firearm_type}<br>
-                                Optic: ${profile.optic_name || 'None'}<br>
-                                Barrel: ${profile.barrel_length || 'Unknown'}"<br>
-                                Zero: ${profile.zero_distance || 'Unknown'}yds<br>
-                                Twist Rate: ${profile.barrel_twist_rate || 'Unknown'}
-                            </div>
-                        `).join('')}
-                    </div>
-                    <div style="margin-top: 15px; text-align: center;">
-                        <button onclick="document.body.removeChild(this.closest('div[style*=position]'));" 
-                                style="padding: 8px 20px; background: #666; color: white; border: none; border-radius: 4px; cursor: pointer;">Cancel</button>
-                    </div>
-                `;
-                
-                modal.appendChild(content);
-                document.body.appendChild(modal);
-                
-                // Add selection function
-                window.selectProfile = function(profileId, profileName) {
-                    document.getElementById('dope_shooting_profile').value = profileId;
-                    
-                    // Find the selected profile data
-                    const selectedProfile = window.loadedProfiles.find(p => p.id === profileId);
-                    if (selectedProfile) {
-                        document.getElementById('shooter_name').value = selectedProfile.shooter_name;
-                        document.getElementById('firearm_info').value = `${selectedProfile.firearm_type} - ${selectedProfile.firearm_name}`;
-                        document.getElementById('optic_name').value = selectedProfile.optic_name || '';
-                    }
-                };
+                // Use the new showProfilePicker function instead
+                console.log('Using new profile picker system');
+                showProfilePicker();
                 
 
             };
