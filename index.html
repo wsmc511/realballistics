@@ -3097,13 +3097,8 @@ window.resetPassword = async function() {
                         return;
                     }
 
-                    // Ensure Supabase is available
-                    if (!window.supabase) {
-                        console.error('Supabase not initialized in loadDopeEngagementsDirect');
-                        return;
-                    }
-
-                    const { data, error } = await window.supabase
+                    // Use the same Supabase reference as other working functions
+                    const { data, error } = await supabase
                         .from('dope_engagements')
                         .select('*')
                         .eq('user_id', currentUser.id)
@@ -4027,14 +4022,8 @@ window.resetPassword = async function() {
             try {
                 console.log('Loading engagement:', engagementId);
                 
-                // Ensure Supabase is available
-                if (!window.supabase) {
-                    console.error('Supabase not initialized');
-                    alert('Database connection not available. Please refresh the page.');
-                    return;
-                }
-                
-                const { data, error } = await window.supabase
+                // Use the same Supabase reference as other working functions
+                const { data, error } = await supabase
                     .from('dope_engagements')
                     .select('*')
                     .eq('id', engagementId)
@@ -4106,14 +4095,8 @@ window.resetPassword = async function() {
 
         window.editDopeEngagement = async function(engagementId) {
             try {
-                // Ensure Supabase is available
-                if (!window.supabase) {
-                    console.error('Supabase not initialized');
-                    alert('Database connection not available. Please refresh the page.');
-                    return;
-                }
-                
-                const { data, error } = await window.supabase
+                // Use the same Supabase reference as other working functions
+                const { data, error } = await supabase
                     .from('dope_engagements')
                     .select('*')
                     .eq('id', engagementId)
