@@ -3049,10 +3049,26 @@ window.resetPassword = async function() {
 
                     console.log('About to save DOPE data:', dopeData);
 
-                    const { data, error } = await supabase
-                        .from('dope_engagements')
-                        .insert([dopeData])
-                        .select();
+                    let data, error;
+                    
+                    // Check if we're editing an existing engagement
+                    if (window.editingEngagementId) {
+                        const result = await supabase
+                            .from('dope_engagements')
+                            .update(dopeData)
+                            .eq('id', window.editingEngagementId)
+                            .select();
+                        data = result.data;
+                        error = result.error;
+                        window.editingEngagementId = null; // Clear editing mode
+                    } else {
+                        const result = await supabase
+                            .from('dope_engagements')
+                            .insert([dopeData])
+                            .select();
+                        data = result.data;
+                        error = result.error;
+                    }
 
                     if (error) {
                         console.error('Error saving DOPE engagement:', error);
@@ -3109,10 +3125,12 @@ window.resetPassword = async function() {
                                 <tr>
                                     <td style="border: 1px solid #ddd; padding: 8px;">${engagement.engagement_date}</td>
                                     <td style="border: 1px solid #ddd; padding: 8px;">${engagement.range_to_target} ${engagement.range_unit}</td>
-                                    <td style="border: 1px solid #ddd; padding: 8px;">${engagement.wind_speed ? `${engagement.wind_speed} ${engagement.wind_type || ''}` : 'N/A'}</td>
-                                    <td style="border: 1px solid #ddd; padding: 8px;">${engagement.temperature ? `${engagement.temperature}°${engagement.temperature_unit}` : 'N/A'}</td>
-                                    <td style="border: 1px solid #ddd; padding: 8px;">${engagement.engagement_outcome || 'N/A'}</td>
+                                    <td style="border: 1px solid #ddd; padding: 8px;">${engagement.wind_speed !== null && engagement.wind_speed !== undefined ? `${engagement.wind_speed} ${engagement.wind_type || ''}` : 'N/A'}</td>
+                                    <td style="border: 1px solid #ddd; padding: 8px;">${engagement.temperature !== null && engagement.temperature !== undefined ? `${engagement.temperature}°${engagement.temperature_unit || 'F'}` : 'N/A'}</td>
+                                    <td style="border: 1px solid #ddd; padding: 8px;">${engagement.engagement_outcome && engagement.engagement_outcome.trim() !== '' ? engagement.engagement_outcome : 'N/A'}</td>
                                     <td style="border: 1px solid #ddd; padding: 8px;">
+                                        <button onclick="viewDopeEngagement('${engagement.id}')" style="background-color: #007bff; color: white; padding: 4px 8px; border: none; border-radius: 4px; cursor: pointer; margin-right: 5px;">View</button>
+                                        <button onclick="editDopeEngagement('${engagement.id}')" style="background-color: #28a745; color: white; padding: 4px 8px; border: none; border-radius: 4px; cursor: pointer; margin-right: 5px;">Edit</button>
                                         <button onclick="deleteDopeEngagement('${engagement.id}')" style="background-color: #dc3545; color: white; padding: 4px 8px; border: none; border-radius: 4px; cursor: pointer;">Delete</button>
                                     </td>
                                 </tr>
@@ -3989,6 +4007,133 @@ window.resetPassword = async function() {
                 }
             };
         });
+
+        // DOPE Engagement View and Edit Functions
+        window.viewDopeEngagement = async function(engagementId) {
+            try {
+                const { data, error } = await supabase
+                    .from('dope_engagements')
+                    .select('*')
+                    .eq('id', engagementId)
+                    .single();
+
+                if (error) {
+                    console.error('Error loading engagement:', error);
+                    alert('Error loading engagement details.');
+                    return;
+                }
+
+                const modalHTML = `
+                    <div id="viewEngagementModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center;">
+                        <div style="background: white; padding: 20px; border-radius: 8px; max-width: 800px; max-height: 90vh; overflow-y: auto; width: 90%;">
+                            <h3>DOPE Engagement Details</h3>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                                <div><strong>Date:</strong> ${data.engagement_date}</div>
+                                <div><strong>Time:</strong> ${data.engagement_time || 'N/A'}</div>
+                                <div><strong>Range:</strong> ${data.range_to_target} ${data.range_unit}</div>
+                                <div><strong>Wind Speed:</strong> ${data.wind_speed || 'N/A'}</div>
+                                <div><strong>Wind Direction:</strong> ${data.wind_direction || 'N/A'}°</div>
+                                <div><strong>Wind Type:</strong> ${data.wind_type || 'N/A'}</div>
+                                <div><strong>Temperature:</strong> ${data.temperature !== null ? `${data.temperature}°${data.temperature_unit}` : 'N/A'}</div>
+                                <div><strong>Pressure:</strong> ${data.barometric_pressure || 'N/A'}</div>
+                                <div><strong>Humidity:</strong> ${data.humidity ? `${data.humidity}%` : 'N/A'}</div>
+                                <div><strong>Altitude:</strong> ${data.altitude || 'N/A'}</div>
+                                <div><strong>Angle of Fire:</strong> ${data.angle_of_fire || 'N/A'}°</div>
+                                <div><strong>Spin Drift:</strong> ${data.spin_drift || 'N/A'}</div>
+                                <div><strong>Coriolis Effect:</strong> ${data.coriolis_effect || 'N/A'}</div>
+                                <div><strong>Target Speed:</strong> ${data.target_movement_speed || 'N/A'}</div>
+                                <div><strong>Target Direction:</strong> ${data.target_movement_direction || 'N/A'}°</div>
+                                <div><strong>Optic Magnification:</strong> ${data.optic_magnification ? `${data.optic_magnification}x` : 'N/A'}</div>
+                                <div><strong>Adjustment Units:</strong> ${data.optic_adjustment_units || 'N/A'}</div>
+                                <div><strong>Parallax Setting:</strong> ${data.parallax_setting || 'N/A'}</div>
+                                <div><strong>Time of Flight:</strong> ${data.time_of_flight || 'N/A'}s</div>
+                                <div><strong>Barrel Condition:</strong> ${data.barrel_condition || 'N/A'}</div>
+                            </div>
+                            <div style="margin-bottom: 15px;">
+                                <strong>Atmospheric Conditions:</strong><br>
+                                ${data.atmospheric_conditions || 'N/A'}
+                            </div>
+                            <div style="margin-bottom: 15px;">
+                                <strong>Light Conditions:</strong><br>
+                                ${data.light_conditions || 'N/A'}
+                            </div>
+                            <div style="margin-bottom: 15px;">
+                                <strong>Engagement Outcome:</strong><br>
+                                ${data.engagement_outcome || 'N/A'}
+                            </div>
+                            <div style="margin-bottom: 20px;">
+                                <strong>Notes:</strong><br>
+                                ${data.notes || 'N/A'}
+                            </div>
+                            <div style="text-align: center;">
+                                <button onclick="closeViewModal()" style="background-color: #6c757d; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                document.body.insertAdjacentHTML('beforeend', modalHTML);
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error loading engagement details.');
+            }
+        };
+
+        window.editDopeEngagement = async function(engagementId) {
+            try {
+                const { data, error } = await supabase
+                    .from('dope_engagements')
+                    .select('*')
+                    .eq('id', engagementId)
+                    .single();
+
+                if (error) {
+                    console.error('Error loading engagement:', error);
+                    alert('Error loading engagement for editing.');
+                    return;
+                }
+
+                // Store the editing ID
+                window.editingEngagementId = engagementId;
+                
+                // Show the form
+                showAddDopeFormDirect();
+                
+                // Pre-fill the form with existing data
+                setTimeout(() => {
+                    if (document.getElementById('engagement_date')) document.getElementById('engagement_date').value = data.engagement_date || '';
+                    if (document.getElementById('engagement_time')) document.getElementById('engagement_time').value = data.engagement_time || '';
+                    if (document.getElementById('range_to_target')) document.getElementById('range_to_target').value = data.range_to_target || '';
+                    if (document.getElementById('range_unit')) document.getElementById('range_unit').value = data.range_unit || 'yards';
+                    if (document.getElementById('wind_speed')) document.getElementById('wind_speed').value = data.wind_speed || '';
+                    if (document.getElementById('wind_direction')) document.getElementById('wind_direction').value = data.wind_direction || '';
+                    if (document.getElementById('wind_type')) document.getElementById('wind_type').value = data.wind_type || '';
+                    if (document.getElementById('temperature')) document.getElementById('temperature').value = data.temperature || '';
+                    if (document.getElementById('temperature_unit')) document.getElementById('temperature_unit').value = data.temperature_unit || 'F';
+                    if (document.getElementById('engagement_outcome')) document.getElementById('engagement_outcome').value = data.engagement_outcome || '';
+                    if (document.getElementById('engagement_notes')) document.getElementById('engagement_notes').value = data.notes || '';
+                    
+                    // Update save button for editing
+                    const saveButton = document.querySelector('button[onclick="saveDopeEngagement()"]');
+                    if (saveButton) {
+                        saveButton.textContent = 'Update Engagement';
+                        saveButton.style.backgroundColor = '#ffc107';
+                    }
+                }, 100);
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error loading engagement for editing.');
+            }
+        };
+
+        window.closeViewModal = function() {
+            const modal = document.getElementById('viewEngagementModal');
+            if (modal) {
+                modal.remove();
+            }
+        };
+
     </script>
 </body>
 </html>
