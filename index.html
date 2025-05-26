@@ -2840,9 +2840,106 @@ window.resetPassword = async function() {
                 alert('Detailed view coming soon!');
             };
 
+            window.showProfilePicker = async function() {
+                try {
+                    // Load all shooting profiles for the current user
+                    const { data: profiles, error } = await window.supabaseClient
+                        .from('ballistic_sessions')
+                        .select('*')
+                        .eq('user_id', currentUser.id);
+
+                    if (error) {
+                        console.error('Error loading profiles:', error);
+                        alert('Error loading shooting profiles');
+                        return;
+                    }
+
+                    if (!profiles || profiles.length === 0) {
+                        alert('No shooting profiles found. Please create a shooting profile first.');
+                        return;
+                    }
+
+                    // Create a modal to select from available profiles
+                    const profileHTML = profiles.map(profile => `
+                        <div onclick="selectProfile('${profile.id}')" style="padding: 10px; border: 1px solid #ddd; margin: 5px 0; cursor: pointer; border-radius: 4px; background-color: #f9f9f9;">
+                            <strong>${profile.shooter_name}</strong><br>
+                            <span style="color: #666;">${profile.firearm_type} - ${profile.firearm_name} (${profile.caliber})</span>
+                        </div>
+                    `).join('');
+
+                    const modalHTML = `
+                        <div id="profilePickerModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center;">
+                            <div style="background: white; padding: 20px; border-radius: 8px; max-width: 600px; max-height: 70vh; overflow-y: auto; width: 90%;">
+                                <h3>Select Shooting Profile</h3>
+                                <div style="margin: 15px 0;">
+                                    ${profileHTML}
+                                </div>
+                                <div style="text-align: center; margin-top: 15px;">
+                                    <button onclick="closeProfilePicker()" style="background-color: #6c757d; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">Cancel</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                    document.body.insertAdjacentHTML('beforeend', modalHTML);
+                } catch (error) {
+                    console.error('Error in showProfilePicker:', error);
+                    alert('Error loading profiles');
+                }
+            };
+
+            window.selectProfile = async function(profileId) {
+                try {
+                    // Load the selected profile data
+                    const { data: profile, error } = await window.supabaseClient
+                        .from('ballistic_sessions')
+                        .select('*')
+                        .eq('id', profileId)
+                        .single();
+
+                    if (error) {
+                        console.error('Error loading profile:', error);
+                        alert('Error loading profile data');
+                        return;
+                    }
+
+                    // Populate all the fields with profile data
+                    document.getElementById('dope_shooting_profile').value = profileId;
+                    document.getElementById('selected_profile').textContent = `${profile.shooter_name} - ${profile.firearm_name}`;
+                    
+                    // Auto-populate all the ballistic fields
+                    document.getElementById('shooter_name').value = profile.shooter_name || '';
+                    document.getElementById('firearm_type').value = profile.firearm_type || '';
+                    document.getElementById('firearm_name').value = profile.firearm_name || '';
+                    document.getElementById('caliber').value = profile.caliber || '';
+                    document.getElementById('barrel_length').value = profile.barrel_length ? `${profile.barrel_length} inches` : '';
+                    document.getElementById('barrel_twist_rate').value = profile.barrel_twist_rate || '';
+                    document.getElementById('optic_name').value = profile.optic_name || '';
+                    document.getElementById('bullet_grain').value = profile.bullet_grain || '';
+                    document.getElementById('muzzle_velocity').value = profile.muzzle_velocity || '';
+                    document.getElementById('ballistic_coefficient').value = profile.ballistic_coefficient || '';
+                    document.getElementById('zero_distance').value = profile.zero_distance || '';
+                    document.getElementById('height_over_bore').value = profile.height_over_bore || '';
+                    document.getElementById('drag_model').value = profile.drag_model || '';
+
+                    closeProfilePicker();
+                } catch (error) {
+                    console.error('Error selecting profile:', error);
+                    alert('Error selecting profile');
+                }
+            };
+
+            window.closeProfilePicker = function() {
+                const modal = document.getElementById('profilePickerModal');
+                if (modal) {
+                    modal.remove();
+                }
+            };
+
             window.populateFromShootingProfile = function() {
                 console.log('Populate from shooting profile');
-                // TODO: Implement auto-population
+                // This function is kept for backward compatibility
+                // The actual population now happens through showProfilePicker
             };
 
             window.populateFromBulletLibrary = function() {
@@ -2884,18 +2981,63 @@ window.resetPassword = async function() {
                             </div>
                             
                             <div class="form-group" style="margin-bottom: 15px;">
-                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Firearm:</label>
-                                <input type="text" id="firearm_info" readonly style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: #f5f5f5;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Firearm Type:</label>
+                                <input type="text" id="firearm_type" readonly style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: #f5f5f5;">
                             </div>
                             
                             <div class="form-group" style="margin-bottom: 15px;">
-                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Optic:</label>
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Firearm Name:</label>
+                                <input type="text" id="firearm_name" readonly style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: #f5f5f5;">
+                            </div>
+                            
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Caliber:</label>
+                                <input type="text" id="caliber" readonly style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: #f5f5f5;">
+                            </div>
+                            
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Barrel Length:</label>
+                                <input type="text" id="barrel_length" readonly style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: #f5f5f5;">
+                            </div>
+                            
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Barrel Twist Rate:</label>
+                                <input type="text" id="barrel_twist_rate" readonly style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: #f5f5f5;">
+                            </div>
+                            
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Optic Name:</label>
                                 <input type="text" id="optic_name" readonly style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: #f5f5f5;">
                             </div>
                             
                             <div class="form-group" style="margin-bottom: 15px;">
-                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Bullet Details:</label>
-                                <input type="text" id="bullet_details" readonly style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: #f5f5f5;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Bullet Grain:</label>
+                                <input type="text" id="bullet_grain" readonly style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: #f5f5f5;">
+                            </div>
+                            
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Muzzle Velocity:</label>
+                                <input type="text" id="muzzle_velocity" readonly style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: #f5f5f5;">
+                            </div>
+                            
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Ballistic Coefficient:</label>
+                                <input type="text" id="ballistic_coefficient" readonly style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: #f5f5f5;">
+                            </div>
+                            
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Zero Distance:</label>
+                                <input type="text" id="zero_distance" readonly style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: #f5f5f5;">
+                            </div>
+                            
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Height Over Bore:</label>
+                                <input type="text" id="height_over_bore" readonly style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: #f5f5f5;">
+                            </div>
+                            
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Drag Model:</label>
+                                <input type="text" id="drag_model" readonly style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: #f5f5f5;">
                             </div>
                             
                             <!-- Date and Time -->
