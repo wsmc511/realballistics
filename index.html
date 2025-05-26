@@ -3135,19 +3135,34 @@ window.resetPassword = async function() {
                         tagName: el.tagName
                     })));
                     
-                    // Get ALL form field values with better error handling
+                    // Get ALL form field values with better error handling - use more direct approach
                     const getFieldValue = (id) => {
                         const element = document.getElementById(id);
                         if (!element) {
                             console.warn(`Field ${id} not found`);
-                            // Try alternative methods to find the field
-                            const byName = document.querySelector(`[name="${id}"]`);
-                            const byClass = document.querySelector(`.${id}`);
-                            console.log(`Alternative search for ${id}:`, { byName, byClass });
-                            return byName?.value || byClass?.value || null;
+                            return null;
                         }
-                        console.log(`Found field ${id}:`, element.value);
-                        return element.value || null;
+                        
+                        // Log the element details for debugging
+                        console.log(`Checking field ${id}:`, {
+                            element: element,
+                            value: element.value,
+                            type: element.type,
+                            selectedIndex: element.selectedIndex,
+                            innerHTML: element.innerHTML?.substring(0, 100)
+                        });
+                        
+                        // For select elements, get the selected value differently
+                        if (element.tagName === 'SELECT') {
+                            const selectedValue = element.options[element.selectedIndex]?.value || '';
+                            console.log(`Select field ${id} selected value:`, selectedValue);
+                            return selectedValue || null;
+                        }
+                        
+                        // For input elements, get the value directly
+                        const value = element.value?.trim() || '';
+                        console.log(`Input field ${id} value:`, value);
+                        return value || null;
                     };
                     
                     const getNumericValue = (id) => {
