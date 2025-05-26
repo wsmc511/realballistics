@@ -3125,13 +3125,28 @@ window.resetPassword = async function() {
                     // Add small delay to ensure form is fully rendered and capture fresh values
                     await new Promise(resolve => setTimeout(resolve, 100));
                     
+                    // Debug: Log all available form fields
+                    const allInputs = Array.from(document.querySelectorAll('input, select, textarea'));
+                    console.log('All available form fields:', allInputs.map(el => ({
+                        id: el.id,
+                        name: el.name,
+                        type: el.type,
+                        value: el.value,
+                        tagName: el.tagName
+                    })));
+                    
                     // Get ALL form field values with better error handling
                     const getFieldValue = (id) => {
                         const element = document.getElementById(id);
                         if (!element) {
                             console.warn(`Field ${id} not found`);
-                            return null;
+                            // Try alternative methods to find the field
+                            const byName = document.querySelector(`[name="${id}"]`);
+                            const byClass = document.querySelector(`.${id}`);
+                            console.log(`Alternative search for ${id}:`, { byName, byClass });
+                            return byName?.value || byClass?.value || null;
                         }
+                        console.log(`Found field ${id}:`, element.value);
                         return element.value || null;
                     };
                     
