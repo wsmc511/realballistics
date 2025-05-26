@@ -3122,8 +3122,49 @@ window.resetPassword = async function() {
                         return;
                     }
 
-                    // Add small delay to ensure form is fully rendered and capture fresh values
-                    await new Promise(resolve => setTimeout(resolve, 100));
+                    // Capture values using event target approach - get the button that was clicked
+                    const saveButton = event.target;
+                    const formContainer = saveButton.closest('div');
+                    
+                    // Function to find field values within the form container
+                    const getFieldValueDirect = (id) => {
+                        const element = formContainer.querySelector(`#${id}`);
+                        if (!element) {
+                            console.warn(`Field ${id} not found in form container`);
+                            return null;
+                        }
+                        
+                        if (element.tagName === 'SELECT') {
+                            return element.options[element.selectedIndex]?.value || null;
+                        }
+                        return element.value?.trim() || null;
+                    };
+                    
+                    // Quick validation with direct field access
+                    const engagementDate = getFieldValueDirect('engagement_date');
+                    const rangeTarget = getFieldValueDirect('range_to_target');
+                    const rangeUnit = getFieldValueDirect('range_unit');
+                    
+                    console.log('Direct field capture:', {
+                        engagementDate,
+                        rangeTarget,
+                        rangeUnit
+                    });
+
+                    if (!engagementDate) {
+                        alert('Please fill in the engagement date.');
+                        return;
+                    }
+                    
+                    if (!rangeTarget || parseFloat(rangeTarget) <= 0) {
+                        alert('Please enter a valid range to target.');
+                        return;
+                    }
+                    
+                    if (!rangeUnit) {
+                        alert('Please select a range unit.');
+                        return;
+                    }
                     
                     // Debug: Log all available form fields
                     const allInputs = Array.from(document.querySelectorAll('input, select, textarea'));
@@ -3198,44 +3239,44 @@ window.resetPassword = async function() {
 
                     const dopeData = {
                         user_id: currentUser.id,
-                        shooting_profile_id: getFieldValue('dope_shooting_profile'),
-                        bullet_library_id: getNumericValue('dope_bullet_library'),
+                        shooting_profile_id: getFieldValueDirect('dope_shooting_profile'),
+                        bullet_library_id: parseFloat(getFieldValueDirect('dope_bullet_library')) || null,
                         engagement_date: engagementDate,
-                        engagement_time: getFieldValue('engagement_time'),
-                        range_to_target: rangeTarget,
+                        engagement_time: getFieldValueDirect('engagement_time'),
+                        range_to_target: parseFloat(rangeTarget),
                         range_unit: rangeUnit,
                         // Wind conditions
-                        wind_speed: getNumericValue('wind_speed'),
-                        wind_direction: getNumericValue('wind_direction'),
-                        wind_type: getFieldValue('wind_type'),
+                        wind_speed: parseFloat(getFieldValueDirect('wind_speed')) || null,
+                        wind_direction: parseFloat(getFieldValueDirect('wind_direction')) || null,
+                        wind_type: getFieldValueDirect('wind_type'),
                         // Temperature
-                        temperature: getNumericValue('temperature'),
-                        temperature_unit: getFieldValue('temperature_unit'),
+                        temperature: parseFloat(getFieldValueDirect('temperature')) || null,
+                        temperature_unit: getFieldValueDirect('temperature_unit'),
                         // Environmental data
-                        humidity: getNumericValue('humidity'),
-                        barometric_pressure: getNumericValue('barometric_pressure'),
-                        pressure_unit: getFieldValue('pressure_unit'),
-                        altitude: getNumericValue('altitude'),
-                        altitude_reference: getFieldValue('altitude_reference'),
-                        angle_of_fire: getNumericValue('angle_of_fire'),
+                        humidity: parseFloat(getFieldValueDirect('humidity')) || null,
+                        barometric_pressure: parseFloat(getFieldValueDirect('barometric_pressure')) || null,
+                        pressure_unit: getFieldValueDirect('pressure_unit'),
+                        altitude: parseFloat(getFieldValueDirect('altitude')) || null,
+                        altitude_reference: getFieldValueDirect('altitude_reference'),
+                        angle_of_fire: parseFloat(getFieldValueDirect('angle_of_fire')) || null,
                         // Ballistic effects
-                        coriolis_effect: getNumericValue('coriolis_effect'),
-                        spin_drift: getNumericValue('spin_drift'),
+                        coriolis_effect: parseFloat(getFieldValueDirect('coriolis_effect')) || null,
+                        spin_drift: parseFloat(getFieldValueDirect('spin_drift')) || null,
                         // Target movement
-                        target_movement_speed: getNumericValue('target_movement_speed'),
-                        target_movement_direction: getNumericValue('target_movement_direction'),
+                        target_movement_speed: parseFloat(getFieldValueDirect('target_movement_speed')) || null,
+                        target_movement_direction: parseFloat(getFieldValueDirect('target_movement_direction')) || null,
                         // Optic settings
-                        optic_magnification: getNumericValue('optic_magnification'),
-                        optic_adjustment_units: getFieldValue('optic_adjustment_units'),
-                        parallax_setting: getNumericValue('parallax_setting'),
+                        optic_magnification: parseFloat(getFieldValueDirect('optic_magnification')) || null,
+                        optic_adjustment_units: getFieldValueDirect('optic_adjustment_units'),
+                        parallax_setting: parseFloat(getFieldValueDirect('parallax_setting')) || null,
                         // Time and conditions
-                        time_of_flight: getNumericValue('time_of_flight'),
-                        atmospheric_conditions: getFieldValue('atmospheric_conditions'),
-                        light_conditions: getFieldValue('light_conditions'),
-                        barrel_condition: getFieldValue('barrel_condition'),
+                        time_of_flight: parseFloat(getFieldValueDirect('time_of_flight')) || null,
+                        atmospheric_conditions: getFieldValueDirect('atmospheric_conditions'),
+                        light_conditions: getFieldValueDirect('light_conditions'),
+                        barrel_condition: getFieldValueDirect('barrel_condition'),
                         // Outcome and notes
-                        engagement_outcome: getFieldValue('engagement_outcome'),
-                        notes: getFieldValue('engagement_notes')
+                        engagement_outcome: getFieldValueDirect('engagement_outcome'),
+                        notes: getFieldValueDirect('engagement_notes')
                     };
 
                     console.log('About to save DOPE data:', dopeData);
