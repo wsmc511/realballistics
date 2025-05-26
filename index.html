@@ -490,8 +490,8 @@
         <!-- Shooting Profile Section -->
         <div id="shootingProfileSection" style="display: none;">
             <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
-                <button class="back-to-home" onclick="showHomePage()" style="background-color: #6c757d; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer;">? Home</button>
-                <h2 style="margin: 0;">Shooting Profile</h2>
+                <button class="back-to-home" onclick="showHomePage()" style="background-color: #6c757d; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer;">🏠 Home</button>
+                <h2 style="margin: 0;">Zero Profile</h2>
             </div>
             <button class="add-session" onclick="toggleForm()">Add New</button>
         <form id="ballisticForm">
@@ -4928,12 +4928,20 @@ window.resetPassword = async function() {
         
         // Fix button text and form carryover issues
         function fixButtonTextAndCleanup() {
-            // Fix question mark characters in button text
-            const buttons = document.querySelectorAll('.home-nav-button');
-            buttons.forEach(button => {
+            // Fix question mark characters in ALL home buttons across the site
+            const allHomeButtons = document.querySelectorAll('button');
+            allHomeButtons.forEach(button => {
                 let text = button.innerHTML;
                 
-                // More aggressive replacement for various question mark patterns
+                // Fix Home buttons specifically (look for the 🏠 icon and ? patterns)
+                if (text.includes('🏠') && text.includes('?')) {
+                    button.innerHTML = text.replace(/\?\s*/g, '🏠 ');
+                }
+                if (text.includes('Home') && text.includes('?')) {
+                    button.innerHTML = text.replace(/\?\s*Home/g, '🏠 Home');
+                }
+                
+                // Fix main navigation buttons
                 if (text.includes('Shooting Profile') || text.includes('? Shooting')) {
                     button.innerHTML = text.replace(/\?\s*Shooting Profile/g, '📊 Zero Profile').replace(/\?\s*Shooting/g, '📊 Zero');
                 }
@@ -4944,18 +4952,21 @@ window.resetPassword = async function() {
                     button.innerHTML = text.replace(/\?\s*DOPE/g, '📋 DOPE');
                 }
                 
-                // Force specific text replacements
-                if (button.onclick && button.onclick.toString().includes('showZeroProfile')) {
-                    const newHTML = button.innerHTML.replace(/^[^a-zA-Z]*/, '📊 ').replace('Shooting Profile', 'Zero Profile');
-                    button.innerHTML = newHTML;
-                }
-                if (button.onclick && button.onclick.toString().includes('showBulletLibrary')) {
-                    const newHTML = button.innerHTML.replace(/^[^a-zA-Z]*/, '🎯 ');
-                    button.innerHTML = newHTML;
-                }
-                if (button.onclick && button.onclick.toString().includes('showDOPE')) {
-                    const newHTML = button.innerHTML.replace(/^[^a-zA-Z]*/, '📋 ');
-                    button.innerHTML = newHTML;
+                // Force specific onclick-based replacements
+                if (button.onclick) {
+                    const onclickStr = button.onclick.toString();
+                    if (onclickStr.includes('showZeroProfile')) {
+                        button.innerHTML = button.innerHTML.replace(/^[^a-zA-Z]*/, '📊 ').replace('Shooting Profile', 'Zero Profile');
+                    }
+                    if (onclickStr.includes('showBulletLibrary')) {
+                        button.innerHTML = button.innerHTML.replace(/^[^a-zA-Z]*/, '🎯 ');
+                    }
+                    if (onclickStr.includes('showDOPE')) {
+                        button.innerHTML = button.innerHTML.replace(/^[^a-zA-Z]*/, '📋 ');
+                    }
+                    if (onclickStr.includes('showHomePage')) {
+                        button.innerHTML = button.innerHTML.replace(/\?\s*/g, '🏠 ');
+                    }
                 }
             });
         }
@@ -4974,7 +4985,7 @@ window.resetPassword = async function() {
                 });
             }
             
-            // Clear any lingering form content by removing dynamic elements
+            // Comprehensive cleanup of all dynamic content
             const sectionsToRemove = ['#firearmLibrarySection', '#dopeSection', '#bulletLibrarySection'];
             sectionsToRemove.forEach(selector => {
                 const existingSection = document.querySelector(selector);
@@ -4983,23 +4994,24 @@ window.resetPassword = async function() {
                 }
             });
             
-            // Also clear any dynamically added content from the home page
+            // Remove ALL dynamic content from the entire document body
+            const body = document.body;
+            const elementsToRemove = body.querySelectorAll('div:not(#homePage):not(.home-nav-button), table:not(.trajectory-table), section:not(#homePage), form');
+            elementsToRemove.forEach(el => {
+                // Only remove if it's not part of the core home page structure
+                if (!el.closest('#homePage') || (el.closest('#homePage') && (el.tagName === 'TABLE' || el.tagName === 'FORM'))) {
+                    el.remove();
+                }
+            });
+            
+            // Specifically clean the home page area
             const homePage = document.getElementById('homePage');
             if (homePage) {
-                // Remove any tables or forms that don't belong on the home page
-                const tables = homePage.querySelectorAll('table');
-                const forms = homePage.querySelectorAll('form');
-                const sections = homePage.querySelectorAll('section');
-                
-                tables.forEach(table => {
-                    if (!table.closest('.home-nav-button')) {
-                        table.remove();
-                    }
-                });
-                forms.forEach(form => form.remove());
-                sections.forEach(section => {
-                    if (section.id !== 'homePage') {
-                        section.remove();
+                // Keep only the welcome div and remove everything else
+                const children = Array.from(homePage.children);
+                children.forEach((child, index) => {
+                    if (index > 0) { // Keep only first child (welcome div)
+                        child.remove();
                     }
                 });
             }
