@@ -4085,26 +4085,52 @@ window.resetPassword = async function() {
                         return;
                     }
 
-                    const firearmHTML = firearms.map(firearm => `
-                        <div style="border: 1px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 5px;">
-                            <h4 style="margin: 0 0 10px 0; color: #007bff;">${firearm.profile_name}</h4>
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.9em;">
-                                <div><strong>Shooter:</strong> ${firearm.shooter_name}</div>
-                                <div><strong>Type:</strong> ${firearm.firearm_type}</div>
-                                <div><strong>Firearm:</strong> ${firearm.firearm_name}</div>
-                                <div><strong>Caliber:</strong> ${firearm.caliber}</div>
-                                <div><strong>Barrel:</strong> ${firearm.barrel_length ? firearm.barrel_length + '"' : 'Not specified'}</div>
-                                <div><strong>Twist Rate:</strong> ${firearm.barrel_twist_rate || 'Not specified'}</div>
-                                <div><strong>Optic:</strong> ${firearm.optic_name || 'Not specified'}</div>
-                                <div><strong>Zero:</strong> ${firearm.zero_distance ? firearm.zero_distance + 'yds' : 'Not specified'}</div>
-                                <div><strong>Height Over Bore:</strong> ${firearm.height_over_bore ? firearm.height_over_bore + '"' : 'Not specified'}</div>
-                            </div>
-                            <div style="margin-top: 10px;">
-                                <button onclick="editFirearm('${firearm.id}')" style="background-color: #ffc107; color: black; padding: 5px 10px; border: none; border-radius: 3px; cursor: pointer; margin-right: 5px;">Edit</button>
-                                <button onclick="deleteFirearm('${firearm.id}')" style="background-color: #dc3545; color: white; padding: 5px 10px; border: none; border-radius: 3px; cursor: pointer;">Delete</button>
-                            </div>
-                        </div>
+                    // Create table header
+                    let firearmHTML = `
+                        <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                            <thead>
+                                <tr style="background-color: #f8f9fa; border-bottom: 2px solid #dee2e6;">
+                                    <th style="padding: 12px; text-align: left; font-weight: 600; color: #495057;">Profile</th>
+                                    <th style="padding: 12px; text-align: left; font-weight: 600; color: #495057;">Shooter</th>
+                                    <th style="padding: 12px; text-align: left; font-weight: 600; color: #495057;">Type</th>
+                                    <th style="padding: 12px; text-align: left; font-weight: 600; color: #495057;">Firearm</th>
+                                    <th style="padding: 12px; text-align: left; font-weight: 600; color: #495057;">Caliber</th>
+                                    <th style="padding: 12px; text-align: left; font-weight: 600; color: #495057;">Barrel</th>
+                                    <th style="padding: 12px; text-align: left; font-weight: 600; color: #495057;">Twist</th>
+                                    <th style="padding: 12px; text-align: left; font-weight: 600; color: #495057;">Optic</th>
+                                    <th style="padding: 12px; text-align: left; font-weight: 600; color: #495057;">Zero</th>
+                                    <th style="padding: 12px; text-align: left; font-weight: 600; color: #495057;">HOB</th>
+                                    <th style="padding: 12px; text-align: left; font-weight: 600; color: #495057;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                    `;
+
+                    // Add table rows
+                    firearmHTML += firearms.map((firearm, index) => `
+                        <tr style="border-bottom: 1px solid #dee2e6; ${index % 2 === 0 ? 'background-color: #fff;' : 'background-color: #f8f9fa;'}">
+                            <td style="padding: 12px; color: #007bff; font-weight: 500;">${firearm.profile_name}</td>
+                            <td style="padding: 12px; color: #495057;">${firearm.shooter_name}</td>
+                            <td style="padding: 12px; color: #495057;">${firearm.firearm_type}</td>
+                            <td style="padding: 12px; color: #495057;">${firearm.firearm_name}</td>
+                            <td style="padding: 12px; color: #495057;">${firearm.caliber}</td>
+                            <td style="padding: 12px; color: #495057;">${firearm.barrel_length ? firearm.barrel_length + '"' : '-'}</td>
+                            <td style="padding: 12px; color: #495057;">${firearm.barrel_twist_rate || '-'}</td>
+                            <td style="padding: 12px; color: #495057;">${firearm.optic_name || '-'}</td>
+                            <td style="padding: 12px; color: #495057;">${firearm.zero_distance ? firearm.zero_distance + 'yds' : '-'}</td>
+                            <td style="padding: 12px; color: #495057;">${firearm.height_over_bore ? firearm.height_over_bore + '"' : '-'}</td>
+                            <td style="padding: 12px;">
+                                <button onclick="editFirearm('${firearm.id}')" style="background-color: #ffc107; color: black; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; margin-right: 5px; font-size: 0.875rem;">Edit</button>
+                                <button onclick="deleteFirearm('${firearm.id}')" style="background-color: #dc3545; color: white; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 0.875rem;">Delete</button>
+                            </td>
+                        </tr>
                     `).join('');
+
+                    // Close table
+                    firearmHTML += `
+                            </tbody>
+                        </table>
+                    `;
 
                     document.getElementById('firearmResults').innerHTML = firearmHTML;
                 } catch (error) {
