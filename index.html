@@ -2956,6 +2956,129 @@ window.resetPassword = async function() {
                                 </div>
                             </div>
                             
+                            <!-- Additional Environmental Fields -->
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Humidity (%):</label>
+                                <input type="number" id="humidity" min="0" max="100" step="0.1" placeholder="Relative humidity percentage" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            </div>
+                            
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Barometric Pressure:</label>
+                                <div style="display: flex; gap: 10px;">
+                                    <input type="number" id="barometric_pressure" step="0.01" placeholder="Pressure" style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                    <select id="pressure_unit" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                        <option value="">Unit</option>
+                                        <option value="inHg">inHg</option>
+                                        <option value="mbar">mbar</option>
+                                        <option value="hPa">hPa</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Altitude:</label>
+                                <div style="display: flex; gap: 10px;">
+                                    <input type="number" id="altitude" step="0.1" placeholder="Elevation" style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                    <select id="altitude_reference" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                        <option value="">Reference</option>
+                                        <option value="MSL">MSL</option>
+                                        <option value="AGL">AGL</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Angle of Fire (degrees):</label>
+                                <input type="number" id="angle_of_fire" min="-90" max="90" step="0.1" placeholder="Uphill/downhill angle" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            </div>
+                            
+                            <!-- Ballistic Effects -->
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Coriolis Effect (mils/MOA):</label>
+                                <input type="number" id="coriolis_effect" step="0.001" placeholder="Coriolis compensation" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            </div>
+                            
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Spin Drift (mils/MOA):</label>
+                                <input type="number" id="spin_drift" step="0.001" placeholder="Spin drift compensation" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            </div>
+                            
+                            <!-- Target Movement -->
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Target Speed (mph/kph):</label>
+                                <input type="number" id="target_movement_speed" step="0.1" placeholder="Target movement speed" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            </div>
+                            
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Target Direction (degrees):</label>
+                                <input type="number" id="target_movement_direction" min="0" max="360" step="0.1" placeholder="Direction of target movement" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            </div>
+                            
+                            <!-- Optic Settings -->
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Optic Magnification:</label>
+                                <input type="number" id="optic_magnification" step="0.1" placeholder="Scope magnification setting" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            </div>
+                            
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Adjustment Units:</label>
+                                <select id="optic_adjustment_units" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                    <option value="">Select Units</option>
+                                    <option value="MOA">MOA</option>
+                                    <option value="mils">Mils</option>
+                                    <option value="clicks">Clicks</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Parallax Setting (yards/meters):</label>
+                                <input type="number" id="parallax_setting" step="0.1" placeholder="Parallax focus distance" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            </div>
+                            
+                            <!-- Time and Conditions -->
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Time of Flight (seconds):</label>
+                                <input type="number" id="time_of_flight" step="0.001" placeholder="Bullet flight time" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            </div>
+                            
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Atmospheric Conditions:</label>
+                                <select id="atmospheric_conditions" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                    <option value="">Select Conditions</option>
+                                    <option value="Clear">Clear</option>
+                                    <option value="Overcast">Overcast</option>
+                                    <option value="Rain">Rain</option>
+                                    <option value="Snow">Snow</option>
+                                    <option value="Fog">Fog</option>
+                                    <option value="Hazy">Hazy</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Light Conditions:</label>
+                                <select id="light_conditions" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                    <option value="">Select Lighting</option>
+                                    <option value="Bright Sun">Bright Sun</option>
+                                    <option value="Overcast">Overcast</option>
+                                    <option value="Dawn">Dawn</option>
+                                    <option value="Dusk">Dusk</option>
+                                    <option value="Low Light">Low Light</option>
+                                    <option value="Artificial Light">Artificial Light</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Barrel Condition:</label>
+                                <select id="barrel_condition" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                    <option value="">Select Condition</option>
+                                    <option value="Cold Bore">Cold Bore</option>
+                                    <option value="Warm">Warm</option>
+                                    <option value="Hot">Hot</option>
+                                    <option value="Fouled">Fouled</option>
+                                    <option value="Clean">Clean</option>
+                                </select>
+                            </div>
+                            
                             <!-- Engagement Outcome -->
                             <div class="form-group" style="margin-bottom: 15px;">
                                 <label style="display: block; margin-bottom: 5px; font-weight: bold;">Engagement Outcome:</label>
