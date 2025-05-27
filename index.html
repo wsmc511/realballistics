@@ -4971,72 +4971,27 @@ window.resetPassword = async function() {
             });
         }
         
-        // Enhanced showHomePage function to prevent form carryover
+        // Simple, working showHomePage function
         window.showHomePage = function() {
-            // Hide all sections properly
-            if (typeof hideAllSections === 'function') {
-                hideAllSections();
-            } else {
-                // Manual section hiding if function doesn't exist
-                const sections = ['shootingProfileSection', 'firearmLibrarySection', 'dopeSection', 'bulletLibrarySection'];
-                sections.forEach(id => {
-                    const element = document.getElementById(id);
-                    if (element) element.style.display = 'none';
-                });
-            }
-            
-            // Comprehensive cleanup of all dynamic content
-            const sectionsToRemove = ['#firearmLibrarySection', '#dopeSection', '#bulletLibrarySection'];
-            sectionsToRemove.forEach(selector => {
-                const existingSection = document.querySelector(selector);
-                if (existingSection && existingSection.parentNode) {
-                    existingSection.parentNode.removeChild(existingSection);
-                }
+            // Hide all sections
+            const sections = ['shootingProfileSection', 'firearmLibrarySection', 'dopeSection', 'bulletLibrarySection'];
+            sections.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) element.style.display = 'none';
             });
             
-            // Remove ALL dynamic content from the entire document body
-            const body = document.body;
-            const elementsToRemove = body.querySelectorAll('div:not(#homePage):not(.home-nav-button), table:not(.trajectory-table), section:not(#homePage), form');
-            elementsToRemove.forEach(el => {
-                // Only remove if it's not part of the core home page structure
-                if (!el.closest('#homePage') || (el.closest('#homePage') && (el.tagName === 'TABLE' || el.tagName === 'FORM'))) {
-                    el.remove();
+            // Remove any dynamic sections
+            document.querySelectorAll('#firearmLibrarySection, #dopeSection, #bulletLibrarySection').forEach(el => {
+                if (el && el.parentNode) {
+                    el.parentNode.removeChild(el);
                 }
             });
-            
-            // Specifically clean the home page area
-            const homePage = document.getElementById('homePage');
-            if (homePage) {
-                // Keep only the welcome div and remove everything else
-                const children = Array.from(homePage.children);
-                children.forEach((child, index) => {
-                    if (index > 0) { // Keep only first child (welcome div)
-                        child.remove();
-                    }
-                });
-            }
             
             // Show home page
-            const homePageElement = document.getElementById('homePage');
-            if (homePageElement) {
-                homePageElement.style.display = 'block';
-                
-                // Make sure only the original home page content is visible
-                const homeButtons = homePageElement.querySelector('.home-nav-button');
-                if (homeButtons) {
-                    // Find all content after the buttons that shouldn't be there
-                    const allChildren = Array.from(homePageElement.children);
-                    allChildren.forEach((child, index) => {
-                        // Keep only the first div (which contains the welcome text and buttons)
-                        if (index > 0) {
-                            child.remove();
-                        }
-                    });
-                }
-            }
+            document.getElementById('homePage').style.display = 'block';
             
-            // Fix button text issues
-            fixButtonTextAndCleanup();
+            // Fix button text
+            setTimeout(fixButtonTextAndCleanup, 100);
         };
         
         // Run fixes on page load
