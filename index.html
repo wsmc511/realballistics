@@ -3965,7 +3965,29 @@ window.resetPassword = async function() {
                                 </div>
                                 <div>
                                     <label style="display: block; margin-bottom: 5px; font-weight: bold;">Caliber:</label>
-                                    <input type="text" name="caliber" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" required>
+                                    <select name="caliber" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" required>
+                                        <option value="">Select Caliber</option>
+                                        <option value=".223 Rem">.223 Rem</option>
+                                        <option value="5.56 NATO">5.56 NATO</option>
+                                        <option value=".308 Win">.308 Win</option>
+                                        <option value="7.62 NATO">7.62 NATO</option>
+                                        <option value="6.5 Creedmoor">6.5 Creedmoor</option>
+                                        <option value=".300 Blackout">.300 Blackout</option>
+                                        <option value=".30-06 Springfield">.30-06 Springfield</option>
+                                        <option value=".22 LR">.22 LR</option>
+                                        <option value=".243 Win">.243 Win</option>
+                                        <option value="7.62x39mm">7.62x39mm</option>
+                                        <option value="6.8 SPC">6.8 SPC</option>
+                                        <option value=".338 Lapua Magnum">.338 Lapua Magnum</option>
+                                        <option value="9mm Luger">9mm Luger</option>
+                                        <option value=".45 ACP">.45 ACP</option>
+                                        <option value=".40 S&W">.40 S&W</option>
+                                        <option value=".380 ACP">.380 ACP</option>
+                                        <option value=".357 Magnum">.357 Magnum</option>
+                                        <option value=".38 Special">.38 Special</option>
+                                        <option value="10mm Auto">10mm Auto</option>
+                                        <option value=".44 Magnum">.44 Magnum</option>
+                                    </select>
                                 </div>
                                 <div>
                                     <label style="display: block; margin-bottom: 5px; font-weight: bold;">Barrel Length (inches):</label>
@@ -3973,7 +3995,21 @@ window.resetPassword = async function() {
                                 </div>
                                 <div>
                                     <label style="display: block; margin-bottom: 5px; font-weight: bold;">Barrel Twist Rate:</label>
-                                    <input type="text" name="barrel_twist_rate" placeholder="e.g., 1:7" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                    <select name="barrel_twist_rate" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                        <option value="">Select Twist Rate</option>
+                                        <option value="1:7">1:7</option>
+                                        <option value="1:8">1:8</option>
+                                        <option value="1:9">1:9</option>
+                                        <option value="1:9.25">1:9.25</option>
+                                        <option value="1:10">1:10</option>
+                                        <option value="1:10.5">1:10.5</option>
+                                        <option value="1:11">1:11</option>
+                                        <option value="1:12">1:12</option>
+                                        <option value="1:14">1:14</option>
+                                        <option value="1:16">1:16</option>
+                                        <option value="1:18.75">1:18.75</option>
+                                        <option value="1:20">1:20</option>
+                                    </select>
                                 </div>
                                 <div>
                                     <label style="display: block; margin-bottom: 5px; font-weight: bold;">Optic Name:</label>
