@@ -1953,19 +1953,18 @@ window.resetPassword = async function() {
                         const relativeVy = vy - windVy;
                         const relativeSpeed = Math.sqrt(relativeVx * relativeVx + relativeVy * relativeVy) || 0.0001;
                         
-                        // Drag force components using relative velocity and ballistic coefficient
-                        const dragCoeff = cd * bulletArea / inputs.ballistic_coefficient;
-                        const dragForce = 0.5 * STD_AIR_DENSITY * relativeSpeed * relativeSpeed * dragCoeff;
-                        const ax = -dragForce * (relativeVx / relativeSpeed) / bulletMass;
-                        const ay = -GRAVITY - (dragForce * (relativeVy / relativeSpeed) / bulletMass);
+                        // Standard ballistic coefficient drag calculation
+                        const dragAccel = (STD_AIR_DENSITY * relativeSpeed * relativeSpeed * cd) / (2 * inputs.ballistic_coefficient);
+                        const ax = -dragAccel * (relativeVx / relativeSpeed);
+                        const ay = -GRAVITY - (dragAccel * (relativeVy / relativeSpeed));
                         
                         // Check for NaN in accelerations
                         if (isNaN(ax) || isNaN(ay)) {
-                            self.postMessage({ log: 'NaN detected: ax=' + ax + ', ay=' + ay + ', dragForce=' + dragForce + ', bulletMass=' + bulletMass });
+                            self.postMessage({ log: 'NaN detected: ax=' + ax + ', ay=' + ay + ', dragAccel=' + dragAccel + ', BC=' + inputs.ballistic_coefficient });
                             return [vx, vy, 0, -GRAVITY, 0, speed]; // Fallback
                         }
                         
-                        return [vx, vy, ax, ay, dragForce, speed];
+                        return [vx, vy, ax, ay, dragAccel, speed];
                     }
 
                     function rk4Step(state, dt) {
