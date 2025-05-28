@@ -3393,13 +3393,13 @@ window.resetPassword = async function() {
                             // Debug: Check if bullet_type field exists and is visible
                             const bulletTypeField = document.getElementById('bullet_type');
                             if (bulletTypeField) {
+                                bulletTypeField.value = bullet.bullet_type;
+                                bulletTypeField.setAttribute('value', bullet.bullet_type);
                                 console.log('Bullet type field found, value set to:', bulletTypeField.value);
                                 console.log('Bullet type field visible:', bulletTypeField.style.display !== 'none');
                                 console.log('Bullet type field parent:', bulletTypeField.parentElement);
-                                // Force visual update and highlight
-                                bulletTypeField.dispatchEvent(new Event('change'));
-                                bulletTypeField.style.backgroundColor = '#e8f5e8'; // Light green to show it's populated
-                                bulletTypeField.style.fontWeight = 'bold';
+                                // Force visual update with important styling
+                                bulletTypeField.style.cssText = 'background-color: #e8f5e8 !important; border: 2px solid #dc3545 !important; font-weight: bold !important;';
                             } else {
                                 console.error('Bullet type field NOT found in DOM');
                             }
@@ -3752,24 +3752,27 @@ window.resetPassword = async function() {
                         const now = new Date();
                         const dateField = document.getElementById('engagement_date');
                         if (dateField) {
-                            dateField.value = now.toISOString().split('T')[0];
+                            const today = now.toISOString().split('T')[0];
+                            dateField.value = today;
+                            dateField.setAttribute('value', today);
                             console.log('Date field set to:', dateField.value);
-                            // Force visual update
-                            dateField.dispatchEvent(new Event('change'));
-                            dateField.style.backgroundColor = '#e8f5e8'; // Light green to show it's set
+                            // Force visual update with important styling
+                            dateField.style.cssText = 'background-color: #e8f5e8 !important; border: 2px solid #28a745 !important; width: 100% !important; padding: 8px !important;';
+                            dateField.focus();
+                            dateField.blur();
                         }
                         
                         const timeField = document.getElementById('engagement_time');
                         if (timeField) {
-                            const timeString = now.toTimeString().slice(0, 5);
-                            timeField.value = timeString;
+                            const currentTime = now.toTimeString().slice(0, 5);
+                            timeField.value = currentTime;
+                            timeField.setAttribute('value', currentTime);
                             console.log('Time field set to:', timeField.value);
-                            // Force visual update
-                            timeField.dispatchEvent(new Event('change'));
-                            timeField.style.backgroundColor = '#e8f5e8'; // Light green to show it's set
+                            // Force visual update with important styling
+                            timeField.style.cssText = 'background-color: #e8f5e8 !important; border: 2px solid #28a745 !important;';
                         }
                         
-                        // Then load dropdowns
+                        // Then load dropdowns (but don't clear the form)
                         loadDopeDropdownsDirect();
                     }, 50);
                 }
