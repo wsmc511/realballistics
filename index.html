@@ -3938,11 +3938,11 @@ window.resetPassword = async function() {
                         const firearmSelect = document.getElementById('zeroFirearmSelect');
                         console.log('Firearm select element:', firearmSelect);
                         if (firearmSelect) {
-                            firearmSelect.innerHTML = '<option value="">Select a saved firearm (optional)</option>';
+                            firearmSelect.innerHTML = '<option value="">Optional</option>';
                             firearms.forEach(firearm => {
                                 const option = document.createElement('option');
                                 option.value = firearm.id;
-                                option.textContent = `${firearm.profile_name} - ${firearm.firearm_name} (${firearm.caliber})`;
+                                option.textContent = `${firearm.firearm_name} ${firearm.barrel_length}" ${firearm.caliber} ${firearm.barrel_twist_rate} ${firearm.optic_name} ${firearm.zero_distance}yds`;
                                 firearmSelect.appendChild(option);
                             });
                             console.log('Populated firearm dropdown with', firearms.length, 'items');
@@ -3963,7 +3963,7 @@ window.resetPassword = async function() {
                         const bulletSelect = document.getElementById('zeroBulletSelect');
                         console.log('Bullet select element:', bulletSelect);
                         if (bulletSelect) {
-                            bulletSelect.innerHTML = '<option value="">Select a saved bullet (optional)</option>';
+                            bulletSelect.innerHTML = '<option value="">Optional</option>';
                             bullets.forEach(bullet => {
                                 const option = document.createElement('option');
                                 option.value = bullet.id;
