@@ -4229,7 +4229,7 @@ window.resetPassword = async function() {
                         const formData = new FormData(e.target);
                         const updateData = {};
                         
-                        for (let [key, value] = formData.entries()) {
+                        for (let [key, value] of formData.entries()) {
                             if (value.trim() !== '') {
                                 updateData[key] = value.trim();
                             }
