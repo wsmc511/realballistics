@@ -2178,6 +2178,8 @@ window.resetPassword = async function() {
                             energy_ftlbs: (0.5 * bulletMass * point.v * point.v / 32.174).toFixed(1)
                         }));
 
+                        self.postMessage({ log: 'First 5 trajectory points with velocity: ' + JSON.stringify(trajectory.slice(0, 5).map(p => ({x: p.x, v: p.v}))) });
+                        self.postMessage({ log: 'Sample velocity at 100yd: ' + JSON.stringify(trajectory.filter(p => Math.abs(p.x - 300) < 1).map(p => ({x: p.x, v: p.v}))) });
                         self.postMessage({ log: 'Results Grid: ' + JSON.stringify(results_grid) });
                         self.postMessage({ results_grid, converged });
                     }
