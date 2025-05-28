@@ -3390,16 +3390,23 @@ window.resetPassword = async function() {
                             setFieldValue('drag_model', bullet.drag_model);
                             setFieldValue('bullet_type', bullet.bullet_type);
                             
-                            // Debug: Check if bullet_type field exists and is visible
+                            // Force bullet type field population with multiple methods
                             const bulletTypeField = document.getElementById('bullet_type');
                             if (bulletTypeField) {
+                                // Try multiple ways to set the value
                                 bulletTypeField.value = bullet.bullet_type;
                                 bulletTypeField.setAttribute('value', bullet.bullet_type);
-                                console.log('Bullet type field found, value set to:', bulletTypeField.value);
-                                console.log('Bullet type field visible:', bulletTypeField.style.display !== 'none');
-                                console.log('Bullet type field parent:', bulletTypeField.parentElement);
-                                // Force visual update with important styling
-                                bulletTypeField.style.cssText = 'background-color: #e8f5e8 !important; border: 2px solid #dc3545 !important; font-weight: bold !important;';
+                                bulletTypeField.defaultValue = bullet.bullet_type;
+                                
+                                // Force the browser to recognize the change
+                                const inputEvent = new Event('input', { bubbles: true });
+                                bulletTypeField.dispatchEvent(inputEvent);
+                                
+                                // Add visual confirmation
+                                bulletTypeField.style.cssText = 'background-color: #e8f5e8 !important; border: 2px solid #dc3545 !important; font-weight: bold !important; width: 100% !important; padding: 8px !important;';
+                                
+                                console.log('Bullet type field forced update to:', bullet.bullet_type);
+                                console.log('Field value after update:', bulletTypeField.value);
                             } else {
                                 console.error('Bullet type field NOT found in DOM');
                             }
