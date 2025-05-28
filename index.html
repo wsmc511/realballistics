@@ -1873,8 +1873,25 @@ window.resetPassword = async function() {
                     const maxDistanceFeet = inputs.max_distance_yards * 3;
                     
                     // Calculate bullet diameter and cross-sectional area from caliber
-                    const caliberMatch = inputs.caliber.match(/[\d.]+/);
-                    const caliberInches = caliberMatch ? parseFloat(caliberMatch[0]) : 0.224; // Default to .224 if no match
+                    let caliberInches;
+                    if (inputs.caliber.includes('5.56')) {
+                        caliberInches = 0.224;
+                    } else if (inputs.caliber.includes('.223')) {
+                        caliberInches = 0.224;
+                    } else if (inputs.caliber.includes('.308') || inputs.caliber.includes('7.62')) {
+                        caliberInches = 0.308;
+                    } else if (inputs.caliber.includes('6.5')) {
+                        caliberInches = 0.264;
+                    } else if (inputs.caliber.includes('.30-06')) {
+                        caliberInches = 0.308;
+                    } else if (inputs.caliber.includes('.270')) {
+                        caliberInches = 0.277;
+                    } else {
+                        // Try to extract number
+                        const caliberMatch = inputs.caliber.match(/[\d.]+/);
+                        caliberInches = caliberMatch ? parseFloat(caliberMatch[0]) : 0.224;
+                    }
+                    
                     const bulletDiameter = caliberInches / 12; // Convert inches to feet
                     const bulletArea = Math.PI * Math.pow(bulletDiameter / 2, 2); // ft²
                     
