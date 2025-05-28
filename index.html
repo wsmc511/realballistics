@@ -3915,20 +3915,28 @@ window.resetPassword = async function() {
 
             // Zero Profile dropdown functions
             window.loadZeroProfileDropdowns = async function() {
+                console.log('Loading Zero Profile dropdowns...');
                 try {
                     if (!currentUser) {
+                        console.log('No current user, skipping dropdown load');
                         return;
                     }
 
+                    console.log('Current user:', currentUser.id);
+
                     // Load firearm library data
+                    console.log('Loading firearms...');
                     const { data: firearms, error: firearmError } = await supabase
                         .from('firearm_profile')
                         .select('*')
                         .eq('user_id', currentUser.id)
                         .order('profile_name', { ascending: true });
 
+                    console.log('Firearms loaded:', firearms, 'Error:', firearmError);
+
                     if (!firearmError && firearms) {
                         const firearmSelect = document.getElementById('zeroFirearmSelect');
+                        console.log('Firearm select element:', firearmSelect);
                         if (firearmSelect) {
                             firearmSelect.innerHTML = '<option value="">Select a saved firearm (optional)</option>';
                             firearms.forEach(firearm => {
@@ -3937,18 +3945,23 @@ window.resetPassword = async function() {
                                 option.textContent = `${firearm.profile_name} - ${firearm.firearm_name} (${firearm.caliber})`;
                                 firearmSelect.appendChild(option);
                             });
+                            console.log('Populated firearm dropdown with', firearms.length, 'items');
                         }
                     }
 
                     // Load bullet library data
+                    console.log('Loading bullets...');
                     const { data: bullets, error: bulletError } = await supabase
                         .from('bullet_library')
                         .select('*')
                         .eq('user_id', currentUser.id)
                         .order('manufacturer_name', { ascending: true });
 
+                    console.log('Bullets loaded:', bullets, 'Error:', bulletError);
+
                     if (!bulletError && bullets) {
                         const bulletSelect = document.getElementById('zeroBulletSelect');
+                        console.log('Bullet select element:', bulletSelect);
                         if (bulletSelect) {
                             bulletSelect.innerHTML = '<option value="">Select a saved bullet (optional)</option>';
                             bullets.forEach(bullet => {
@@ -3957,6 +3970,7 @@ window.resetPassword = async function() {
                                 option.textContent = `${bullet.manufacturer_name} ${bullet.caliber} ${bullet.grain}gr - BC: ${bullet.ballistic_coefficient}`;
                                 bulletSelect.appendChild(option);
                             });
+                            console.log('Populated bullet dropdown with', bullets.length, 'items');
                         }
                     }
                 } catch (error) {
@@ -4043,8 +4057,10 @@ window.resetPassword = async function() {
                 hideElement('bulletLibrarySection');
                 hideElement('activeDopeSection');
                 
-                // Load the dropdowns
-                loadZeroProfileDropdowns();
+                // Load the dropdowns with a slight delay to ensure DOM is ready
+                setTimeout(() => {
+                    loadZeroProfileDropdowns();
+                }, 100);
             };
 
             // Firearm Library Functions
