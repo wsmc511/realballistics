@@ -4971,46 +4971,32 @@ window.resetPassword = async function() {
             });
         }
         
-        // Simple, working showHomePage function
+        // Reliable showHomePage function
         window.showHomePage = function() {
-            // Hide all sections
+            // Hide all other sections first
             const sections = ['shootingProfileSection', 'firearmLibrarySection', 'dopeSection', 'bulletLibrarySection'];
             sections.forEach(id => {
                 const element = document.getElementById(id);
                 if (element) element.style.display = 'none';
             });
             
-            // Remove any dynamic sections
-            document.querySelectorAll('#firearmLibrarySection, #dopeSection, #bulletLibrarySection').forEach(el => {
-                if (el && el.parentNode) {
-                    el.parentNode.removeChild(el);
+            // Remove the specific dynamic content that gets added by library functions
+            const dynamicIds = ['activeFirearmLibrary', 'activeBulletLibrary', 'activeDopeSection'];
+            dynamicIds.forEach(id => {
+                const element = document.getElementById(id);
+                if (element && element.parentNode) {
+                    element.parentNode.removeChild(element);
                 }
             });
             
-            // Clean up any lingering content on the home page
+            // Show home page
             const homePage = document.getElementById('homePage');
             if (homePage) {
-                // Remove tables, forms, and other dynamic content from home page
-                const unwantedElements = homePage.querySelectorAll('table, form, .firearm-library, .bullet-library, .dope-section, h3, h4');
-                unwantedElements.forEach(el => el.remove());
-                
-                // Also remove any divs that contain library data (but keep the main welcome div)
-                const allDivs = homePage.querySelectorAll('div');
-                allDivs.forEach(div => {
-                    if (div.innerHTML.includes('Your Firearm Profiles') || 
-                        div.innerHTML.includes('Bullet Library') || 
-                        div.innerHTML.includes('DOPE') ||
-                        div.querySelector('table')) {
-                        div.remove();
-                    }
-                });
+                homePage.style.display = 'block';
             }
             
-            // Show home page
-            document.getElementById('homePage').style.display = 'block';
-            
-            // Fix button text
-            setTimeout(fixButtonTextAndCleanup, 100);
+            // Fix button text after a brief delay
+            setTimeout(fixButtonTextAndCleanup, 50);
         };
         
         // Run fixes on page load
