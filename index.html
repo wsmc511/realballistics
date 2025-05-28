@@ -377,6 +377,19 @@
             align-items: center;
             gap: 10px;
         }
+        
+        /* Sticky header for trajectory table */
+        .trajectory-table {
+            position: relative;
+        }
+        .trajectory-table thead th {
+            position: sticky;
+            top: 0;
+            background-color: #f8f9fa;
+            z-index: 10;
+            border-bottom: 2px solid #dee2e6;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
     </style>
     <script type="text/javascript">
         var gk_isXlsx = false;
