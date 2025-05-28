@@ -2334,8 +2334,8 @@ window.resetPassword = async function() {
                 form.step_interval_yards.value = session.step_interval_yards || '';
                 form.max_distance_yards.value = session.max_distance_yards || '';
                 console.log('Wind data from database:', { wind_speed: session.wind_speed, wind_angle: session.wind_angle });
-                form.wind_speed.value = session.wind_speed || '';
-                form.wind_angle.value = session.wind_angle || '';
+                form.wind_speed.value = session.wind_speed !== null && session.wind_speed !== undefined ? session.wind_speed : '';
+                form.wind_angle.value = session.wind_angle !== null && session.wind_angle !== undefined ? session.wind_angle : '';
 
                 editSessionId = sessionId;
                 document.getElementById('cancelEditButton').style.display = 'inline-block';
