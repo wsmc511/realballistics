@@ -3396,6 +3396,10 @@ window.resetPassword = async function() {
                                 console.log('Bullet type field found, value set to:', bulletTypeField.value);
                                 console.log('Bullet type field visible:', bulletTypeField.style.display !== 'none');
                                 console.log('Bullet type field parent:', bulletTypeField.parentElement);
+                                // Force visual update and highlight
+                                bulletTypeField.dispatchEvent(new Event('change'));
+                                bulletTypeField.style.backgroundColor = '#e8f5e8'; // Light green to show it's populated
+                                bulletTypeField.style.fontWeight = 'bold';
                             } else {
                                 console.error('Bullet type field NOT found in DOM');
                             }
@@ -3750,6 +3754,9 @@ window.resetPassword = async function() {
                         if (dateField) {
                             dateField.value = now.toISOString().split('T')[0];
                             console.log('Date field set to:', dateField.value);
+                            // Force visual update
+                            dateField.dispatchEvent(new Event('change'));
+                            dateField.style.backgroundColor = '#e8f5e8'; // Light green to show it's set
                         }
                         
                         const timeField = document.getElementById('engagement_time');
@@ -3757,6 +3764,9 @@ window.resetPassword = async function() {
                             const timeString = now.toTimeString().slice(0, 5);
                             timeField.value = timeString;
                             console.log('Time field set to:', timeField.value);
+                            // Force visual update
+                            timeField.dispatchEvent(new Event('change'));
+                            timeField.style.backgroundColor = '#e8f5e8'; // Light green to show it's set
                         }
                         
                         // Then load dropdowns
