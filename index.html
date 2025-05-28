@@ -3589,7 +3589,7 @@ window.resetPassword = async function() {
                                     <select id="temperature_unit" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
                                         <option value="">Unit</option>
                                         <option value="C">Celsius</option>
-                                        <option value="F">Fahrenheit</option>
+                                        <option value="F" selected>Fahrenheit</option>
                                     </select>
                                 </div>
                             </div>
@@ -3606,7 +3606,7 @@ window.resetPassword = async function() {
                                     <input type="number" id="barometric_pressure" step="0.01" placeholder="Pressure" style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
                                     <select id="pressure_unit" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
                                         <option value="">Unit</option>
-                                        <option value="inHg">inHg</option>
+                                        <option value="inHg" selected>inHg</option>
                                         <option value="mb">mb</option>
                                     </select>
                                 </div>
@@ -3618,8 +3618,8 @@ window.resetPassword = async function() {
                                     <input type="number" id="altitude" step="0.1" placeholder="Elevation" style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
                                     <select id="altitude_reference" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
                                         <option value="">Reference</option>
-                                        <option value="ASL">ASL</option>
-                                        <option value="BSL">BSL</option>
+                                        <option value="Above Sea Level" selected>Above Sea Level</option>
+                                        <option value="Below Sea Level">Below Sea Level</option>
                                     </select>
                                 </div>
                             </div>
@@ -3736,10 +3736,17 @@ window.resetPassword = async function() {
                     setTimeout(() => {
                         loadDopeDropdownsDirect();
                         
-                        // Initialize the date field with today's date
+                        // Initialize the date and time fields with current date/time
+                        const now = new Date();
                         const dateField = document.getElementById('engagement_date');
                         if (dateField && !dateField.value) {
-                            dateField.value = new Date().toISOString().split('T')[0];
+                            dateField.value = now.toISOString().split('T')[0];
+                        }
+                        
+                        const timeField = document.getElementById('engagement_time');
+                        if (timeField && !timeField.value) {
+                            const timeString = now.toTimeString().slice(0, 5);
+                            timeField.value = timeString;
                         }
                     }, 1000);
                 }
