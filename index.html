@@ -3389,6 +3389,16 @@ window.resetPassword = async function() {
                             setFieldValue('ballistic_coefficient', bullet.ballistic_coefficient);
                             setFieldValue('drag_model', bullet.drag_model);
                             setFieldValue('bullet_type', bullet.bullet_type);
+                            
+                            // Debug: Check if bullet_type field exists and is visible
+                            const bulletTypeField = document.getElementById('bullet_type');
+                            if (bulletTypeField) {
+                                console.log('Bullet type field found, value set to:', bulletTypeField.value);
+                                console.log('Bullet type field visible:', bulletTypeField.style.display !== 'none');
+                                console.log('Bullet type field parent:', bulletTypeField.parentElement);
+                            } else {
+                                console.error('Bullet type field NOT found in DOM');
+                            }
                             setFieldValue('lot_number', bullet.lot_number || '');
                             setFieldValue('muzzle_velocity', bullet.muzzle_velocity ? `${bullet.muzzle_velocity} fps` : '');
                             setFieldValue('muzzle_energy', bullet.muzzle_energy ? `${bullet.muzzle_energy} ft-lbs` : '');
