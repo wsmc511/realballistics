@@ -1917,8 +1917,12 @@ window.resetPassword = async function() {
                         
                         // Proper ballistic coefficient application
                         const cd = getDragCoefficient(speed, inputs.drag_model);
-                        const standardDrag = 0.5 * STD_AIR_DENSITY * speed * speed * cd * bulletArea;
-                        const actualDrag = standardDrag / inputs.ballistic_coefficient;
+                        
+                        // Check for invalid values
+                        if (!bulletArea || bulletArea <= 0 || !inputs.ballistic_coefficient || inputs.ballistic_coefficient <= 0) {
+                            self.postMessage({ log: 'Invalid bulletArea=' + bulletArea + ' or BC=' + inputs.ballistic_coefficient });
+                            return [vx, vy, 0, -GRAVITY, 0, speed]; // Fallback to gravity only
+                        }
                         
                         // Wind effects (convert mph to ft/s)
                         const windVx = windSpeed * 1.467 * Math.cos(windAngle);
@@ -1932,7 +1936,13 @@ window.resetPassword = async function() {
                         const ax = -dragForce * (relativeVx / relativeSpeed) / bulletMass;
                         const ay = -GRAVITY - (dragForce * (relativeVy / relativeSpeed) / bulletMass);
                         
-                        return [vx, vy, ax, ay, actualDrag, speed];
+                        // Check for NaN in accelerations
+                        if (isNaN(ax) || isNaN(ay)) {
+                            self.postMessage({ log: 'NaN detected: ax=' + ax + ', ay=' + ay + ', dragForce=' + dragForce + ', bulletMass=' + bulletMass });
+                            return [vx, vy, 0, -GRAVITY, 0, speed]; // Fallback
+                        }
+                        
+                        return [vx, vy, ax, ay, dragForce, speed];
                     }
 
                     function rk4Step(state, dt) {
