@@ -4999,9 +4999,38 @@ window.resetPassword = async function() {
             setTimeout(fixButtonTextAndCleanup, 50);
         };
         
+        // Reorganize home page buttons in the requested order
+        function reorganizeHomeButtons() {
+            const buttonContainer = document.querySelector('#homePage .home-nav-button').parentElement;
+            const buttons = Array.from(buttonContainer.querySelectorAll('.home-nav-button'));
+            
+            // Find buttons by their onclick functions
+            let firearmBtn, bulletBtn, zeroBtn, dopeBtn;
+            
+            buttons.forEach(btn => {
+                const onclick = btn.getAttribute('onclick');
+                if (onclick && onclick.includes('showFirearmLibrary')) firearmBtn = btn;
+                else if (onclick && onclick.includes('showBulletLibrary')) bulletBtn = btn;
+                else if (onclick && onclick.includes('showZeroProfile')) zeroBtn = btn;
+                else if (onclick && onclick.includes('showDOPE')) dopeBtn = btn;
+            });
+            
+            // Remove all buttons
+            buttons.forEach(btn => btn.remove());
+            
+            // Add them back in the correct order: Firearm, Bullet, Zero, DOPE
+            if (firearmBtn) buttonContainer.appendChild(firearmBtn);
+            if (bulletBtn) buttonContainer.appendChild(bulletBtn);
+            if (zeroBtn) buttonContainer.appendChild(zeroBtn);
+            if (dopeBtn) buttonContainer.appendChild(dopeBtn);
+        }
+        
         // Run fixes on page load
         document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(fixButtonTextAndCleanup, 100);
+            setTimeout(() => {
+                fixButtonTextAndCleanup();
+                reorganizeHomeButtons();
+            }, 100);
         });
         
         // Also run when page becomes visible (for navigation)
