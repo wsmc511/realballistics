@@ -2332,8 +2332,8 @@ window.resetPassword = async function() {
                 form.drag_model.value = session.drag_model || '';
                 form.step_interval_yards.value = session.step_interval_yards || '';
                 form.max_distance_yards.value = session.max_distance_yards || '';
-                form.wind_speed.value = session.wind_speed || '';
-                form.wind_angle.value = session.wind_angle || '';
+                document.getElementById('wind_speed').value = session.wind_speed || '';
+                document.getElementById('wind_direction').value = session.wind_angle || '';
 
                 editSessionId = sessionId;
                 document.getElementById('cancelEditButton').style.display = 'inline-block';
