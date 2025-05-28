@@ -786,7 +786,7 @@
                         <select id="temperature_unit">
                             <option value="">Unit</option>
                             <option value="C">Celsius</option>
-                            <option value="F">Fahrenheit</option>
+                            <option value="F" selected>Fahrenheit</option>
                         </select>
                     </div>
                 </div>
@@ -797,7 +797,7 @@
                         <input type="number" id="barometric_pressure" step="0.01" placeholder="Pressure">
                         <select id="pressure_unit">
                             <option value="">Unit</option>
-                            <option value="inHg">inHg</option>
+                            <option value="inHg" selected>inHg</option>
                             <option value="mb">mb</option>
                         </select>
                     </div>
@@ -814,8 +814,8 @@
                         <input type="number" id="altitude" step="0.1" placeholder="Meters">
                         <select id="altitude_reference">
                             <option value="">Reference</option>
-                            <option value="ASL">ASL (Above Sea Level)</option>
-                            <option value="BSL">BSL (Below Sea Level)</option>
+                            <option value="Above Sea Level" selected>Above Sea Level</option>
+                            <option value="Below Sea Level">Below Sea Level</option>
                         </select>
                     </div>
                 </div>
@@ -2785,8 +2785,18 @@ window.resetPassword = async function() {
 
             window.showAddDopeForm = function() {
                 document.getElementById('addDopeForm').style.display = 'block';
-                // Set today's date as default
-                document.getElementById('engagement_date').value = new Date().toISOString().split('T')[0];
+                
+                // Set current date and time as defaults
+                const now = new Date();
+                document.getElementById('engagement_date').value = now.toISOString().split('T')[0];
+                
+                // Set current time (hours:minutes)
+                const timeString = now.toTimeString().slice(0, 5);
+                document.getElementById('engagement_time').value = timeString;
+                
+                // Load dropdowns with fresh data
+                loadDopeDropdowns();
+                
                 clearDopeForm();
             };
 
@@ -2837,12 +2847,31 @@ window.resetPassword = async function() {
                         }
                     }
 
-                    console.log('Loading bullet library...');
-                    // Load bullet library - skip this for now to test
-                    console.log('Skipping bullet library load to avoid errors');
-                    const bulletSelect = document.getElementById('dope_bullet_library');
-                    if (bulletSelect) {
-                        bulletSelect.innerHTML = '<option value="">Select a bullet...</option>';
+                    console.log('Loading bullet library for DOPE...');
+                    // Load bullet library
+                    const { data: bullets, error: bulletError } = await supabase
+                        .from('bullet_library')
+                        .select('*')
+                        .eq('user_id', currentUser.id)
+                        .order('manufacturer_name', { ascending: true });
+
+                    if (bulletError) {
+                        console.error('Bullet error:', bulletError);
+                    } else {
+                        console.log('Bullets loaded for DOPE:', bullets);
+                        const bulletSelect = document.getElementById('dope_bullet_library');
+                        if (bulletSelect) {
+                            bulletSelect.innerHTML = '<option value="">Select a bullet...</option>';
+                            
+                            if (bullets && bullets.length > 0) {
+                                bullets.forEach(bullet => {
+                                    const option = document.createElement('option');
+                                    option.value = bullet.id;
+                                    option.textContent = `${bullet.manufacturer_name} ${bullet.caliber} ${bullet.grain}gr ${bullet.bullet_type || ''}`;
+                                    bulletSelect.appendChild(option);
+                                });
+                            }
+                        }
                     }
                 } catch (error) {
                     console.error('Error loading DOPE dropdowns:', error);
