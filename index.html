@@ -496,6 +496,19 @@
             <button class="add-session" onclick="toggleForm()">Add New</button>
         <form id="ballisticForm">
             <div class="form-group">
+                <label>Load from Firearm Library:</label>
+                <select id="zeroFirearmSelect" onchange="loadZeroFirearmData()">
+                    <option value="">Select a saved firearm (optional)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Load from Bullet Library:</label>
+                <select id="zeroBulletSelect" onchange="loadZeroBulletData()">
+                    <option value="">Select a saved bullet (optional)</option>
+                </select>
+            </div>
+            <hr style="margin: 20px 0; border: 1px solid #ddd;">
+            <div class="form-group">
                 <label>Shooter Name:</label>
                 <input type="text" name="shooter_name">
             </div>
@@ -528,19 +541,17 @@
                 <select name="barrel_twist_rate">
                     <option value="">Select Twist Rate</option>
                     <option value="1:7">1:7</option>
-                    <option value="1:7.5">1:7.5</option>
                     <option value="1:8">1:8</option>
                     <option value="1:9">1:9</option>
+                    <option value="1:9.25">1:9.25</option>
                     <option value="1:10">1:10</option>
+                    <option value="1:10.5">1:10.5</option>
+                    <option value="1:11">1:11</option>
                     <option value="1:12">1:12</option>
                     <option value="1:14">1:14</option>
                     <option value="1:16">1:16</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Load from Bullet Library:</label>
-                <select id="bulletLibrarySelect" onchange="loadBulletData()">
-                    <option value="">Select a saved bullet (optional)</option>
+                    <option value="1:18.75">1:18.75</option>
+                    <option value="1:20">1:20</option>
                 </select>
             </div>
             <div class="form-group">
@@ -3901,10 +3912,140 @@ window.resetPassword = async function() {
             // Store loaded data for picker buttons
             window.loadedProfiles = [];
             window.loadedBullets = [];
+
+            // Zero Profile dropdown functions
+            window.loadZeroProfileDropdowns = async function() {
+                try {
+                    if (!currentUser) {
+                        return;
+                    }
+
+                    // Load firearm library data
+                    const { data: firearms, error: firearmError } = await supabase
+                        .from('firearm_profile')
+                        .select('*')
+                        .eq('user_id', currentUser.id)
+                        .order('profile_name', { ascending: true });
+
+                    if (!firearmError && firearms) {
+                        const firearmSelect = document.getElementById('zeroFirearmSelect');
+                        if (firearmSelect) {
+                            firearmSelect.innerHTML = '<option value="">Select a saved firearm (optional)</option>';
+                            firearms.forEach(firearm => {
+                                const option = document.createElement('option');
+                                option.value = firearm.id;
+                                option.textContent = `${firearm.profile_name} - ${firearm.firearm_name} (${firearm.caliber})`;
+                                firearmSelect.appendChild(option);
+                            });
+                        }
+                    }
+
+                    // Load bullet library data
+                    const { data: bullets, error: bulletError } = await supabase
+                        .from('bullet_library')
+                        .select('*')
+                        .eq('user_id', currentUser.id)
+                        .order('manufacturer_name', { ascending: true });
+
+                    if (!bulletError && bullets) {
+                        const bulletSelect = document.getElementById('zeroBulletSelect');
+                        if (bulletSelect) {
+                            bulletSelect.innerHTML = '<option value="">Select a saved bullet (optional)</option>';
+                            bullets.forEach(bullet => {
+                                const option = document.createElement('option');
+                                option.value = bullet.id;
+                                option.textContent = `${bullet.manufacturer_name} ${bullet.caliber} ${bullet.grain}gr - BC: ${bullet.ballistic_coefficient}`;
+                                bulletSelect.appendChild(option);
+                            });
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error loading Zero Profile dropdowns:', error);
+                }
+            };
+
+            window.loadZeroFirearmData = async function() {
+                const firearmSelect = document.getElementById('zeroFirearmSelect');
+                const firearmId = firearmSelect.value;
+                
+                if (!firearmId) return;
+
+                try {
+                    const { data: firearm, error } = await supabase
+                        .from('firearm_profile')
+                        .select('*')
+                        .eq('id', firearmId)
+                        .single();
+
+                    if (error) throw error;
+
+                    // Populate firearm fields
+                    const form = document.getElementById('ballisticForm');
+                    if (firearm.shooter_name) form.querySelector('[name="shooter_name"]').value = firearm.shooter_name;
+                    if (firearm.firearm_type) form.querySelector('[name="firearm_type"]').value = firearm.firearm_type;
+                    if (firearm.firearm_name) form.querySelector('[name="firearm_name"]').value = firearm.firearm_name;
+                    if (firearm.optic_name) form.querySelector('[name="optic_name"]').value = firearm.optic_name;
+                    if (firearm.caliber) form.querySelector('[name="caliber"]').value = firearm.caliber;
+                    if (firearm.barrel_length) form.querySelector('[name="barrel_length"]').value = firearm.barrel_length;
+                    if (firearm.barrel_twist_rate) form.querySelector('[name="barrel_twist_rate"]').value = firearm.barrel_twist_rate;
+                    if (firearm.zero_distance) form.querySelector('[name="zero_distance"]').value = firearm.zero_distance;
+                    if (firearm.height_over_bore) form.querySelector('[name="height_over_bore"]').value = firearm.height_over_bore;
+
+                } catch (error) {
+                    console.error('Error loading firearm data:', error);
+                    alert('Error loading firearm data. Please try again.');
+                }
+            };
+
+            window.loadZeroBulletData = async function() {
+                const bulletSelect = document.getElementById('zeroBulletSelect');
+                const bulletId = bulletSelect.value;
+                
+                if (!bulletId) return;
+
+                try {
+                    const { data: bullet, error } = await supabase
+                        .from('bullet_library')
+                        .select('*')
+                        .eq('id', bulletId)
+                        .single();
+
+                    if (error) throw error;
+
+                    // Populate bullet fields
+                    const form = document.getElementById('ballisticForm');
+                    if (bullet.grain) form.querySelector('[name="bullet_grain"]').value = bullet.grain;
+                    if (bullet.ballistic_coefficient) form.querySelector('[name="ballistic_coefficient"]').value = bullet.ballistic_coefficient;
+                    if (bullet.drag_model) form.querySelector('[name="drag_model"]').value = bullet.drag_model;
+                    if (bullet.muzzle_velocity) form.querySelector('[name="muzzle_velocity"]').value = bullet.muzzle_velocity;
+
+                } catch (error) {
+                    console.error('Error loading bullet data:', error);
+                    alert('Error loading bullet data. Please try again.');
+                }
+            };
             
             // This old function has been replaced by the new showProfilePicker above
             
             // Old duplicate functions have been removed
+
+            // Zero Profile Functions
+            window.showZeroProfile = function() {
+                document.getElementById('homePage').style.display = 'none';
+                document.getElementById('shootingProfileSection').style.display = 'block';
+                
+                // Hide other sections
+                const hideElement = (id) => {
+                    const element = document.getElementById(id);
+                    if (element) element.style.display = 'none';
+                };
+                hideElement('firearmLibrarySection');
+                hideElement('bulletLibrarySection');
+                hideElement('activeDopeSection');
+                
+                // Load the dropdowns
+                loadZeroProfileDropdowns();
+            };
 
             // Firearm Library Functions
             window.showFirearmLibrary = function() {
