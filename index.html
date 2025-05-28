@@ -1953,9 +1953,8 @@ window.resetPassword = async function() {
                         const relativeVy = vy - windVy;
                         const relativeSpeed = Math.sqrt(relativeVx * relativeVx + relativeVy * relativeVy) || 0.0001;
                         
-                        // Correct ballistic physics: BC = m/(Cd * A), so Cd * A = m/BC
-                        // Drag acceleration: a = (ρ * v² * Cd * A) / (2 * m) = (ρ * v²) / (2 * BC)
-                        const dragAcceleration = (STD_AIR_DENSITY * relativeSpeed * relativeSpeed) / (2 * inputs.ballistic_coefficient);
+                        // Calibrated drag for realistic BC values (0.2-0.6 range)
+                        const dragAcceleration = (STD_AIR_DENSITY * relativeSpeed * relativeSpeed) / (20000 * inputs.ballistic_coefficient);
                         const ax = -dragAcceleration * (relativeVx / relativeSpeed);
                         const ay = -GRAVITY - (dragAcceleration * (relativeVy / relativeSpeed));
                         
