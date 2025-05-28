@@ -2153,8 +2153,8 @@ window.resetPassword = async function() {
                             drag_model: form.drag_model.value,
                             step_interval_yards: parseInt(form.step_interval_yards.value),
                             max_distance_yards: parseInt(form.max_distance_yards.value),
-                            wind_speed: parseFloat(form.wind_speed.value) || 0,
-                            wind_angle: parseFloat(form.wind_angle.value) || 0
+                            wind_speed: form.wind_speed.value !== '' ? parseFloat(form.wind_speed.value) : null,
+                            wind_angle: form.wind_angle.value !== '' ? parseFloat(form.wind_angle.value) : null
                         };
 
                         const sessionData = {
