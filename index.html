@@ -3732,23 +3732,26 @@ window.resetPassword = async function() {
                         </div>
                     `;
                     
-                    // Load the dropdowns and initialize form fields after creating the form
+                    // Immediately set date and time, then load dropdowns
                     setTimeout(() => {
-                        loadDopeDropdownsDirect();
-                        
-                        // Initialize the date and time fields with current date/time
+                        // Initialize the date and time fields with current date/time FIRST
                         const now = new Date();
                         const dateField = document.getElementById('engagement_date');
-                        if (dateField && !dateField.value) {
+                        if (dateField) {
                             dateField.value = now.toISOString().split('T')[0];
+                            console.log('Date field set to:', dateField.value);
                         }
                         
                         const timeField = document.getElementById('engagement_time');
-                        if (timeField && !timeField.value) {
+                        if (timeField) {
                             const timeString = now.toTimeString().slice(0, 5);
                             timeField.value = timeString;
+                            console.log('Time field set to:', timeField.value);
                         }
-                    }, 1000);
+                        
+                        // Then load dropdowns
+                        loadDopeDropdownsDirect();
+                    }, 50);
                 }
             };
 
