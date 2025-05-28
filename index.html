@@ -3402,8 +3402,16 @@ window.resetPassword = async function() {
                                 const inputEvent = new Event('input', { bubbles: true });
                                 bulletTypeField.dispatchEvent(inputEvent);
                                 
-                                // Add visual confirmation
-                                bulletTypeField.style.cssText = 'background-color: #e8f5e8 !important; border: 2px solid #dc3545 !important; font-weight: bold !important; width: 100% !important; padding: 8px !important;';
+                                // Add visual confirmation with text color
+                                bulletTypeField.style.cssText = 'background-color: #e8f5e8 !important; border: 2px solid #dc3545 !important; font-weight: bold !important; width: 100% !important; padding: 8px !important; color: #000000 !important; border-radius: 4px !important;';
+                                
+                                // Also try setting innerHTML as backup
+                                if (bulletTypeField.tagName === 'INPUT') {
+                                    bulletTypeField.value = bullet.bullet_type;
+                                } else {
+                                    bulletTypeField.innerHTML = bullet.bullet_type;
+                                    bulletTypeField.textContent = bullet.bullet_type;
+                                }
                                 
                                 console.log('Bullet type field forced update to:', bullet.bullet_type);
                                 console.log('Field value after update:', bulletTypeField.value);
