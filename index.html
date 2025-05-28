@@ -2153,8 +2153,8 @@ window.resetPassword = async function() {
                             drag_model: form.drag_model.value,
                             step_interval_yards: parseInt(form.step_interval_yards.value),
                             max_distance_yards: parseInt(form.max_distance_yards.value),
-                            wind_speed: parseFloat(document.getElementById('wind_speed').value) || 0,
-                            wind_angle: parseFloat(document.getElementById('wind_direction').value) || 0
+                            wind_speed: parseFloat(form.wind_speed.value) || 0,
+                            wind_angle: parseFloat(form.wind_angle.value) || 0
                         };
 
                         const sessionData = {
@@ -2334,8 +2334,8 @@ window.resetPassword = async function() {
                 form.step_interval_yards.value = session.step_interval_yards || '';
                 form.max_distance_yards.value = session.max_distance_yards || '';
                 console.log('Wind data from database:', { wind_speed: session.wind_speed, wind_angle: session.wind_angle });
-                document.getElementById('wind_speed').value = session.wind_speed || '';
-                document.getElementById('wind_direction').value = session.wind_angle || '';
+                form.wind_speed.value = session.wind_speed || '';
+                form.wind_angle.value = session.wind_angle || '';
 
                 editSessionId = sessionId;
                 document.getElementById('cancelEditButton').style.display = 'inline-block';
