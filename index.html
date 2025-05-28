@@ -1868,8 +1868,13 @@ window.resetPassword = async function() {
                     const maxDistanceFeet = inputs.max_distance_yards * 3;
                     
                     // Calculate bullet diameter and cross-sectional area from caliber
-                    const bulletDiameter = parseFloat(inputs.caliber.replace(/[^\d.]/g, '')) / 12; // Convert inches to feet
+                    const caliberMatch = inputs.caliber.match(/[\d.]+/);
+                    const caliberInches = caliberMatch ? parseFloat(caliberMatch[0]) : 0.224; // Default to .224 if no match
+                    const bulletDiameter = caliberInches / 12; // Convert inches to feet
                     const bulletArea = Math.PI * Math.pow(bulletDiameter / 2, 2); // ft²
+                    
+                    // Debug logging
+                    self.postMessage({ log: 'Caliber: ' + inputs.caliber + ', Extracted: ' + caliberInches + ', Area: ' + bulletArea });
                     
                     // Wind components
                     const windSpeed = inputs.wind_speed || 0; // mph
@@ -1964,16 +1969,26 @@ window.resetPassword = async function() {
                         let t = 0;
                         const trajectory = [];
 
+                        // Debug initial conditions
+                        self.postMessage({ log: 'Initial state: x=' + state[0] + ', y=' + state[1] + ', vx=' + state[2] + ', vy=' + state[3] });
+                        self.postMessage({ log: 'Max distance: ' + maxDistanceFeet + ' ft, Height over bore: ' + heightOverBore + ' ft' });
+
                         let lastState = [...state, t];
                         trajectory.push({ x: state[0], y: state[1], v: Math.sqrt(state[2] * state[2] + state[3] * state[3]), t });
 
                         const keyDistances = [0, 75, 150];
                         let closestPoints = keyDistances.map(dist => ({ dist: dist, closestX: null, drag: null, speed: null, minDiff: Infinity }));
 
-                        while (state[0] <= maxDistanceFeet) {
+                        let iterations = 0;
+                        while (state[0] <= maxDistanceFeet && iterations < 100000) {
                             const derivatives = computeDerivatives(state);
                             state = rk4Step(state, DT);
                             t += DT;
+                            iterations++;
+
+                            if (iterations === 1) {
+                                self.postMessage({ log: 'First iteration - state after step: x=' + state[0] + ', y=' + state[1] + ', vx=' + state[2] + ', vy=' + state[3] });
+                            }
 
                             if (state[0] - lastState[0] >= 0.001) {
                                 const fraction = (state[0] - lastState[0]) / (state[0] - lastState[0] || 0.0001);
