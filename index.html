@@ -3409,7 +3409,10 @@ window.resetPassword = async function() {
                             if (dopeBulletTypeField) {
                                 dopeBulletTypeField.textContent = bullet.bullet_type;
                                 dopeBulletTypeField.innerHTML = bullet.bullet_type;
-                                dopeBulletTypeField.style.cssText = 'background-color: #f5f5f5 !important; border: 1px solid #ddd !important; padding: 8px !important; color: #000000 !important; border-radius: 4px !important; min-height: 20px !important;';
+                                // Update styling while preserving original width
+                                dopeBulletTypeField.style.backgroundColor = '#f5f5f5';
+                                dopeBulletTypeField.style.border = '1px solid #ddd';
+                                dopeBulletTypeField.style.color = '#000000';
                                 console.log('DOPE bullet type field updated to:', bullet.bullet_type);
                             }
                             setFieldValue('lot_number', bullet.lot_number || '');
