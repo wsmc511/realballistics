@@ -2316,6 +2316,7 @@ window.resetPassword = async function() {
                 }
 
                 const session = data;
+                console.log('Complete session data loaded from database:', session);
                 const form = document.getElementById('ballisticForm');
                 form.shooter_name.value = session.shooter_name || '';
                 form.firearm_type.value = session.firearm_type || '';
@@ -2332,6 +2333,7 @@ window.resetPassword = async function() {
                 form.drag_model.value = session.drag_model || '';
                 form.step_interval_yards.value = session.step_interval_yards || '';
                 form.max_distance_yards.value = session.max_distance_yards || '';
+                console.log('Wind data from database:', { wind_speed: session.wind_speed, wind_angle: session.wind_angle });
                 document.getElementById('wind_speed').value = session.wind_speed || '';
                 document.getElementById('wind_direction').value = session.wind_angle || '';
 
