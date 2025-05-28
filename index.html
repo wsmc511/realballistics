@@ -2583,6 +2583,19 @@ window.resetPassword = async function() {
                 document.getElementById('trajectoryDescription').textContent = '';
                 document.getElementById('comparisonTitle').style.display = 'none';
                 document.getElementById('comparisonTable').style.display = 'none';
+                
+                // Reset the Select All checkbox
+                const selectAllCheckbox = document.getElementById('selectAllSessions');
+                if (selectAllCheckbox) {
+                    selectAllCheckbox.checked = false;
+                }
+                
+                // Uncheck all individual session checkboxes
+                const sessionCheckboxes = document.querySelectorAll('.select-session');
+                sessionCheckboxes.forEach(checkbox => {
+                    checkbox.checked = false;
+                });
+                
                 const formElement = document.getElementById('ballisticForm');
                 if (formElement.style.display === 'block') {
                     toggleForm();
