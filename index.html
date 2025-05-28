@@ -4189,7 +4189,29 @@ window.resetPassword = async function() {
                                     </div>
                                     <div>
                                         <label style="display: block; margin-bottom: 5px; font-weight: bold;">Caliber:</label>
-                                        <input type="text" name="caliber" value="${firearm.caliber || ''}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                        <select name="caliber" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                            <option value="">Select Caliber</option>
+                                            <option value=".223 Rem" ${firearm.caliber === '.223 Rem' ? 'selected' : ''}>.223 Rem</option>
+                                            <option value="5.56 NATO" ${firearm.caliber === '5.56 NATO' ? 'selected' : ''}>5.56 NATO</option>
+                                            <option value=".308 Win" ${firearm.caliber === '.308 Win' ? 'selected' : ''}>.308 Win</option>
+                                            <option value="7.62 NATO" ${firearm.caliber === '7.62 NATO' ? 'selected' : ''}>7.62 NATO</option>
+                                            <option value="6.5 Creedmoor" ${firearm.caliber === '6.5 Creedmoor' ? 'selected' : ''}>6.5 Creedmoor</option>
+                                            <option value=".300 Blackout" ${firearm.caliber === '.300 Blackout' ? 'selected' : ''}>.300 Blackout</option>
+                                            <option value=".30-06 Springfield" ${firearm.caliber === '.30-06 Springfield' ? 'selected' : ''}>.30-06 Springfield</option>
+                                            <option value=".22 LR" ${firearm.caliber === '.22 LR' ? 'selected' : ''}>.22 LR</option>
+                                            <option value=".243 Win" ${firearm.caliber === '.243 Win' ? 'selected' : ''}>.243 Win</option>
+                                            <option value="7.62x39mm" ${firearm.caliber === '7.62x39mm' ? 'selected' : ''}>7.62x39mm</option>
+                                            <option value="6.8 SPC" ${firearm.caliber === '6.8 SPC' ? 'selected' : ''}>6.8 SPC</option>
+                                            <option value=".338 Lapua Magnum" ${firearm.caliber === '.338 Lapua Magnum' ? 'selected' : ''}>.338 Lapua Magnum</option>
+                                            <option value="9mm Luger" ${firearm.caliber === '9mm Luger' ? 'selected' : ''}>9mm Luger</option>
+                                            <option value=".45 ACP" ${firearm.caliber === '.45 ACP' ? 'selected' : ''}>.45 ACP</option>
+                                            <option value=".40 S&W" ${firearm.caliber === '.40 S&W' ? 'selected' : ''}>.40 S&W</option>
+                                            <option value=".380 ACP" ${firearm.caliber === '.380 ACP' ? 'selected' : ''}>.380 ACP</option>
+                                            <option value=".357 Magnum" ${firearm.caliber === '.357 Magnum' ? 'selected' : ''}>.357 Magnum</option>
+                                            <option value=".38 Special" ${firearm.caliber === '.38 Special' ? 'selected' : ''}>.38 Special</option>
+                                            <option value="10mm Auto" ${firearm.caliber === '10mm Auto' ? 'selected' : ''}>10mm Auto</option>
+                                            <option value=".44 Magnum" ${firearm.caliber === '.44 Magnum' ? 'selected' : ''}>.44 Magnum</option>
+                                        </select>
                                     </div>
                                     <div>
                                         <label style="display: block; margin-bottom: 5px; font-weight: bold;">Barrel Length (inches):</label>
@@ -4197,7 +4219,21 @@ window.resetPassword = async function() {
                                     </div>
                                     <div>
                                         <label style="display: block; margin-bottom: 5px; font-weight: bold;">Barrel Twist Rate:</label>
-                                        <input type="text" name="barrel_twist_rate" value="${firearm.barrel_twist_rate || ''}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                        <select name="barrel_twist_rate" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                            <option value="">Select Twist Rate</option>
+                                            <option value="1:7" ${firearm.barrel_twist_rate === '1:7' ? 'selected' : ''}>1:7</option>
+                                            <option value="1:8" ${firearm.barrel_twist_rate === '1:8' ? 'selected' : ''}>1:8</option>
+                                            <option value="1:9" ${firearm.barrel_twist_rate === '1:9' ? 'selected' : ''}>1:9</option>
+                                            <option value="1:9.25" ${firearm.barrel_twist_rate === '1:9.25' ? 'selected' : ''}>1:9.25</option>
+                                            <option value="1:10" ${firearm.barrel_twist_rate === '1:10' ? 'selected' : ''}>1:10</option>
+                                            <option value="1:10.5" ${firearm.barrel_twist_rate === '1:10.5' ? 'selected' : ''}>1:10.5</option>
+                                            <option value="1:11" ${firearm.barrel_twist_rate === '1:11' ? 'selected' : ''}>1:11</option>
+                                            <option value="1:12" ${firearm.barrel_twist_rate === '1:12' ? 'selected' : ''}>1:12</option>
+                                            <option value="1:14" ${firearm.barrel_twist_rate === '1:14' ? 'selected' : ''}>1:14</option>
+                                            <option value="1:16" ${firearm.barrel_twist_rate === '1:16' ? 'selected' : ''}>1:16</option>
+                                            <option value="1:18.75" ${firearm.barrel_twist_rate === '1:18.75' ? 'selected' : ''}>1:18.75</option>
+                                            <option value="1:20" ${firearm.barrel_twist_rate === '1:20' ? 'selected' : ''}>1:20</option>
+                                        </select>
                                     </div>
                                     <div>
                                         <label style="display: block; margin-bottom: 5px; font-weight: bold;">Optic Name:</label>
