@@ -3435,6 +3435,11 @@ window.resetPassword = async function() {
                 console.log('Show add DOPE form direct');
                 const dopeContent = document.getElementById('dopeContent');
                 if (dopeContent) {
+                    // Get current date and time for embedding directly in HTML
+                    const now = new Date();
+                    const currentDate = now.toISOString().split('T')[0];
+                    const currentTime = now.toTimeString().slice(0, 5);
+                    
                     dopeContent.innerHTML = `
                         <div style="background-color: white; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
                             <h3>Log New Engagement</h3>
@@ -3553,12 +3558,12 @@ window.resetPassword = async function() {
                             <!-- Date and Time -->
                             <div class="form-group" style="margin-bottom: 15px;">
                                 <label style="display: block; margin-bottom: 5px; font-weight: bold;">Engagement Date:</label>
-                                <input type="date" id="engagement_date" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                <input type="date" id="engagement_date" required value="${currentDate}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
                             </div>
                             
                             <div class="form-group" style="margin-bottom: 15px;">
                                 <label style="display: block; margin-bottom: 5px; font-weight: bold;">Engagement Time:</label>
-                                <input type="time" id="engagement_time" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                <input type="time" id="engagement_time" value="${currentTime}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
                             </div>
                             
                             <!-- Range Data -->
@@ -3746,34 +3751,10 @@ window.resetPassword = async function() {
                         </div>
                     `;
                     
-                    // Immediately set date and time, then load dropdowns
+                    // Load dropdowns after form is created
                     setTimeout(() => {
-                        // Initialize the date and time fields with current date/time FIRST
-                        const now = new Date();
-                        const dateField = document.getElementById('engagement_date');
-                        if (dateField) {
-                            const today = now.toISOString().split('T')[0];
-                            dateField.value = today;
-                            dateField.setAttribute('value', today);
-                            console.log('Date field set to:', dateField.value);
-                            // Force visual update with important styling
-                            dateField.style.cssText = 'background-color: #e8f5e8 !important; border: 2px solid #28a745 !important; width: 100% !important; padding: 8px !important;';
-                            dateField.focus();
-                            dateField.blur();
-                        }
-                        
-                        const timeField = document.getElementById('engagement_time');
-                        if (timeField) {
-                            const currentTime = now.toTimeString().slice(0, 5);
-                            timeField.value = currentTime;
-                            timeField.setAttribute('value', currentTime);
-                            console.log('Time field set to:', timeField.value);
-                            // Force visual update with important styling
-                            timeField.style.cssText = 'background-color: #e8f5e8 !important; border: 2px solid #28a745 !important;';
-                        }
-                        
-                        // Then load dropdowns (but don't clear the form)
                         loadDopeDropdownsDirect();
+                        console.log('Date and time embedded directly in HTML');
                     }, 50);
                 }
             };
