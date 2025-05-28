@@ -4318,7 +4318,7 @@ window.resetPassword = async function() {
                             } else {
                                 alert('Firearm profile updated successfully!');
                                 closeEditModal();
-                                await loadFirearmLibraryDirect();
+                                await loadFirearmProfiles();
                             }
                         } catch (e) {
                             console.error('Error:', e);
