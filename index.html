@@ -1856,40 +1856,78 @@ window.resetPassword = async function() {
                 self.onmessage = function(e) {
                     const { inputs } = e.data;
 
-                    const GRAVITY = 32.174;
-                    const AIR_DENSITY = 0.0765;
+                    const GRAVITY = 32.174; // ft/s²
+                    const STD_AIR_DENSITY = 0.0765; // lb/ft³ at sea level, 59°F
                     const DT = 0.001;
 
-                    const bulletMass = inputs.bullet_grain / 7000;
-                    const muzzleVelocity = inputs.muzzle_velocity;
-                    const zeroDistance = inputs.zero_distance * 3;
-                    const heightOverBore = inputs.height_over_bore / 12;
+                    const bulletMass = inputs.bullet_grain / 7000; // Convert grains to pounds
+                    const muzzleVelocity = inputs.muzzle_velocity; // ft/s
+                    const zeroDistance = inputs.zero_distance * 3; // Convert yards to feet
+                    const heightOverBore = inputs.height_over_bore / 12; // Convert inches to feet
                     const stepIntervalFeet = inputs.step_interval_yards * 3;
                     const maxDistanceFeet = inputs.max_distance_yards * 3;
+                    
+                    // Calculate bullet diameter and cross-sectional area from caliber
+                    const bulletDiameter = parseFloat(inputs.caliber.replace(/[^\d.]/g, '')) / 12; // Convert inches to feet
+                    const bulletArea = Math.PI * Math.pow(bulletDiameter / 2, 2); // ft²
+                    
+                    // Wind components
+                    const windSpeed = inputs.wind_speed || 0; // mph
+                    const windAngle = (inputs.wind_angle || 0) * Math.PI / 180; // Convert to radians
 
                     const targetDistances = Array.from(
                         { length: Math.floor(inputs.max_distance_yards / inputs.step_interval_yards) + 1 },
                         (_, i) => i * stepIntervalFeet
                     );
 
-                    function getDragCoefficient(v) {
-                        const mach = v / 1116;
-                        if (mach >= 2.5) return 0.180;
-                        if (mach >= 2.0) return 0.170;
-                        if (mach >= 1.5) return 0.160;
-                        if (mach >= 1.0) return 0.170;
-                        return 0.150;
+                    function getDragCoefficient(velocity, dragModel) {
+                        const mach = velocity / 1116; // Speed of sound at sea level
+                        
+                        // Use proper drag model (G1, G7, etc.)
+                        if (dragModel === 'G7') {
+                            // G7 drag model for boat-tail bullets
+                            if (mach >= 3.0) return 0.1198;
+                            if (mach >= 2.5) return 0.1270;
+                            if (mach >= 2.0) return 0.1348;
+                            if (mach >= 1.5) return 0.1431;
+                            if (mach >= 1.0) return 0.1618;
+                            if (mach >= 0.9) return 0.1825;
+                            return 0.2066;
+                        } else {
+                            // G1 drag model (default)
+                            if (mach >= 3.0) return 0.1629;
+                            if (mach >= 2.5) return 0.1659;
+                            if (mach >= 2.0) return 0.1629;
+                            if (mach >= 1.8) return 0.1659;
+                            if (mach >= 1.5) return 0.2031;
+                            if (mach >= 1.0) return 0.2597;
+                            if (mach >= 0.9) return 0.3010;
+                            return 0.3287;
+                        }
                     }
 
                     function computeDerivatives(state) {
                         const [x, y, vx, vy] = state;
                         const speed = Math.sqrt(vx * vx + vy * vy) || 0.0001;
-                        const cd = getDragCoefficient(speed) / inputs.ballistic_coefficient;
-                        const bulletArea = 0.000137;
-                        const drag = 0.5 * AIR_DENSITY * speed * speed * cd * bulletArea;
-                        const ax = -drag * (vx / speed) / bulletMass;
-                        const ay = -GRAVITY - (drag * (vy / speed) / bulletMass);
-                        return [vx, vy, ax, ay, drag, speed];
+                        
+                        // Proper ballistic coefficient application
+                        const cd = getDragCoefficient(speed, inputs.drag_model);
+                        const standardDrag = 0.5 * STD_AIR_DENSITY * speed * speed * cd * bulletArea;
+                        const actualDrag = standardDrag / inputs.ballistic_coefficient;
+                        
+                        // Wind effects (convert mph to ft/s)
+                        const windVx = windSpeed * 1.467 * Math.cos(windAngle);
+                        const windVy = windSpeed * 1.467 * Math.sin(windAngle);
+                        const relativeVx = vx - windVx;
+                        const relativeVy = vy - windVy;
+                        const relativeSpeed = Math.sqrt(relativeVx * relativeVx + relativeVy * relativeVy) || 0.0001;
+                        
+                        // Drag force components using relative velocity
+                        const dragForce = 0.5 * STD_AIR_DENSITY * relativeSpeed * relativeSpeed * cd * bulletArea / inputs.ballistic_coefficient;
+                        const ax = -dragForce * (relativeVx / relativeSpeed) / bulletMass;
+                        const ay = -GRAVITY - (dragForce * (relativeVy / relativeSpeed) / bulletMass);
+                        
+                        return [vx, vy, ax, ay, actualDrag, speed];
                     }
 
                     function rk4Step(state, dt) {
