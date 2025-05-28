@@ -181,11 +181,11 @@
             background-color: #5a32a3; 
         }
         button.edit-session { 
-            background-color: #fd7e14; 
+            background-color: #17a2b8; 
             color: white; 
         }
         button.edit-session:hover { 
-            background-color: #e06c0f; 
+            background-color: #138496; 
         }
         button.login, button.logout, button.reset-password { 
             background-color: #007bff; 
@@ -3763,7 +3763,7 @@ window.resetPassword = async function() {
                                     <td style="border: 1px solid #ddd; padding: 8px;">${engagement.engagement_outcome && engagement.engagement_outcome.trim() !== '' ? engagement.engagement_outcome : 'N/A'}</td>
                                     <td style="border: 1px solid #ddd; padding: 8px;">
                                         <button onclick="viewDopeEngagement('${engagement.id}')" style="background-color: #007bff; color: white; padding: 4px 8px; border: none; border-radius: 4px; cursor: pointer; margin-right: 5px;">View</button>
-                                        <button onclick="editDopeEngagement('${engagement.id}')" style="background-color: #28a745; color: white; padding: 4px 8px; border: none; border-radius: 4px; cursor: pointer; margin-right: 5px;">Edit</button>
+                                        <button onclick="editDopeEngagement('${engagement.id}')" style="background-color: #17a2b8; color: white; padding: 4px 8px; border: none; border-radius: 4px; cursor: pointer; margin-right: 5px;">Edit</button>
                                         <button onclick="deleteDopeEngagement('${engagement.id}')" style="background-color: #dc3545; color: white; padding: 4px 8px; border: none; border-radius: 4px; cursor: pointer;">Delete</button>
                                     </td>
                                 </tr>
