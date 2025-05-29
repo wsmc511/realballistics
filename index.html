@@ -5448,6 +5448,17 @@ window.resetPassword = async function() {
 
                 console.log('Engagement data loaded:', data);
                 console.log('All field names:', Object.keys(data));
+                console.log('Specific field values:');
+                console.log('shooter_name:', data.shooter_name);
+                console.log('firearm_type:', data.firearm_type);
+                console.log('firearm_name:', data.firearm_name);
+                console.log('rifle_caliber:', data.rifle_caliber);
+                console.log('barrel_length:', data.barrel_length);
+                console.log('barrel_twist_rate:', data.barrel_twist_rate);
+                console.log('optic_name:', data.optic_name);
+                console.log('zero_distance:', data.zero_distance);
+                console.log('height_over_bore:', data.height_over_bore);
+                console.log('adjustment_units:', data.adjustment_units);
 
                 const modalHTML = `
                     <div id="viewEngagementModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center;">
