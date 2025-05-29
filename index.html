@@ -5479,32 +5479,18 @@ window.resetPassword = async function() {
                 
                 // Fetch linked firearm profile data if available
                 let firearmData = null;
-                if (engagement.shooting_profile_id || engagement.firearm_profile_id) {
-                    const profileId = engagement.firearm_profile_id || engagement.shooting_profile_id;
-                    console.log('Fetching firearm profile with ID:', profileId);
+                if (engagement.firearm_profile_id) {
+                    console.log('Fetching firearm profile with ID:', engagement.firearm_profile_id);
                     
-                    // Try ballistic_sessions first (for shooting_profile_id)
-                    const { data: sessionData, error: sessionError } = await window.supabaseClient
-                        .from('ballistic_sessions')
+                    const { data: profileData, error: profileError } = await window.supabaseClient
+                        .from('firearm_profile')
                         .select('*')
-                        .eq('id', profileId)
+                        .eq('id', engagement.firearm_profile_id)
                         .single();
                     
-                    if (!sessionError && sessionData) {
-                        firearmData = sessionData;
-                        console.log('Found firearm data in ballistic_sessions:', firearmData);
-                    } else {
-                        // Try firearm_profile table
-                        const { data: profileData, error: profileError } = await window.supabaseClient
-                            .from('firearm_profile')
-                            .select('*')
-                            .eq('id', profileId)
-                            .single();
-                        
-                        if (!profileError && profileData) {
-                            firearmData = profileData;
-                            console.log('Found firearm data in firearm_profile:', firearmData);
-                        }
+                    if (!profileError && profileData) {
+                        firearmData = profileData;
+                        console.log('Found firearm data in firearm_profile:', firearmData);
                     }
                 }
 
@@ -5527,17 +5513,17 @@ window.resetPassword = async function() {
                 // Combine all data for display
                 const data = {
                     ...engagement,
-                    // Add firearm data with proper field names
-                    shooter_name: firearmData?.shooter_name || firearmData?.profile_name,
-                    firearm_type: firearmData?.action_type,
-                    firearm_name: firearmData?.firearm_model,
+                    // Add firearm data with correct field names from firearm_profile table
+                    shooter_name: firearmData?.shooter_name,
+                    firearm_type: firearmData?.firearm_type,
+                    firearm_name: firearmData?.firearm_name,
                     rifle_caliber: firearmData?.caliber,
                     barrel_length: firearmData?.barrel_length,
-                    barrel_twist_rate: firearmData?.twist_rate,
-                    optic_name: firearmData?.scope_name,
+                    barrel_twist_rate: firearmData?.barrel_twist_rate,
+                    optic_name: firearmData?.optic_name,
                     zero_distance: firearmData?.zero_distance,
-                    height_over_bore: firearmData?.scope_height,
-                    adjustment_units: firearmData?.turret_units,
+                    height_over_bore: firearmData?.height_over_bore,
+                    adjustment_units: engagement?.optic_adjustment_units,
                     // Add bullet data
                     bullet_manufacturer_name: bulletData?.manufacturer_name,
                     bullet_caliber: bulletData?.caliber,
