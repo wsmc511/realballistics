@@ -2823,10 +2823,10 @@ window.resetPassword = async function() {
                         return;
                     }
 
-                    console.log('Loading shooting profiles...');
-                    // Load shooting profiles
+                    console.log('Loading firearm profiles...');
+                    // Load firearm profiles
                     const { data: profiles, error: profileError } = await supabase
-                        .from('ballistic_sessions')
+                        .from('firearm_profile')
                         .select('id, shooter_name, firearm_name, caliber')
                         .eq('user_id', currentUser.id)
                         .order('shooter_name', { ascending: true });
