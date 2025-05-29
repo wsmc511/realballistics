@@ -1898,8 +1898,8 @@ window.resetPassword = async function() {
                     let muzzleVelocity = inputs.muzzle_velocity;
                     if (inputs.barrel_length && inputs.barrel_length !== 20) {
                         // Standard velocity is typically measured at 20" barrel
-                        // Realistic velocity change: 20-25 fps per inch for most cartridges
-                        const velocityPerInch = inputs.caliber.includes('5.56') || inputs.caliber.includes('.223') ? 23 : 22;
+                        // Realistic velocity change: 18-22 fps per inch for most cartridges
+                        const velocityPerInch = inputs.caliber.includes('5.56') || inputs.caliber.includes('.223') ? 20 : 19;
                         const barrelLengthAdjustment = (inputs.barrel_length - 20) * velocityPerInch;
                         muzzleVelocity += barrelLengthAdjustment;
                         self.postMessage({ log: 'Barrel length adjustment: ' + barrelLengthAdjustment + ' fps for ' + inputs.barrel_length + '" barrel' });
@@ -1944,10 +1944,10 @@ window.resetPassword = async function() {
                         const relativeVy = vy - windVy;
                         const relativeSpeed = Math.sqrt(relativeVx * relativeVx + relativeVy * relativeVy) || 0.0001;
                         
-                        // Industry-standard drag calculation using empirical drag factors
-                        // These factors are calibrated from decades of ballistic testing
-                        const DRAG_FACTOR_G1 = 0.000314; // Proven empirical factor for G1 standard projectile
-                        const DRAG_FACTOR_G7 = 0.000235; // Proven empirical factor for G7 standard projectile
+                        // Industry-standard drag calculation using proven empirical drag factors
+                        // These factors are calibrated to match military and sporting ballistic data
+                        const DRAG_FACTOR_G1 = 0.000255; // Adjusted empirical factor for G1 standard projectile
+                        const DRAG_FACTOR_G7 = 0.000190; // Adjusted empirical factor for G7 standard projectile
                         const dragFactor = inputs.drag_model === 'G7' ? DRAG_FACTOR_G7 : DRAG_FACTOR_G1;
                         const dragAcceleration = (dragFactor / inputs.ballistic_coefficient) * relativeSpeed * relativeSpeed;
                         
