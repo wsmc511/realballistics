@@ -1506,7 +1506,13 @@
             document.querySelectorAll('.setup-tab-content').forEach(content => {
                 content.style.display = 'none';
             });
-            document.getElementById(`${tabName}Tab`).style.display = 'block';
+            const tabContent = document.getElementById(`${tabName}Tab`);
+            if (tabContent) {
+                tabContent.style.display = 'block';
+                console.log('Tab content displayed:', tabName, tabContent);
+            } else {
+                console.error('Tab content not found:', `${tabName}Tab`);
+            }
             
             // Load specific tab data
             if (tabName === 'sharing') {
