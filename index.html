@@ -1436,75 +1436,84 @@
         // Setup Page Functions
         window.showSetup = async function() {
             console.log('showSetup function called');
+            
             // Hide all other sections
-            document.getElementById('homePage').style.display = 'none';
-            document.getElementById('shootingProfileSection').style.display = 'none';
-            
-            const setupSection = document.getElementById('setupSection');
-            console.log('Setup section element:', setupSection);
-            if (setupSection) {
-                setupSection.style.cssText = `
-                    display: block !important;
-                    width: 100% !important;
-                    min-height: 500px !important;
-                    padding: 20px !important;
-                    margin: 0 !important;
-                    box-sizing: border-box !important;
-                    background-color: #f5f5f5 !important;
-                    position: relative !important;
-                    z-index: 1000 !important;
-                `;
-                console.log('Setup section display set with forced CSS');
-                
-                // Check dimensions and position
-                const rect = setupSection.getBoundingClientRect();
-                console.log('Setup section position:', {
-                    top: rect.top,
-                    left: rect.left,
-                    width: rect.width,
-                    height: rect.height,
-                    visible: rect.top >= 0 && rect.left >= 0 && rect.bottom <= window.innerHeight && rect.right <= window.innerWidth
-                });
-                
-                // Force scroll to top
-                window.scrollTo(0, 0);
-                setupSection.scrollIntoView({ behavior: 'smooth' });
-            } else {
-                console.error('Setup section not found!');
-            }
-            
             const hideElement = (id) => {
                 const element = document.getElementById(id);
                 if (element) element.style.display = 'none';
             };
+            hideElement('homePage');
+            hideElement('shootingProfileSection');
             hideElement('firearmLibrarySection');
             hideElement('bulletLibrarySection'); 
             hideElement('activeDopeSection');
             hideElement('filterSection');
+            hideElement('ballisticForm');
+            hideElement('compareForm');
+            hideElement('compareResults');
+            hideElement('activeBulletLibrary');
+            hideElement('activeFirearmLibrary');
+            hideElement('dopeSection');
+            
+            // Create setup content dynamically (like DOPE section)
+            const appContent = document.getElementById('appContent');
+            const setupContent = document.createElement('div');
+            setupContent.id = 'activeSetupSection';
+            setupContent.style.cssText = `
+                display: block;
+                width: 100%;
+                min-height: 500px;
+                padding: 20px;
+                background-color: #f5f5f5;
+                position: relative;
+            `;
+            
+            // Add setup HTML content
+            setupContent.innerHTML = `
+                <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                    <h2 style="margin: 0 0 20px 0; color: #333;">Setup</h2>
+                    
+                    <!-- Tab Navigation -->
+                    <div style="border-bottom: 2px solid #ddd; margin-bottom: 20px;">
+                        <button onclick="showSetupTab('account')" id="accountTabBtn" class="setup-tab-btn" style="padding: 10px 20px; margin-right: 10px; border: none; background: #007bff; color: white; border-radius: 4px 4px 0 0; cursor: pointer;">Account</button>
+                        <button onclick="showSetupTab('preferences')" id="preferencesTabBtn" class="setup-tab-btn" style="padding: 10px 20px; margin-right: 10px; border: none; background: #6c757d; color: white; border-radius: 4px 4px 0 0; cursor: pointer;">Preferences</button>
+                        <button onclick="showSetupTab('sharing')" id="sharingTabBtn" class="setup-tab-btn" style="padding: 10px 20px; border: none; background: #6c757d; color: white; border-radius: 4px 4px 0 0; cursor: pointer;">Sharing</button>
+                    </div>
+                    
+                    <!-- Tab Content Areas -->
+                    <div id="setupTabContent"></div>
+                </div>
+            `;
+            
+            // Remove any existing active setup section
+            const existing = document.getElementById('activeSetupSection');
+            if (existing) existing.remove();
+            
+            // Add the new setup content
+            appContent.appendChild(setupContent);
+            console.log('Setup content created and added to page');
             
             // Get current user and load profile data
             try {
-                // Show the default Account tab first
-                showSetupTab('account');
-                
                 if (!window.supabaseClient) {
                     console.error('Supabase client not available, setup page will show with limited functionality');
-                    // Still show the setup page but with limited functionality
+                    showSetupTab('account');
                     return;
                 }
                 
                 const { data: { user }, error } = await window.supabaseClient.auth.getUser();
                 if (user && !error) {
-                    // Set the global currentUser for compatibility
                     window.currentUser = user;
-                    // Load user profile data
                     loadUserProfile();
                 } else {
                     console.error('No user found for setup page:', error);
                 }
+                
+                // Show the default Account tab
+                showSetupTab('account');
+                
             } catch (error) {
                 console.error('Error getting user for setup:', error);
-                // Still show the setup page even if there's an error
                 showSetupTab('account');
             }
         };
