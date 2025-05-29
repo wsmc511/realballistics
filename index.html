@@ -5468,14 +5468,14 @@ window.resetPassword = async function() {
                                     <div><strong>Firearm Type:</strong> ${data.firearm_type || 'N/A'}</div>
                                     <div><strong>Firearm Name:</strong> ${data.firearm_name || 'N/A'}</div>
                                     <div><strong>Rifle Caliber:</strong> ${data.rifle_caliber || 'N/A'}</div>
-                                    <div><strong>Barrel Length:</strong> ${data.barrel_length ? `${data.barrel_length}"` : 'N/A'}</div>
+                                    <div><strong>Barrel Length:</strong> ${data.barrel_length || 'N/A'}</div>
                                     <div><strong>Barrel Twist Rate:</strong> ${data.barrel_twist_rate || 'N/A'}</div>
                                     <div><strong>Optic Name:</strong> ${data.optic_name || 'N/A'}</div>
-                                    <div><strong>Optic Magnification:</strong> ${data.optic_magnification ? `${data.optic_magnification}x` : 'N/A'}</div>
-                                    <div><strong>Zero Distance:</strong> ${data.zero_distance ? `${data.zero_distance} ${data.zero_distance_unit || 'yards'}` : 'N/A'}</div>
-                                    <div><strong>Height over Bore:</strong> ${data.height_over_bore ? `${data.height_over_bore}"` : 'N/A'}</div>
-                                    <div><strong>Adjustment Units:</strong> ${data.optic_adjustment_units || 'N/A'}</div>
-                                    <div><strong>Parallax Setting:</strong> ${data.parallax_setting ? `${data.parallax_setting} ${data.parallax_unit || 'yards'}` : 'N/A'}</div>
+                                    <div><strong>Optic Magnification:</strong> ${data.optic_magnification || 'N/A'}</div>
+                                    <div><strong>Zero Distance:</strong> ${data.zero_distance || 'N/A'}</div>
+                                    <div><strong>Height over Bore:</strong> ${data.height_over_bore || 'N/A'}</div>
+                                    <div><strong>Adjustment Units:</strong> ${data.adjustment_units || 'N/A'}</div>
+                                    <div><strong>Parallax Setting:</strong> ${data.parallax_setting || 'N/A'}</div>
                                     <div><strong>Barrel Condition:</strong> ${data.barrel_condition || 'N/A'}</div>
                                 </div>
                             </div>
@@ -5484,15 +5484,15 @@ window.resetPassword = async function() {
                             <div style="margin-bottom: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 6px; border-left: 4px solid #ffc107;">
                                 <h4 style="margin: 0 0 10px 0; color: #ffc107;">3. Bullet and Ballistics</h4>
                                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                                    <div><strong>Bullet Manufacturer:</strong> ${data.bullet_manufacturer_name || 'N/A'}</div>
+                                    <div><strong>Bullet Manufacturer:</strong> ${data.bullet_manufacturer || 'N/A'}</div>
                                     <div><strong>Bullet Caliber:</strong> ${data.bullet_caliber || 'N/A'}</div>
-                                    <div><strong>Bullet Grain Weight:</strong> ${data.bullet_grain_weight ? `${data.bullet_grain_weight} gr` : 'N/A'}</div>
-                                    <div><strong>Ballistic Coefficient:</strong> ${data.bullet_ballistic_coefficient || 'N/A'}</div>
-                                    <div><strong>Drag Model:</strong> ${data.bullet_drag_model || 'N/A'}</div>
+                                    <div><strong>Bullet Grain Weight:</strong> ${data.bullet_grain || 'N/A'}</div>
+                                    <div><strong>Ballistic Coefficient:</strong> ${data.ballistic_coefficient || 'N/A'}</div>
+                                    <div><strong>Drag Model:</strong> ${data.drag_model || 'N/A'}</div>
                                     <div><strong>Bullet Type:</strong> ${data.bullet_type || 'N/A'}</div>
-                                    <div><strong>Lot Number:</strong> ${data.bullet_lot_number || 'N/A'}</div>
-                                    <div><strong>Muzzle Velocity:</strong> ${data.bullet_muzzle_velocity ? `${data.bullet_muzzle_velocity} fps` : 'N/A'}</div>
-                                    <div><strong>Muzzle Energy:</strong> ${data.bullet_muzzle_energy ? `${data.bullet_muzzle_energy} ft-lbs` : 'N/A'}</div>
+                                    <div><strong>Lot Number:</strong> ${data.lot_number || 'N/A'}</div>
+                                    <div><strong>Muzzle Velocity:</strong> ${data.muzzle_velocity || 'N/A'}</div>
+                                    <div><strong>Muzzle Energy:</strong> ${data.muzzle_energy || 'N/A'}</div>
                                 </div>
                             </div>
 
@@ -5515,11 +5515,11 @@ window.resetPassword = async function() {
                             <div style="margin-bottom: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 6px; border-left: 4px solid #dc3545;">
                                 <h4 style="margin: 0 0 10px 0; color: #dc3545;">5. Wind and External Forces</h4>
                                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                                    <div><strong>Wind Speed:</strong> ${data.wind_speed ? `${data.wind_speed} ${data.wind_speed_unit || 'mph'}` : 'N/A'}</div>
-                                    <div><strong>Wind Direction:</strong> ${data.wind_direction ? `${data.wind_direction}° ${data.angle_direction || ''}` : 'N/A'}</div>
+                                    <div><strong>Wind Speed:</strong> ${data.wind_speed || 'N/A'}</div>
+                                    <div><strong>Wind Direction:</strong> ${data.wind_direction || 'N/A'}</div>
                                     <div><strong>Wind Type:</strong> ${data.wind_type || 'N/A'}</div>
-                                    <div><strong>Coriolis Effect:</strong> ${data.coriolis_effect ? `${data.coriolis_effect} ${data.coriolis_direction || ''} ${data.coriolis_unit || ''}` : 'N/A'}</div>
-                                    <div><strong>Spin Drift:</strong> ${data.spin_drift ? `${data.spin_drift} ${data.spin_drift_direction || ''} ${data.spin_drift_unit || ''}` : 'N/A'}</div>
+                                    <div><strong>Coriolis Effect:</strong> ${data.coriolis_effect || 'N/A'}</div>
+                                    <div><strong>Spin Drift:</strong> ${data.spin_drift || 'N/A'}</div>
                                 </div>
                             </div>
 
@@ -5533,10 +5533,10 @@ window.resetPassword = async function() {
                                     <div><strong>Latitude:</strong> ${data.latitude ? `${data.latitude}° ${data.latitude_direction || 'N'}` : 'N/A'}</div>
                                     <div><strong>Longitude:</strong> ${data.longitude ? `${data.longitude}° ${data.longitude_direction || 'W'}` : 'N/A'}</div>
                                     <div><strong>Range to Target:</strong> ${data.range_to_target ? `${data.range_to_target} ${data.range_unit || 'yards'}` : 'N/A'}</div>
-                                    <div><strong>Angle of Fire:</strong> ${data.angle_of_fire ? `${data.angle_of_fire}°` : 'N/A'}</div>
-                                    <div><strong>Target Speed:</strong> ${data.target_movement_speed ? `${data.target_movement_speed} ${data.target_speed_unit || 'mph'}` : 'N/A'}</div>
-                                    <div><strong>Target Direction:</strong> ${data.target_movement_direction ? `${data.target_movement_direction}°` : 'N/A'}</div>
-                                    <div><strong>Time of Flight:</strong> ${data.time_of_flight ? `${data.time_of_flight}s` : 'N/A'}</div>
+                                    <div><strong>Angle of Fire:</strong> ${data.angle_of_fire || 'N/A'}</div>
+                                    <div><strong>Target Speed:</strong> ${data.target_speed || 'N/A'}</div>
+                                    <div><strong>Target Direction:</strong> ${data.target_direction || 'N/A'}</div>
+                                    <div><strong>Time of Flight:</strong> ${data.time_of_flight || 'N/A'}</div>
                                 </div>
                             </div>
 
