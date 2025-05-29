@@ -1444,8 +1444,11 @@
             console.log('Setup section element:', setupSection);
             if (setupSection) {
                 setupSection.style.display = 'block';
-                console.log('Setup section display set to block');
-                console.log('Setup section computed style:', window.getComputedStyle(setupSection).display);
+                setupSection.style.width = '100%';
+                setupSection.style.minHeight = '400px';
+                setupSection.style.padding = '20px';
+                setupSection.style.boxSizing = 'border-box';
+                console.log('Setup section display set to block with explicit dimensions');
                 
                 // Check dimensions and position
                 const rect = setupSection.getBoundingClientRect();
