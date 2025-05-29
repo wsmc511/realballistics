@@ -1520,34 +1520,136 @@
 
         window.showSetupTab = function(tabName) {
             console.log('showSetupTab called with:', tabName);
-            // Update tab buttons
-            document.querySelectorAll('.setup-tab').forEach(tab => {
-                tab.style.background = '#f8f9fa';
-                tab.style.color = '#333';
+            
+            // Update tab button styles
+            document.querySelectorAll('.setup-tab-btn').forEach(btn => {
+                btn.style.background = '#6c757d';
+                btn.style.color = 'white';
             });
-            const activeTab = document.querySelector(`[data-tab="${tabName}"]`);
-            if (activeTab) {
-                activeTab.style.background = '#007BFF';
-                activeTab.style.color = 'white';
-                console.log('Active tab updated:', tabName);
-            } else {
-                console.error('Tab not found:', tabName);
+            
+            // Highlight active tab
+            const activeTabBtn = document.getElementById(`${tabName}TabBtn`);
+            if (activeTabBtn) {
+                activeTabBtn.style.background = '#007bff';
+                activeTabBtn.style.color = 'white';
+                console.log('Active tab button updated:', tabName);
             }
             
-            // Show/hide tab content
-            document.querySelectorAll('.setup-tab-content').forEach(content => {
-                content.style.display = 'none';
-            });
-            const tabContent = document.getElementById(`${tabName}Tab`);
-            if (tabContent) {
-                tabContent.style.display = 'block';
-                console.log('Tab content displayed:', tabName, tabContent);
-            } else {
-                console.error('Tab content not found:', `${tabName}Tab`);
+            // Create tab content based on selected tab
+            const tabContentDiv = document.getElementById('setupTabContent');
+            if (!tabContentDiv) {
+                console.error('Tab content container not found');
+                return;
             }
             
-            // Load specific tab data
-            if (tabName === 'sharing') {
+            let content = '';
+            
+            if (tabName === 'account') {
+                content = `
+                    <div id="accountTab">
+                        <h3 style="margin-top: 0;">Account Management</h3>
+                        
+                        <div style="margin-bottom: 20px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Email Address:</label>
+                            <input type="email" id="profileEmail" readonly style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: #f8f9fa;">
+                        </div>
+                        
+                        <div style="margin-bottom: 20px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Display Name:</label>
+                            <input type="text" id="profileDisplayName" placeholder="Enter your display name" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                        </div>
+                        
+                        <div style="margin-bottom: 20px;">
+                            <button onclick="updateProfile()" style="background-color: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; margin-right: 10px;">Update Profile</button>
+                            <button onclick="showChangePassword()" style="background-color: #ffc107; color: black; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; margin-right: 10px;">Change Password</button>
+                            <button onclick="deleteAccount()" style="background-color: #dc3545; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer;">Delete Account</button>
+                        </div>
+                        
+                        <div id="changePasswordSection" style="display: none; background-color: #f8f9fa; padding: 15px; border-radius: 4px; margin-top: 20px;">
+                            <h4>Change Password</h4>
+                            <div style="margin-bottom: 10px;">
+                                <input type="password" id="currentPassword" placeholder="Current password" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            </div>
+                            <div style="margin-bottom: 10px;">
+                                <input type="password" id="newPassword" placeholder="New password" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            </div>
+                            <div style="margin-bottom: 10px;">
+                                <input type="password" id="confirmNewPassword" placeholder="Confirm new password" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            </div>
+                            <button onclick="changePassword()" style="background-color: #28a745; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; margin-right: 10px;">Update Password</button>
+                            <button onclick="cancelChangePassword()" style="background-color: #6c757d; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer;">Cancel</button>
+                        </div>
+                    </div>
+                `;
+            } else if (tabName === 'preferences') {
+                content = `
+                    <div id="preferencesTab">
+                        <h3 style="margin-top: 0;">User Preferences</h3>
+                        
+                        <div style="margin-bottom: 20px;">
+                            <label style="display: block; margin-bottom: 10px;">
+                                <input type="checkbox" id="darkModeToggle" style="margin-right: 8px;">
+                                Enable Dark Mode
+                            </label>
+                        </div>
+                        
+                        <div style="margin-bottom: 20px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Default Distance Unit:</label>
+                            <select id="defaultDistanceUnit" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                <option value="yards">Yards</option>
+                                <option value="meters">Meters</option>
+                            </select>
+                        </div>
+                        
+                        <div style="margin-bottom: 20px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Default Velocity Unit:</label>
+                            <select id="defaultVelocityUnit" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                <option value="fps">Feet per Second (fps)</option>
+                                <option value="mps">Meters per Second (m/s)</option>
+                            </select>
+                        </div>
+                        
+                        <button onclick="savePreferences()" style="background-color: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer;">Save Preferences</button>
+                    </div>
+                `;
+            } else if (tabName === 'sharing') {
+                content = `
+                    <div id="sharingTab">
+                        <h3 style="margin-top: 0;">Library Sharing</h3>
+                        
+                        <div style="margin-bottom: 20px;">
+                            <h4>Share Your Libraries</h4>
+                            <p style="margin-bottom: 10px;">Enter email addresses to share your firearm and bullet libraries:</p>
+                            <input type="email" id="shareEmail" placeholder="Enter email address" style="width: 70%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-right: 10px;">
+                            <button onclick="shareLibraries()" style="background-color: #007bff; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer;">Share</button>
+                        </div>
+                        
+                        <div style="margin-bottom: 20px;">
+                            <h4>Currently Shared With</h4>
+                            <div id="sharedWithList" style="background-color: #f8f9fa; padding: 15px; border-radius: 4px; min-height: 60px;">
+                                Loading shared users...
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h4>Libraries Shared With You</h4>
+                            <div id="sharedFromList" style="background-color: #f8f9fa; padding: 15px; border-radius: 4px; min-height: 60px;">
+                                Loading shared libraries...
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            tabContentDiv.innerHTML = content;
+            console.log('Tab content loaded for:', tabName);
+            
+            // Load user data for account tab
+            if (tabName === 'account') {
+                loadUserProfile();
+            } else if (tabName === 'preferences') {
+                loadUserPreferences();
+            } else if (tabName === 'sharing') {
                 loadSharingData();
             }
         };
