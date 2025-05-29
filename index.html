@@ -3906,13 +3906,25 @@ window.resetPassword = async function() {
                     const bulletValue = getFieldValueDirect('dope_bullet_library');
                     console.log('Debug dropdown values:', {
                         firearm: firearmlValue,
-                        bullet: bulletValue
+                        firearmType: typeof firearmlValue,
+                        bullet: bulletValue,
+                        bulletType: typeof bulletValue
                     });
+
+                    // Validate foreign key values
+                    if (!firearmlValue) {
+                        alert('Please select a firearm profile before saving.');
+                        return;
+                    }
+                    if (!bulletValue) {
+                        alert('Please select a bullet before saving.');
+                        return;
+                    }
 
                     const dopeData = {
                         user_id: currentUser.id,
                         firearm_profile_id: firearmlValue,
-                        bullet_library_id: parseFloat(bulletValue) || null,
+                        bullet_library_id: parseInt(bulletValue) || null,
                         engagement_date: engagementDate,
                         engagement_time: getFieldValueDirect('engagement_time'),
                         // Location data
