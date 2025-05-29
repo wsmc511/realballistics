@@ -5447,6 +5447,7 @@ window.resetPassword = async function() {
                 }
 
                 console.log('Engagement data loaded:', data);
+                console.log('All field names:', Object.keys(data));
 
                 const modalHTML = `
                     <div id="viewEngagementModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center;">
@@ -5457,7 +5458,7 @@ window.resetPassword = async function() {
                             <div style="margin-bottom: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 6px; border-left: 4px solid #007bff;">
                                 <h4 style="margin: 0 0 10px 0; color: #007bff;">1. Shooter Information</h4>
                                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                                    <div><strong>Shooter Name:</strong> ${data.shooter_name || 'N/A'}</div>
+                                    <div><strong>Shooter Name:</strong> ${data.shooter_name || data.profile_name || 'N/A'}</div>
                                 </div>
                             </div>
 
@@ -5465,16 +5466,16 @@ window.resetPassword = async function() {
                             <div style="margin-bottom: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 6px; border-left: 4px solid #28a745;">
                                 <h4 style="margin: 0 0 10px 0; color: #28a745;">2. Firearm and Optics</h4>
                                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                                    <div><strong>Firearm Type:</strong> ${data.firearm_type || 'N/A'}</div>
-                                    <div><strong>Firearm Name:</strong> ${data.firearm_name || 'N/A'}</div>
-                                    <div><strong>Rifle Caliber:</strong> ${data.rifle_caliber || 'N/A'}</div>
+                                    <div><strong>Firearm Type:</strong> ${data.firearm_type || data.action_type || 'N/A'}</div>
+                                    <div><strong>Firearm Name:</strong> ${data.firearm_name || data.firearm_model || 'N/A'}</div>
+                                    <div><strong>Rifle Caliber:</strong> ${data.rifle_caliber || data.caliber || 'N/A'}</div>
                                     <div><strong>Barrel Length:</strong> ${data.barrel_length || 'N/A'}</div>
-                                    <div><strong>Barrel Twist Rate:</strong> ${data.barrel_twist_rate || 'N/A'}</div>
-                                    <div><strong>Optic Name:</strong> ${data.optic_name || 'N/A'}</div>
+                                    <div><strong>Barrel Twist Rate:</strong> ${data.barrel_twist_rate || data.twist_rate || 'N/A'}</div>
+                                    <div><strong>Optic Name:</strong> ${data.optic_name || data.scope_name || 'N/A'}</div>
                                     <div><strong>Optic Magnification:</strong> ${data.optic_magnification || 'N/A'}</div>
                                     <div><strong>Zero Distance:</strong> ${data.zero_distance || 'N/A'}</div>
-                                    <div><strong>Height over Bore:</strong> ${data.height_over_bore || 'N/A'}</div>
-                                    <div><strong>Adjustment Units:</strong> ${data.adjustment_units || 'N/A'}</div>
+                                    <div><strong>Height over Bore:</strong> ${data.height_over_bore || data.scope_height || 'N/A'}</div>
+                                    <div><strong>Adjustment Units:</strong> ${data.adjustment_units || data.turret_units || 'N/A'}</div>
                                     <div><strong>Parallax Setting:</strong> ${data.parallax_setting || 'N/A'}</div>
                                     <div><strong>Barrel Condition:</strong> ${data.barrel_condition || 'N/A'}</div>
                                 </div>
@@ -5484,14 +5485,14 @@ window.resetPassword = async function() {
                             <div style="margin-bottom: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 6px; border-left: 4px solid #ffc107;">
                                 <h4 style="margin: 0 0 10px 0; color: #ffc107;">3. Bullet and Ballistics</h4>
                                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                                    <div><strong>Bullet Manufacturer:</strong> ${data.bullet_manufacturer || 'N/A'}</div>
-                                    <div><strong>Bullet Caliber:</strong> ${data.bullet_caliber || 'N/A'}</div>
-                                    <div><strong>Bullet Grain Weight:</strong> ${data.bullet_grain || 'N/A'}</div>
-                                    <div><strong>Ballistic Coefficient:</strong> ${data.ballistic_coefficient || 'N/A'}</div>
+                                    <div><strong>Bullet Manufacturer:</strong> ${data.bullet_manufacturer || data.manufacturer || 'N/A'}</div>
+                                    <div><strong>Bullet Caliber:</strong> ${data.bullet_caliber || data.caliber || 'N/A'}</div>
+                                    <div><strong>Bullet Grain Weight:</strong> ${data.bullet_grain || data.grain_weight || data.grain || 'N/A'}</div>
+                                    <div><strong>Ballistic Coefficient:</strong> ${data.ballistic_coefficient || data.bc || 'N/A'}</div>
                                     <div><strong>Drag Model:</strong> ${data.drag_model || 'N/A'}</div>
                                     <div><strong>Bullet Type:</strong> ${data.bullet_type || 'N/A'}</div>
                                     <div><strong>Lot Number:</strong> ${data.lot_number || 'N/A'}</div>
-                                    <div><strong>Muzzle Velocity:</strong> ${data.muzzle_velocity || 'N/A'}</div>
+                                    <div><strong>Muzzle Velocity:</strong> ${data.muzzle_velocity || data.velocity || 'N/A'}</div>
                                     <div><strong>Muzzle Energy:</strong> ${data.muzzle_energy || 'N/A'}</div>
                                 </div>
                             </div>
