@@ -5948,7 +5948,8 @@ window.resetPassword = async function() {
             
             data.forEach((point, index) => {
                 const x = padding + (parseFloat(point.distance_yd) / maxDistance) * graphWidth;
-                const y = zeroY - (parseFloat(point.hold_in) / holdRange) * (graphHeight / 2);
+                // Flip the y-axis calculation - positive hold values should be above line of sight
+                const y = zeroY + (parseFloat(point.hold_in) / holdRange) * (graphHeight / 2);
                 
                 if (index === 0) {
                     ctx.moveTo(x, y);
@@ -5962,7 +5963,8 @@ window.resetPassword = async function() {
             ctx.fillStyle = '#dc3545';
             data.forEach(point => {
                 const x = padding + (parseFloat(point.distance_yd) / maxDistance) * graphWidth;
-                const y = zeroY - (parseFloat(point.hold_in) / holdRange) * (graphHeight / 2);
+                // Flip the y-axis calculation for data points too
+                const y = zeroY + (parseFloat(point.hold_in) / holdRange) * (graphHeight / 2);
                 
                 ctx.beginPath();
                 ctx.arc(x, y, 4, 0, 2 * Math.PI);
@@ -6024,7 +6026,8 @@ window.resetPassword = async function() {
                 
                 session.results_grid.forEach((point, index) => {
                     const x = padding + (parseFloat(point.distance_yd) / maxDistance) * graphWidth;
-                    const y = zeroY - (parseFloat(point.hold_in) / holdRange) * (graphHeight / 2);
+                    // Flip the y-axis calculation for comparison graph
+                    const y = zeroY + (parseFloat(point.hold_in) / holdRange) * (graphHeight / 2);
                     
                     if (index === 0) {
                         ctx.moveTo(x, y);
@@ -6038,7 +6041,8 @@ window.resetPassword = async function() {
                 ctx.fillStyle = color;
                 session.results_grid.forEach(point => {
                     const x = padding + (parseFloat(point.distance_yd) / maxDistance) * graphWidth;
-                    const y = zeroY - (parseFloat(point.hold_in) / holdRange) * (graphHeight / 2);
+                    // Flip the y-axis calculation for comparison data points
+                    const y = zeroY + (parseFloat(point.hold_in) / holdRange) * (graphHeight / 2);
                     
                     ctx.beginPath();
                     ctx.arc(x, y, 3, 0, 2 * Math.PI);
@@ -6066,7 +6070,8 @@ window.resetPassword = async function() {
             const zeroY = canvas.height - padding - ((canvas.height - 2 * padding) / 2);
             for (let i = -2; i <= 2; i++) {
                 const hold = (holdRange / 2) * i;
-                const y = zeroY - (i / 2) * ((canvas.height - 2 * padding) / 2);
+                // Flip the y-axis labels to match corrected graph orientation
+                const y = zeroY + (i / 2) * ((canvas.height - 2 * padding) / 2);
                 const x = padding - 10;
                 ctx.textAlign = 'right';
                 ctx.fillText(hold.toFixed(1) + '"', x, y + 4);
