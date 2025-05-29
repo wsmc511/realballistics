@@ -5450,48 +5450,115 @@ window.resetPassword = async function() {
 
                 const modalHTML = `
                     <div id="viewEngagementModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center;">
-                        <div style="background: white; padding: 20px; border-radius: 8px; max-width: 800px; max-height: 90vh; overflow-y: auto; width: 90%;">
-                            <h3>DOPE Engagement Details</h3>
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
-                                <div><strong>Date:</strong> ${data.engagement_date}</div>
-                                <div><strong>Time:</strong> ${data.engagement_time || 'N/A'}</div>
-                                <div><strong>Range:</strong> ${data.range_to_target} ${data.range_unit}</div>
-                                <div><strong>Wind Speed:</strong> ${data.wind_speed || 'N/A'}</div>
-                                <div><strong>Wind Direction:</strong> ${data.wind_direction || 'N/A'}°</div>
-                                <div><strong>Wind Type:</strong> ${data.wind_type || 'N/A'}</div>
-                                <div><strong>Temperature:</strong> ${data.temperature !== null ? `${data.temperature}°${data.temperature_unit}` : 'N/A'}</div>
-                                <div><strong>Pressure:</strong> ${data.barometric_pressure || 'N/A'}</div>
-                                <div><strong>Humidity:</strong> ${data.humidity ? `${data.humidity}%` : 'N/A'}</div>
-                                <div><strong>Altitude:</strong> ${data.altitude || 'N/A'}</div>
-                                <div><strong>Angle of Fire:</strong> ${data.angle_of_fire || 'N/A'}°</div>
-                                <div><strong>Spin Drift:</strong> ${data.spin_drift || 'N/A'}</div>
-                                <div><strong>Coriolis Effect:</strong> ${data.coriolis_effect || 'N/A'}</div>
-                                <div><strong>Target Speed:</strong> ${data.target_movement_speed || 'N/A'}</div>
-                                <div><strong>Target Direction:</strong> ${data.target_movement_direction || 'N/A'}°</div>
-                                <div><strong>Optic Magnification:</strong> ${data.optic_magnification ? `${data.optic_magnification}x` : 'N/A'}</div>
-                                <div><strong>Adjustment Units:</strong> ${data.optic_adjustment_units || 'N/A'}</div>
-                                <div><strong>Parallax Setting:</strong> ${data.parallax_setting || 'N/A'}</div>
-                                <div><strong>Time of Flight:</strong> ${data.time_of_flight || 'N/A'}s</div>
-                                <div><strong>Barrel Condition:</strong> ${data.barrel_condition || 'N/A'}</div>
+                        <div style="background: white; padding: 20px; border-radius: 8px; max-width: 900px; max-height: 90vh; overflow-y: auto; width: 95%;">
+                            <h3 style="text-align: center; margin-bottom: 25px; color: #333;">DOPE Engagement Details</h3>
+                            
+                            <!-- 1. Shooter Information -->
+                            <div style="margin-bottom: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 6px; border-left: 4px solid #007bff;">
+                                <h4 style="margin: 0 0 10px 0; color: #007bff;">1. Shooter Information</h4>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                                    <div><strong>Shooter Name:</strong> ${data.shooter_name || 'N/A'}</div>
+                                </div>
                             </div>
-                            <div style="margin-bottom: 15px;">
-                                <strong>Atmospheric Conditions:</strong><br>
-                                ${data.atmospheric_conditions || 'N/A'}
+
+                            <!-- 2. Firearm and Optics -->
+                            <div style="margin-bottom: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 6px; border-left: 4px solid #28a745;">
+                                <h4 style="margin: 0 0 10px 0; color: #28a745;">2. Firearm and Optics</h4>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                                    <div><strong>Firearm Type:</strong> ${data.firearm_type || 'N/A'}</div>
+                                    <div><strong>Firearm Name:</strong> ${data.firearm_name || 'N/A'}</div>
+                                    <div><strong>Rifle Caliber:</strong> ${data.rifle_caliber || 'N/A'}</div>
+                                    <div><strong>Barrel Length:</strong> ${data.barrel_length ? `${data.barrel_length}"` : 'N/A'}</div>
+                                    <div><strong>Barrel Twist Rate:</strong> ${data.barrel_twist_rate || 'N/A'}</div>
+                                    <div><strong>Optic Name:</strong> ${data.optic_name || 'N/A'}</div>
+                                    <div><strong>Optic Magnification:</strong> ${data.optic_magnification ? `${data.optic_magnification}x` : 'N/A'}</div>
+                                    <div><strong>Zero Distance:</strong> ${data.zero_distance ? `${data.zero_distance} ${data.zero_distance_unit || 'yards'}` : 'N/A'}</div>
+                                    <div><strong>Height over Bore:</strong> ${data.height_over_bore ? `${data.height_over_bore}"` : 'N/A'}</div>
+                                    <div><strong>Adjustment Units:</strong> ${data.optic_adjustment_units || 'N/A'}</div>
+                                    <div><strong>Parallax Setting:</strong> ${data.parallax_setting ? `${data.parallax_setting} ${data.parallax_unit || 'yards'}` : 'N/A'}</div>
+                                    <div><strong>Barrel Condition:</strong> ${data.barrel_condition || 'N/A'}</div>
+                                </div>
                             </div>
-                            <div style="margin-bottom: 15px;">
-                                <strong>Light Conditions:</strong><br>
-                                ${data.light_conditions || 'N/A'}
+
+                            <!-- 3. Bullet and Ballistics -->
+                            <div style="margin-bottom: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 6px; border-left: 4px solid #ffc107;">
+                                <h4 style="margin: 0 0 10px 0; color: #ffc107;">3. Bullet and Ballistics</h4>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                                    <div><strong>Bullet Manufacturer:</strong> ${data.bullet_manufacturer_name || 'N/A'}</div>
+                                    <div><strong>Bullet Caliber:</strong> ${data.bullet_caliber || 'N/A'}</div>
+                                    <div><strong>Bullet Grain Weight:</strong> ${data.bullet_grain_weight ? `${data.bullet_grain_weight} gr` : 'N/A'}</div>
+                                    <div><strong>Ballistic Coefficient:</strong> ${data.bullet_ballistic_coefficient || 'N/A'}</div>
+                                    <div><strong>Drag Model:</strong> ${data.bullet_drag_model || 'N/A'}</div>
+                                    <div><strong>Bullet Type:</strong> ${data.bullet_type || 'N/A'}</div>
+                                    <div><strong>Lot Number:</strong> ${data.bullet_lot_number || 'N/A'}</div>
+                                    <div><strong>Muzzle Velocity:</strong> ${data.bullet_muzzle_velocity ? `${data.bullet_muzzle_velocity} fps` : 'N/A'}</div>
+                                    <div><strong>Muzzle Energy:</strong> ${data.bullet_muzzle_energy ? `${data.bullet_muzzle_energy} ft-lbs` : 'N/A'}</div>
+                                </div>
                             </div>
-                            <div style="margin-bottom: 15px;">
-                                <strong>Engagement Outcome:</strong><br>
-                                ${data.engagement_outcome || 'N/A'}
+
+                            <!-- 4. Environmental Conditions -->
+                            <div style="margin-bottom: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 6px; border-left: 4px solid #17a2b8;">
+                                <h4 style="margin: 0 0 10px 0; color: #17a2b8;">4. Environmental Conditions</h4>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                                    <div><strong>Temperature:</strong> ${data.temperature !== null ? `${data.temperature}°${data.temperature_unit || 'F'}` : 'N/A'}</div>
+                                    <div><strong>Humidity:</strong> ${data.humidity ? `${data.humidity}%` : 'N/A'}</div>
+                                    <div><strong>Barometric Pressure:</strong> ${data.barometric_pressure ? `${data.barometric_pressure} ${data.pressure_unit || 'inHg'}` : 'N/A'}</div>
+                                    <div><strong>Altitude:</strong> ${data.altitude ? `${data.altitude} ${data.altitude_reference || 'ASL'}` : 'N/A'}</div>
+                                </div>
+                                <div style="margin-top: 10px;">
+                                    <div><strong>Atmospheric Conditions:</strong> ${data.atmospheric_conditions || 'N/A'}</div>
+                                    <div style="margin-top: 5px;"><strong>Light Conditions:</strong> ${data.light_conditions || 'N/A'}</div>
+                                </div>
                             </div>
-                            <div style="margin-bottom: 20px;">
-                                <strong>Notes:</strong><br>
-                                ${data.notes || 'N/A'}
+
+                            <!-- 5. Wind and External Forces -->
+                            <div style="margin-bottom: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 6px; border-left: 4px solid #dc3545;">
+                                <h4 style="margin: 0 0 10px 0; color: #dc3545;">5. Wind and External Forces</h4>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                                    <div><strong>Wind Speed:</strong> ${data.wind_speed ? `${data.wind_speed} ${data.wind_speed_unit || 'mph'}` : 'N/A'}</div>
+                                    <div><strong>Wind Direction:</strong> ${data.wind_direction ? `${data.wind_direction}° ${data.angle_direction || ''}` : 'N/A'}</div>
+                                    <div><strong>Wind Type:</strong> ${data.wind_type || 'N/A'}</div>
+                                    <div><strong>Coriolis Effect:</strong> ${data.coriolis_effect ? `${data.coriolis_effect} ${data.coriolis_direction || ''} ${data.coriolis_unit || ''}` : 'N/A'}</div>
+                                    <div><strong>Spin Drift:</strong> ${data.spin_drift ? `${data.spin_drift} ${data.spin_drift_direction || ''} ${data.spin_drift_unit || ''}` : 'N/A'}</div>
+                                </div>
                             </div>
-                            <div style="text-align: center;">
-                                <button onclick="closeViewModal()" style="background-color: #6c757d; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">Close</button>
+
+                            <!-- 6. Engagement Details -->
+                            <div style="margin-bottom: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 6px; border-left: 4px solid #6f42c1;">
+                                <h4 style="margin: 0 0 10px 0; color: #6f42c1;">6. Engagement Details</h4>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                                    <div><strong>Engagement Date:</strong> ${data.engagement_date || 'N/A'}</div>
+                                    <div><strong>Engagement Time:</strong> ${data.engagement_time || 'N/A'}</div>
+                                    <div><strong>Location Name:</strong> ${data.location_name || 'N/A'}</div>
+                                    <div><strong>Latitude:</strong> ${data.latitude ? `${data.latitude}° ${data.latitude_direction || 'N'}` : 'N/A'}</div>
+                                    <div><strong>Longitude:</strong> ${data.longitude ? `${data.longitude}° ${data.longitude_direction || 'W'}` : 'N/A'}</div>
+                                    <div><strong>Range to Target:</strong> ${data.range_to_target ? `${data.range_to_target} ${data.range_unit || 'yards'}` : 'N/A'}</div>
+                                    <div><strong>Angle of Fire:</strong> ${data.angle_of_fire ? `${data.angle_of_fire}°` : 'N/A'}</div>
+                                    <div><strong>Target Speed:</strong> ${data.target_movement_speed ? `${data.target_movement_speed} ${data.target_speed_unit || 'mph'}` : 'N/A'}</div>
+                                    <div><strong>Target Direction:</strong> ${data.target_movement_direction ? `${data.target_movement_direction}°` : 'N/A'}</div>
+                                    <div><strong>Time of Flight:</strong> ${data.time_of_flight ? `${data.time_of_flight}s` : 'N/A'}</div>
+                                </div>
+                            </div>
+
+                            <!-- 7. Outcome and Notes -->
+                            <div style="margin-bottom: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 6px; border-left: 4px solid #fd7e14;">
+                                <h4 style="margin: 0 0 10px 0; color: #fd7e14;">7. Outcome and Notes</h4>
+                                <div style="margin-bottom: 10px;">
+                                    <strong>Engagement Outcome:</strong><br>
+                                    <div style="background: white; padding: 10px; border-radius: 4px; border: 1px solid #ddd; margin-top: 5px;">
+                                        ${data.engagement_outcome || 'N/A'}
+                                    </div>
+                                </div>
+                                <div>
+                                    <strong>Engagement Notes:</strong><br>
+                                    <div style="background: white; padding: 10px; border-radius: 4px; border: 1px solid #ddd; margin-top: 5px; min-height: 60px;">
+                                        ${data.notes || 'N/A'}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style="text-align: center; margin-top: 25px;">
+                                <button onclick="closeViewModal()" style="background-color: #6c757d; color: white; padding: 12px 30px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px;">Close</button>
                             </div>
                         </div>
                     </div>
