@@ -3672,6 +3672,11 @@ window.resetPassword = async function() {
                                 <label style="display: block; margin-bottom: 5px; font-weight: bold;">Coriolis Effect (mils/MOA):</label>
                                 <div style="display: flex; gap: 10px;">
                                     <input type="number" id="coriolis_effect" step="0.001" placeholder="Coriolis compensation" style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                    <select id="coriolis_direction" style="width: auto; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                        <option value="">Direction</option>
+                                        <option value="Left">Left</option>
+                                        <option value="Right">Right</option>
+                                    </select>
                                     <select id="coriolis_unit" style="width: auto; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
                                         <option value="MOA" selected>MOA</option>
                                         <option value="MILS">MILS</option>
@@ -3683,6 +3688,11 @@ window.resetPassword = async function() {
                                 <label style="display: block; margin-bottom: 5px; font-weight: bold;">Spin Drift (mils/MOA):</label>
                                 <div style="display: flex; gap: 10px;">
                                     <input type="number" id="spin_drift" step="0.001" placeholder="Spin drift compensation" style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                    <select id="spin_drift_direction" style="width: auto; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                        <option value="">Direction</option>
+                                        <option value="Left">Left</option>
+                                        <option value="Right">Right</option>
+                                    </select>
                                     <select id="spin_drift_unit" style="width: auto; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
                                         <option value="MOA" selected>MOA</option>
                                         <option value="MILS">MILS</option>
