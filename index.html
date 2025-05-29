@@ -3588,6 +3588,34 @@ window.resetPassword = async function() {
                                 <input type="time" id="engagement_time" value="${currentTime}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
                             </div>
                             
+                            <!-- Location Data -->
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Location Name:</label>
+                                <input type="text" id="location_name" placeholder="Shooting location name" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            </div>
+                            
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Latitude:</label>
+                                <div style="display: flex; gap: 10px;">
+                                    <input type="number" id="latitude" step="0.000001" placeholder="e.g., 40.7128" style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                    <select id="latitude_direction" style="width: auto; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                        <option value="N" selected>N</option>
+                                        <option value="S">S</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Longitude:</label>
+                                <div style="display: flex; gap: 10px;">
+                                    <input type="number" id="longitude" step="0.000001" placeholder="e.g., -74.0060" style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                    <select id="longitude_direction" style="width: auto; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                        <option value="E">E</option>
+                                        <option value="W" selected>W</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
                             <!-- Range Data -->
                             <div class="form-group" style="margin-bottom: 15px;">
                                 <label style="display: block; margin-bottom: 5px; font-weight: bold;">Range to Target:</label>
@@ -3895,7 +3923,9 @@ window.resetPassword = async function() {
                         // Location data
                         location_name: getFieldValueDirect('location_name'),
                         longitude: parseFloat(getFieldValueDirect('longitude')) || null,
+                        longitude_direction: getFieldValueDirect('longitude_direction'),
                         latitude: parseFloat(getFieldValueDirect('latitude')) || null,
+                        latitude_direction: getFieldValueDirect('latitude_direction'),
                         range_to_target: parseFloat(rangeTarget),
                         range_unit: rangeUnit,
                         // Wind conditions
