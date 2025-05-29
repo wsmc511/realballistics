@@ -1946,8 +1946,8 @@ window.resetPassword = async function() {
                         
                         // Industry-standard drag calculation using proven empirical drag factors
                         // These factors are calibrated to match military and sporting ballistic data
-                        const DRAG_FACTOR_G1 = 0.000255; // Adjusted empirical factor for G1 standard projectile
-                        const DRAG_FACTOR_G7 = 0.000190; // Adjusted empirical factor for G7 standard projectile
+                        const DRAG_FACTOR_G1 = 0.000200; // Further adjusted empirical factor for G1 standard projectile
+                        const DRAG_FACTOR_G7 = 0.000150; // Further adjusted empirical factor for G7 standard projectile
                         const dragFactor = inputs.drag_model === 'G7' ? DRAG_FACTOR_G7 : DRAG_FACTOR_G1;
                         const dragAcceleration = (dragFactor / inputs.ballistic_coefficient) * relativeSpeed * relativeSpeed;
                         
