@@ -1435,10 +1435,12 @@
 
         // Setup Page Functions
         window.showSetup = async function() {
+            console.log('showSetup function called');
             // Hide all other sections
             document.getElementById('homePage').style.display = 'none';
             document.getElementById('shootingProfileSection').style.display = 'none';
             document.getElementById('setupSection').style.display = 'block';
+            console.log('Setup section should now be visible');
             
             const hideElement = (id) => {
                 const element = document.getElementById(id);
@@ -1477,13 +1479,20 @@
         };
 
         window.showSetupTab = function(tabName) {
+            console.log('showSetupTab called with:', tabName);
             // Update tab buttons
             document.querySelectorAll('.setup-tab').forEach(tab => {
                 tab.style.background = '#f8f9fa';
                 tab.style.color = '#333';
             });
-            document.querySelector(`[data-tab="${tabName}"]`).style.background = '#007BFF';
-            document.querySelector(`[data-tab="${tabName}"]`).style.color = 'white';
+            const activeTab = document.querySelector(`[data-tab="${tabName}"]`);
+            if (activeTab) {
+                activeTab.style.background = '#007BFF';
+                activeTab.style.color = 'white';
+                console.log('Active tab updated:', tabName);
+            } else {
+                console.error('Tab not found:', tabName);
+            }
             
             // Show/hide tab content
             document.querySelectorAll('.setup-tab-content').forEach(content => {
