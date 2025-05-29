@@ -1451,8 +1451,12 @@
             
             // Get current user and load profile data
             try {
+                // Show the default Account tab first
+                showSetupTab('account');
+                
                 if (!window.supabaseClient) {
-                    console.error('Supabase client not available');
+                    console.error('Supabase client not available, setup page will show with limited functionality');
+                    // Still show the setup page but with limited functionality
                     return;
                 }
                 
@@ -1467,6 +1471,8 @@
                 }
             } catch (error) {
                 console.error('Error getting user for setup:', error);
+                // Still show the setup page even if there's an error
+                showSetupTab('account');
             }
         };
 
