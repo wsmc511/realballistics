@@ -3901,14 +3901,23 @@ window.resetPassword = async function() {
                     }
 
 
-                    // Debug the dropdown values
+                    // Debug the dropdown values  
                     const firearmlValue = getFieldValueDirect('dope_firearm_profile');
                     const bulletValue = getFieldValueDirect('dope_bullet_library');
+                    
+                    // Additional debugging - check if elements exist
+                    const firearmElement = document.getElementById('dope_firearm_profile');
+                    const bulletElement = document.getElementById('dope_bullet_library');
+                    
                     console.log('Debug dropdown values:', {
                         firearm: firearmlValue,
                         firearmType: typeof firearmlValue,
                         bullet: bulletValue,
-                        bulletType: typeof bulletValue
+                        bulletType: typeof bulletValue,
+                        firearmElementExists: !!firearmElement,
+                        bulletElementExists: !!bulletElement,
+                        firearmElementValue: firearmElement?.value,
+                        bulletElementValue: bulletElement?.value
                     });
 
                     // Validate foreign key values
