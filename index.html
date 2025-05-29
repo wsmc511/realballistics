@@ -1493,13 +1493,13 @@
 
         window.loadUserProfile = async function() {
             try {
-                if (!currentUser) return;
+                if (!window.currentUser) return;
                 
                 // Set email (readonly)
-                document.getElementById('profileEmail').value = currentUser.email || '';
+                document.getElementById('profileEmail').value = window.currentUser.email || '';
                 
                 // Load user metadata from Supabase auth
-                const { data: { user }, error } = await supabase.auth.getUser();
+                const { data: { user }, error } = await window.supabaseClient.auth.getUser();
                 if (error) {
                     console.error('Error loading user profile:', error);
                     return;
@@ -1537,7 +1537,7 @@
                 const displayName = document.getElementById('profileDisplayName').value.trim();
                 
                 // Update user metadata
-                const { error } = await supabase.auth.updateUser({
+                const { error } = await window.supabaseClient.auth.updateUser({
                     data: { display_name: displayName }
                 });
                 
@@ -1580,7 +1580,7 @@
             }
             
             try {
-                const { error } = await supabase.auth.updateUser({
+                const { error } = await window.supabaseClient.auth.updateUser({
                     password: newPassword
                 });
                 
@@ -1617,13 +1617,13 @@
         window.deleteAccount = async function() {
             try {
                 // Delete all user data first
-                await supabase.from('dope_engagements').delete().eq('user_id', currentUser.id);
-                await supabase.from('ballistic_sessions').delete().eq('user_id', currentUser.id);
-                await supabase.from('bullet_library').delete().eq('user_id', currentUser.id);
-                await supabase.from('firearm_profile').delete().eq('user_id', currentUser.id);
+                await window.supabaseClient.from('dope_engagements').delete().eq('user_id', window.currentUser.id);
+                await window.supabaseClient.from('ballistic_sessions').delete().eq('user_id', window.currentUser.id);
+                await window.supabaseClient.from('bullet_library').delete().eq('user_id', window.currentUser.id);
+                await window.supabaseClient.from('firearm_profile').delete().eq('user_id', window.currentUser.id);
                 
                 // Delete auth user (note: this might require admin privileges)
-                const { error } = await supabase.auth.admin.deleteUser(currentUser.id);
+                const { error } = await window.supabaseClient.auth.admin.deleteUser(window.currentUser.id);
                 
                 if (error) {
                     console.error('Error deleting account:', error);
@@ -1691,10 +1691,10 @@
             try {
                 // For now, we'll create a simple sharing record
                 // In a full implementation, you'd want to send an actual email invitation
-                const { data, error } = await supabase
+                const { data, error } = await window.supabaseClient
                     .from('library_shares')
                     .insert([{
-                        owner_id: currentUser.id,
+                        owner_id: window.currentUser.id,
                         shared_with_email: email,
                         created_at: new Date().toISOString()
                     }]);
@@ -1718,10 +1718,10 @@
         window.loadSharingData = async function() {
             try {
                 // Load active shares (who you've shared with)
-                const { data: shares, error: sharesError } = await supabase
+                const { data: shares, error: sharesError } = await window.supabaseClient
                     .from('library_shares')
                     .select('*')
-                    .eq('owner_id', currentUser.id);
+                    .eq('owner_id', window.currentUser.id);
                 
                 if (sharesError) {
                     console.error('Error loading shares:', sharesError);
@@ -1729,10 +1729,10 @@
                 }
                 
                 // Load libraries shared with you
-                const { data: sharedWithMe, error: sharedError } = await supabase
+                const { data: sharedWithMe, error: sharedError } = await window.supabaseClient
                     .from('library_shares')
                     .select('*')
-                    .eq('shared_with_email', currentUser.email);
+                    .eq('shared_with_email', window.currentUser.email);
                 
                 if (sharedError) {
                     console.error('Error loading shared libraries:', sharedError);
