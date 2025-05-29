@@ -1451,7 +1451,12 @@
             
             // Get current user and load profile data
             try {
-                const { data: { user }, error } = await supabase.auth.getUser();
+                if (!window.supabaseClient) {
+                    console.error('Supabase client not available');
+                    return;
+                }
+                
+                const { data: { user }, error } = await window.supabaseClient.auth.getUser();
                 if (user && !error) {
                     // Set the global currentUser for compatibility
                     window.currentUser = user;
