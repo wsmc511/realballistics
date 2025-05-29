@@ -1439,8 +1439,16 @@
             // Hide all other sections
             document.getElementById('homePage').style.display = 'none';
             document.getElementById('shootingProfileSection').style.display = 'none';
-            document.getElementById('setupSection').style.display = 'block';
-            console.log('Setup section should now be visible');
+            
+            const setupSection = document.getElementById('setupSection');
+            console.log('Setup section element:', setupSection);
+            if (setupSection) {
+                setupSection.style.display = 'block';
+                console.log('Setup section display set to block');
+                console.log('Setup section computed style:', window.getComputedStyle(setupSection).display);
+            } else {
+                console.error('Setup section not found!');
+            }
             
             const hideElement = (id) => {
                 const element = document.getElementById(id);
