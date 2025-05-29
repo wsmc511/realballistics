@@ -1446,6 +1446,20 @@
                 setupSection.style.display = 'block';
                 console.log('Setup section display set to block');
                 console.log('Setup section computed style:', window.getComputedStyle(setupSection).display);
+                
+                // Check dimensions and position
+                const rect = setupSection.getBoundingClientRect();
+                console.log('Setup section position:', {
+                    top: rect.top,
+                    left: rect.left,
+                    width: rect.width,
+                    height: rect.height,
+                    visible: rect.top >= 0 && rect.left >= 0 && rect.bottom <= window.innerHeight && rect.right <= window.innerWidth
+                });
+                
+                // Force scroll to top
+                window.scrollTo(0, 0);
+                setupSection.scrollIntoView({ behavior: 'smooth' });
             } else {
                 console.error('Setup section not found!');
             }
