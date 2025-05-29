@@ -3664,8 +3664,8 @@ window.resetPassword = async function() {
                                     <input type="number" id="altitude" step="0.1" placeholder="Elevation" style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
                                     <select id="altitude_reference" style="width: auto; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
                                         <option value="">Reference</option>
-                                        <option value="Above Sea Level" selected>Above Sea Level</option>
-                                        <option value="Below Sea Level">Below Sea Level</option>
+                                        <option value="ASL" selected>Above Sea Level</option>
+                                        <option value="BSL">Below Sea Level</option>
                                     </select>
                                 </div>
                             </div>
@@ -3892,10 +3892,15 @@ window.resetPassword = async function() {
                         bullet_library_id: parseFloat(getFieldValueDirect('dope_bullet_library')) || null,
                         engagement_date: engagementDate,
                         engagement_time: getFieldValueDirect('engagement_time'),
+                        // Location data
+                        location_name: getFieldValueDirect('location_name'),
+                        longitude: parseFloat(getFieldValueDirect('longitude')) || null,
+                        latitude: parseFloat(getFieldValueDirect('latitude')) || null,
                         range_to_target: parseFloat(rangeTarget),
                         range_unit: rangeUnit,
                         // Wind conditions
                         wind_speed: parseFloat(getFieldValueDirect('wind_speed')) || null,
+                        wind_speed_unit: getFieldValueDirect('wind_speed_unit'),
                         wind_direction: parseFloat(getFieldValueDirect('wind_direction')) || null,
                         wind_type: getFieldValueDirect('wind_type'),
                         // Temperature
@@ -3908,16 +3913,23 @@ window.resetPassword = async function() {
                         altitude: parseFloat(getFieldValueDirect('altitude')) || null,
                         altitude_reference: getFieldValueDirect('altitude_reference'),
                         angle_of_fire: parseFloat(getFieldValueDirect('angle_of_fire')) || null,
+                        angle_direction: getFieldValueDirect('angle_direction'),
                         // Ballistic effects
                         coriolis_effect: parseFloat(getFieldValueDirect('coriolis_effect')) || null,
+                        coriolis_direction: getFieldValueDirect('coriolis_direction'),
+                        coriolis_unit: getFieldValueDirect('coriolis_unit'),
                         spin_drift: parseFloat(getFieldValueDirect('spin_drift')) || null,
+                        spin_drift_direction: getFieldValueDirect('spin_drift_direction'),
+                        spin_drift_unit: getFieldValueDirect('spin_drift_unit'),
                         // Target movement
                         target_movement_speed: parseFloat(getFieldValueDirect('target_movement_speed')) || null,
+                        target_speed_unit: getFieldValueDirect('target_speed_unit'),
                         target_movement_direction: parseFloat(getFieldValueDirect('target_movement_direction')) || null,
                         // Optic settings
                         optic_magnification: parseFloat(getFieldValueDirect('optic_magnification')) || null,
                         optic_adjustment_units: getFieldValueDirect('optic_adjustment_units'),
                         parallax_setting: parseFloat(getFieldValueDirect('parallax_setting')) || null,
+                        parallax_unit: getFieldValueDirect('parallax_unit'),
                         // Time and conditions
                         time_of_flight: parseFloat(getFieldValueDirect('time_of_flight')) || null,
                         atmospheric_conditions: getFieldValueDirect('atmospheric_conditions'),
