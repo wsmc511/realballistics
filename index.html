@@ -3925,11 +3925,10 @@ window.resetPassword = async function() {
                         alert('Please select a firearm profile before saving.');
                         return;
                     }
-                    // Temporarily remove bullet validation to debug
-                    // if (!bulletValue) {
-                    //     alert('Please select a bullet before saving.');
-                    //     return;
-                    // }
+                    if (!bulletValue) {
+                        alert('Please select a bullet before saving.');
+                        return;
+                    }
 
                     const dopeData = {
                         user_id: currentUser.id,
