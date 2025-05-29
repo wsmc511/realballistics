@@ -3901,10 +3901,18 @@ window.resetPassword = async function() {
                     }
 
 
+                    // Debug the dropdown values
+                    const firearmlValue = getFieldValueDirect('dope_firearm_profile');
+                    const bulletValue = getFieldValueDirect('dope_bullet_library');
+                    console.log('Debug dropdown values:', {
+                        firearm: firearmlValue,
+                        bullet: bulletValue
+                    });
+
                     const dopeData = {
                         user_id: currentUser.id,
-                        firearm_profile_id: getFieldValueDirect('dope_shooting_profile'),
-                        bullet_library_id: parseFloat(getFieldValueDirect('dope_bullet_library')) || null,
+                        firearm_profile_id: firearmlValue,
+                        bullet_library_id: parseFloat(bulletValue) || null,
                         engagement_date: engagementDate,
                         engagement_time: getFieldValueDirect('engagement_time'),
                         // Location data
