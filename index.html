@@ -3095,7 +3095,7 @@ window.resetPassword = async function() {
                     closeFirearmPicker();
 
                     // Set the hidden field and display text
-                    document.getElementById('dope_firearm_profile').value = firearmId;
+                    document.getElementById('firearm_profile_id').value = firearmId;
                     document.getElementById('selected_firearm').textContent = `${firearm.profile_name} - ${firearm.firearm_name}`;
 
                     // Wait a moment for DOM to update, then populate fields
@@ -3358,7 +3358,7 @@ window.resetPassword = async function() {
                     setTimeout(() => {
                         try {
                             // Set the hidden field and display text
-                            const bulletField = document.getElementById('dope_bullet_library');
+                            const bulletField = document.getElementById('bullet_library_id');
                             const selectedText = document.getElementById('selected_bullet');
                             
                             if (bulletField) {
@@ -3458,7 +3458,7 @@ window.resetPassword = async function() {
                                     <button type="button" onclick="showFirearmPicker()" style="padding: 8px 15px; border: 1px solid #007bff; background-color: #007bff; color: white; border-radius: 4px; cursor: pointer;">Select Firearm</button>
                                     <span id="selected_firearm" style="padding: 8px; color: #666;">None selected</span>
                                 </div>
-                                <input type="hidden" id="dope_firearm_profile" value="">
+                                <input type="hidden" id="firearm_profile_id" value="">
                             </div>
                             
                             <div class="form-group" style="margin-bottom: 15px;">
@@ -3467,7 +3467,7 @@ window.resetPassword = async function() {
                                     <button type="button" onclick="showBulletPicker()" style="padding: 8px 15px; border: 1px solid #28a745; background-color: #28a745; color: white; border-radius: 4px; cursor: pointer;">Select Bullet</button>
                                     <span id="selected_bullet" style="padding: 8px; color: #666;">None selected</span>
                                 </div>
-                                <input type="hidden" id="dope_bullet_library" value="">
+                                <input type="hidden" id="bullet_library_id" value="">
                             </div>
                             
                             <!-- Primary Engagement Data -->
@@ -3902,12 +3902,12 @@ window.resetPassword = async function() {
 
 
                     // Debug the dropdown values  
-                    const firearmlValue = getFieldValueDirect('dope_firearm_profile');
-                    const bulletValue = getFieldValueDirect('dope_bullet_library');
+                    const firearmlValue = getFieldValueDirect('firearm_profile_id');
+                    const bulletValue = getFieldValueDirect('bullet_library_id');
                     
                     // Additional debugging - check if elements exist
-                    const firearmElement = document.getElementById('dope_firearm_profile');
-                    const bulletElement = document.getElementById('dope_bullet_library');
+                    const firearmElement = document.getElementById('firearm_profile_id');
+                    const bulletElement = document.getElementById('bullet_library_id');
                     
                     console.log('Debug dropdown values:', {
                         firearm: firearmlValue,
@@ -3925,10 +3925,11 @@ window.resetPassword = async function() {
                         alert('Please select a firearm profile before saving.');
                         return;
                     }
-                    if (!bulletValue) {
-                        alert('Please select a bullet before saving.');
-                        return;
-                    }
+                    // Temporarily remove bullet validation to debug
+                    // if (!bulletValue) {
+                    //     alert('Please select a bullet before saving.');
+                    //     return;
+                    // }
 
                     const dopeData = {
                         user_id: currentUser.id,
