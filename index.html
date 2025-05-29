@@ -1434,7 +1434,7 @@
         };
 
         // Setup Page Functions
-        window.showSetup = function() {
+        window.showSetup = async function() {
             // Hide all other sections
             document.getElementById('homePage').style.display = 'none';
             document.getElementById('shootingProfileSection').style.display = 'none';
@@ -1449,8 +1449,20 @@
             hideElement('activeDopeSection');
             hideElement('filterSection');
             
-            // Load user profile data
-            loadUserProfile();
+            // Get current user and load profile data
+            try {
+                const { data: { user }, error } = await supabase.auth.getUser();
+                if (user && !error) {
+                    // Set the global currentUser for compatibility
+                    window.currentUser = user;
+                    // Load user profile data
+                    loadUserProfile();
+                } else {
+                    console.error('No user found for setup page:', error);
+                }
+            } catch (error) {
+                console.error('Error getting user for setup:', error);
+            }
         };
 
         window.showSetupTab = function(tabName) {
