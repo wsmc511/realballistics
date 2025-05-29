@@ -3578,7 +3578,7 @@ window.resetPassword = async function() {
                                 <label style="display: block; margin-bottom: 5px; font-weight: bold;">Range to Target:</label>
                                 <div style="display: flex; gap: 10px;">
                                     <input type="number" id="range_to_target" step="0.01" placeholder="Distance" required style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-                                    <select id="range_unit" required style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                    <select id="range_unit" required style="width: auto; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
                                         <option value="">Unit</option>
                                         <option value="meters">Meters</option>
                                         <option value="yards">Yards</option>
@@ -3591,7 +3591,7 @@ window.resetPassword = async function() {
                                 <label style="display: block; margin-bottom: 5px; font-weight: bold;">Wind Speed:</label>
                                 <div style="display: flex; gap: 10px;">
                                     <input type="number" id="wind_speed" step="0.1" placeholder="Speed" style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-                                    <select id="wind_speed_unit" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                    <select id="wind_speed_unit" style="width: auto; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
                                         <option value="mph" selected>mph</option>
                                         <option value="kph">kph</option>
                                     </select>
@@ -3618,7 +3618,7 @@ window.resetPassword = async function() {
                                 <label style="display: block; margin-bottom: 5px; font-weight: bold;">Temperature:</label>
                                 <div style="display: flex; gap: 10px;">
                                     <input type="number" id="temperature" step="0.1" placeholder="Temperature" style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-                                    <select id="temperature_unit" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                    <select id="temperature_unit" style="width: auto; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
                                         <option value="">Unit</option>
                                         <option value="C">Celsius</option>
                                         <option value="F" selected>Fahrenheit</option>
@@ -3636,7 +3636,7 @@ window.resetPassword = async function() {
                                 <label style="display: block; margin-bottom: 5px; font-weight: bold;">Barometric Pressure:</label>
                                 <div style="display: flex; gap: 10px;">
                                     <input type="number" id="barometric_pressure" step="0.01" placeholder="Pressure" style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-                                    <select id="pressure_unit" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                    <select id="pressure_unit" style="width: auto; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
                                         <option value="">Unit</option>
                                         <option value="inHg" selected>inHg</option>
                                         <option value="mb">mb</option>
@@ -3648,7 +3648,7 @@ window.resetPassword = async function() {
                                 <label style="display: block; margin-bottom: 5px; font-weight: bold;">Altitude:</label>
                                 <div style="display: flex; gap: 10px;">
                                     <input type="number" id="altitude" step="0.1" placeholder="Elevation" style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-                                    <select id="altitude_reference" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                    <select id="altitude_reference" style="width: auto; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
                                         <option value="">Reference</option>
                                         <option value="Above Sea Level" selected>Above Sea Level</option>
                                         <option value="Below Sea Level">Below Sea Level</option>
@@ -3666,7 +3666,7 @@ window.resetPassword = async function() {
                                 <label style="display: block; margin-bottom: 5px; font-weight: bold;">Coriolis Effect (mils/MOA):</label>
                                 <div style="display: flex; gap: 10px;">
                                     <input type="number" id="coriolis_effect" step="0.001" placeholder="Coriolis compensation" style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-                                    <select id="coriolis_unit" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                    <select id="coriolis_unit" style="width: auto; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
                                         <option value="MOA" selected>MOA</option>
                                         <option value="MILS">MILS</option>
                                     </select>
@@ -3677,7 +3677,7 @@ window.resetPassword = async function() {
                                 <label style="display: block; margin-bottom: 5px; font-weight: bold;">Spin Drift (mils/MOA):</label>
                                 <div style="display: flex; gap: 10px;">
                                     <input type="number" id="spin_drift" step="0.001" placeholder="Spin drift compensation" style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-                                    <select id="spin_drift_unit" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                    <select id="spin_drift_unit" style="width: auto; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
                                         <option value="MOA" selected>MOA</option>
                                         <option value="MILS">MILS</option>
                                     </select>
@@ -3689,7 +3689,7 @@ window.resetPassword = async function() {
                                 <label style="display: block; margin-bottom: 5px; font-weight: bold;">Target Speed (mph/kph):</label>
                                 <div style="display: flex; gap: 10px;">
                                     <input type="number" id="target_movement_speed" step="0.1" placeholder="Target movement speed" style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-                                    <select id="target_speed_unit" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                    <select id="target_speed_unit" style="width: auto; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
                                         <option value="mph" selected>mph</option>
                                         <option value="kph">kph</option>
                                     </select>
