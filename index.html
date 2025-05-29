@@ -1443,12 +1443,18 @@
             const setupSection = document.getElementById('setupSection');
             console.log('Setup section element:', setupSection);
             if (setupSection) {
-                setupSection.style.display = 'block';
-                setupSection.style.width = '100%';
-                setupSection.style.minHeight = '400px';
-                setupSection.style.padding = '20px';
-                setupSection.style.boxSizing = 'border-box';
-                console.log('Setup section display set to block with explicit dimensions');
+                setupSection.style.cssText = `
+                    display: block !important;
+                    width: 100% !important;
+                    min-height: 500px !important;
+                    padding: 20px !important;
+                    margin: 0 !important;
+                    box-sizing: border-box !important;
+                    background-color: #f5f5f5 !important;
+                    position: relative !important;
+                    z-index: 1000 !important;
+                `;
+                console.log('Setup section display set with forced CSS');
                 
                 // Check dimensions and position
                 const rect = setupSection.getBoundingClientRect();
