@@ -6222,13 +6222,10 @@ window.resetPassword = async function() {
 
             window.showSharedLibrarySelector = async function() {
                 try {
-                    // Get all accepted shares for this user
+                    // Get all accepted shares for this user (without join)
                     const { data: shares, error } = await supabase
                         .from('library_shares')
-                        .select(`
-                            *,
-                            shared_by_user:shared_by_user_id(email)
-                        `)
+                        .select('*')
                         .eq('shared_with_email', currentUser.email)
                         .eq('status', 'accepted')
                         .not('shared_with_user_id', 'is', null);
@@ -6244,6 +6241,8 @@ window.resetPassword = async function() {
                         return;
                     }
 
+                    // We'll use the shared_by_email field that's already in the library_shares table
+
                     // Show modal with available shared libraries
                     const modalHTML = `
                         <div id="sharedLibraryModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center;">
@@ -6254,7 +6253,7 @@ window.resetPassword = async function() {
                                 <div id="sharedLibrariesContent">
                                     ${shares.map(share => `
                                         <div style="margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 5px;">
-                                            <h4 style="margin: 0 0 10px 0; color: #007bff;">Library shared by: ${share.shared_by_user?.email || 'Unknown'}</h4>
+                                            <h4 style="margin: 0 0 10px 0; color: #007bff;">Library shared by: ${share.shared_by_email || 'Unknown'}</h4>
                                             <div id="bullets_${share.shared_by_user_id}" style="margin-top: 10px;">
                                                 Loading bullets...
                                             </div>
