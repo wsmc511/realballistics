@@ -2144,13 +2144,27 @@
                 const darkMode = document.getElementById('darkModeToggle').checked;
                 const distanceUnit = document.getElementById('defaultDistanceUnit').value;
                 const velocityUnit = document.getElementById('defaultVelocityUnit').value;
-                const temperature = parseFloat(document.getElementById('defaultTemperature').value) || 79;
+                const temperatureValue = document.getElementById('defaultTemperature').value;
+                const temperature = temperatureValue ? parseFloat(temperatureValue) : 79;
                 const temperatureUnit = document.getElementById('defaultTemperatureUnit').value;
-                const humidity = parseFloat(document.getElementById('defaultHumidity').value) || 77;
-                const pressure = parseFloat(document.getElementById('defaultPressure').value) || 30.1;
+                
+                const humidityValue = document.getElementById('defaultHumidity').value;
+                const humidity = humidityValue ? parseFloat(humidityValue) : 77;
+                
+                const pressureValue = document.getElementById('defaultPressure').value;
+                const pressure = pressureValue ? parseFloat(pressureValue) : 30.1;
                 const pressureUnit = document.getElementById('defaultPressureUnit').value;
-                const altitude = parseFloat(document.getElementById('defaultAltitude').value) || 100;
+                
+                const altitudeValue = document.getElementById('defaultAltitude').value;
+                const altitude = altitudeValue ? parseFloat(altitudeValue) : 100;
                 const altitudeReference = document.getElementById('defaultAltitudeReference').value;
+                
+                console.log('Environmental values:', {
+                    temperature, temperatureUnit,
+                    humidity,
+                    pressure, pressureUnit,
+                    altitude, altitudeReference
+                });
                 
                 // Map the form values to the existing database schema
                 const theme = darkMode ? 'dark' : 'light';
