@@ -1071,6 +1071,20 @@
                     </div>
                 </div>
 
+                <!-- Request Access -->
+                <div style="margin-bottom: 30px;">
+                    <h4>Request Library Access</h4>
+                    <p style="color: #666; margin-bottom: 15px;">Request access to another user's libraries.</p>
+                    
+                    <div class="form-group">
+                        <label>Request Access from User:</label>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <input type="email" id="requestEmail" placeholder="Enter user email address" style="flex: 1;">
+                            <button type="button" onclick="requestLibraryAccess()" style="background: #007bff; color: white; padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer;">Send Request</button>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Current Shares -->
                 <div style="margin-bottom: 30px;">
                     <h4>Active Shares</h4>
@@ -1079,11 +1093,21 @@
                     </div>
                 </div>
 
+                <!-- Pending Share Requests -->
+                <div style="margin-bottom: 30px;">
+                    <h4>Pending Share Requests</h4>
+                    <p style="color: #666; margin-bottom: 10px;">Requests from other users to access your libraries.</p>
+                    <div id="pendingRequests" style="border: 1px solid #ddd; border-radius: 5px; min-height: 80px; padding: 15px;">
+                        <div style="text-align: center; color: #666;">Loading...</div>
+                    </div>
+                </div>
+
                 <!-- Shared With You -->
                 <div style="margin-bottom: 30px;">
                     <h4>Libraries Shared With You</h4>
-                    <div id="sharedWithYou" style="border: 1px solid #ddd; border-radius: 5px; min-height: 100px; padding: 15px;">
-                        <div style="text-align: center; color: #666;">No libraries shared with you yet.</div>
+                    <p style="color: #666; margin-bottom: 10px;">Libraries you have access to and pending invitations.</p>
+                    <div id="sharedWithYou" style="border: 1px solid #ddd; border-radius: 5px; min-height: 80px; padding: 15px;">
+                        <div style="text-align: center; color: #666;">Loading...</div>
                     </div>
                 </div>
             </div>
@@ -6222,6 +6246,17 @@ window.resetPassword = async function() {
 
             window.showSharedLibrarySelector = async function() {
                 try {
+                    console.log('Checking for shared libraries for user:', currentUser.email);
+                    
+                    // First, let's see ALL shares for this email (for debugging)
+                    const { data: allShares, error: allError } = await supabase
+                        .from('library_shares')
+                        .select('*')
+                        .eq('shared_with_email', currentUser.email);
+                    
+                    console.log('All shares found for this email:', allShares);
+                    console.log('Error (if any):', allError);
+
                     // Get all accepted shares for this user (without join)
                     const { data: shares, error } = await supabase
                         .from('library_shares')
@@ -6230,6 +6265,8 @@ window.resetPassword = async function() {
                         .eq('status', 'accepted')
                         .not('shared_with_user_id', 'is', null);
 
+                    console.log('Accepted shares with user_id:', shares);
+
                     if (error) {
                         console.error('Error fetching shared libraries:', error);
                         alert('Error fetching shared libraries: ' + error.message);
@@ -6237,8 +6274,32 @@ window.resetPassword = async function() {
                     }
 
                     if (!shares || shares.length === 0) {
-                        alert('No shared libraries available. Ask other users to share their libraries with you first.');
-                        return;
+                        // Check if there are any shares at all, even pending ones
+                        if (allShares && allShares.length > 0) {
+                            const pendingShares = allShares.filter(s => s.status === 'pending');
+                            const rejectedShares = allShares.filter(s => s.status === 'rejected');
+                            const acceptedButNoUserId = allShares.filter(s => s.status === 'accepted' && !s.shared_with_user_id);
+                            
+                            let message = 'No ready-to-use shared libraries found.\n\n';
+                            if (pendingShares.length > 0) {
+                                message += `Found ${pendingShares.length} pending share(s). `;
+                            }
+                            if (acceptedButNoUserId.length > 0) {
+                                message += `Found ${acceptedButNoUserId.length} accepted share(s) missing user ID. `;
+                            }
+                            if (rejectedShares.length > 0) {
+                                message += `Found ${rejectedShares.length} rejected share(s). `;
+                            }
+                            message += '\n\nTrying to accept pending shares now...';
+                            
+                            alert(message);
+                            await checkAndAcceptPendingShares();
+                            alert('Please try "Load Shared Library" again.');
+                            return;
+                        } else {
+                            alert('No shared libraries available. Ask other users to share their libraries with you first.');
+                            return;
+                        }
                     }
 
                     // We'll use the shared_by_email field that's already in the library_shares table
@@ -6398,6 +6459,261 @@ window.resetPassword = async function() {
                 const modal = document.getElementById('sharedLibraryModal');
                 if (modal) {
                     modal.remove();
+                }
+            };
+
+            // Request library access from another user
+            window.requestLibraryAccess = async function() {
+                try {
+                    const email = document.getElementById('requestEmail').value.trim();
+                    
+                    if (!email) {
+                        alert('Please enter an email address.');
+                        return;
+                    }
+
+                    if (email === currentUser.email) {
+                        alert('You cannot request access from yourself.');
+                        return;
+                    }
+
+                    // Check if request already exists
+                    const { data: existing, error: checkError } = await supabase
+                        .from('library_shares')
+                        .select('*')
+                        .eq('shared_by_email', email)
+                        .eq('shared_with_email', currentUser.email);
+
+                    if (checkError) {
+                        alert('Error checking existing requests: ' + checkError.message);
+                        return;
+                    }
+
+                    if (existing && existing.length > 0) {
+                        const share = existing[0];
+                        if (share.status === 'pending') {
+                            alert('You already have a pending request to this user.');
+                            return;
+                        } else if (share.status === 'accepted') {
+                            alert('This user has already shared their library with you.');
+                            return;
+                        } else if (share.status === 'rejected') {
+                            alert('Your previous request was rejected by this user.');
+                            return;
+                        }
+                    }
+
+                    // Create new share request
+                    const shareData = {
+                        shared_by_email: email,
+                        shared_with_email: currentUser.email,
+                        status: 'pending',
+                        created_at: new Date().toISOString(),
+                        request_type: 'user_requested'
+                    };
+
+                    const { error } = await supabase
+                        .from('library_shares')
+                        .insert([shareData]);
+
+                    if (error) {
+                        alert('Error sending request: ' + error.message);
+                        return;
+                    }
+
+                    alert('Access request sent successfully!');
+                    document.getElementById('requestEmail').value = '';
+                    await loadSharingData();
+
+                } catch (error) {
+                    console.error('Error requesting library access:', error);
+                    alert('Error sending request: ' + error.message);
+                }
+            };
+
+            // Load and display sharing data
+            window.loadSharingData = async function() {
+                try {
+                    if (!currentUser) return;
+
+                    // Load pending requests TO approve (requests from others to access your library)
+                    const { data: pendingRequests, error: pendingError } = await supabase
+                        .from('library_shares')
+                        .select('*')
+                        .eq('shared_by_email', currentUser.email)
+                        .eq('status', 'pending');
+
+                    // Load shares WITH you (both pending and accepted)
+                    const { data: sharedWithYou, error: sharedError } = await supabase
+                        .from('library_shares')
+                        .select('*')
+                        .eq('shared_with_email', currentUser.email);
+
+                    // Load active shares (shares you've given to others)
+                    const { data: activeShares, error: activeError } = await supabase
+                        .from('library_shares')
+                        .select('*')
+                        .eq('shared_by_email', currentUser.email)
+                        .eq('status', 'accepted');
+
+                    if (pendingError || sharedError || activeError) {
+                        console.error('Error loading sharing data:', { pendingError, sharedError, activeError });
+                        return;
+                    }
+
+                    // Update pending requests section
+                    const pendingContainer = document.getElementById('pendingRequests');
+                    if (pendingContainer) {
+                        if (!pendingRequests || pendingRequests.length === 0) {
+                            pendingContainer.innerHTML = '<div style="text-align: center; color: #666;">No pending requests.</div>';
+                        } else {
+                            pendingContainer.innerHTML = pendingRequests.map(request => `
+                                <div style="margin-bottom: 10px; padding: 10px; border: 1px solid #ffc107; border-radius: 4px; background-color: #fff3cd;">
+                                    <div style="font-weight: bold; color: #856404;">Request from: ${request.shared_with_email}</div>
+                                    <div style="font-size: 12px; color: #666; margin: 5px 0;">
+                                        ${request.request_type === 'user_requested' ? 'User requested access' : 'Invited by you'} 
+                                        • ${new Date(request.created_at).toLocaleDateString()}
+                                    </div>
+                                    <div style="margin-top: 10px;">
+                                        <button onclick="approveShare('${request.id}')" style="background: #28a745; color: white; padding: 5px 10px; border: none; border-radius: 3px; cursor: pointer; margin-right: 5px;">Approve</button>
+                                        <button onclick="rejectShare('${request.id}')" style="background: #dc3545; color: white; padding: 5px 10px; border: none; border-radius: 3px; cursor: pointer;">Reject</button>
+                                    </div>
+                                </div>
+                            `).join('');
+                        }
+                    }
+
+                    // Update shared with you section
+                    const sharedContainer = document.getElementById('sharedWithYou');
+                    if (sharedContainer) {
+                        if (!sharedWithYou || sharedWithYou.length === 0) {
+                            sharedContainer.innerHTML = '<div style="text-align: center; color: #666;">No libraries shared with you.</div>';
+                        } else {
+                            sharedContainer.innerHTML = sharedWithYou.map(share => {
+                                let statusColor = '#666';
+                                let statusText = share.status;
+                                if (share.status === 'accepted') {
+                                    statusColor = '#28a745';
+                                    statusText = 'Access Granted';
+                                } else if (share.status === 'pending') {
+                                    statusColor = '#ffc107';
+                                    statusText = 'Pending Approval';
+                                } else if (share.status === 'rejected') {
+                                    statusColor = '#dc3545';
+                                    statusText = 'Rejected';
+                                }
+
+                                return `
+                                    <div style="margin-bottom: 10px; padding: 10px; border: 1px solid ${statusColor}; border-radius: 4px;">
+                                        <div style="font-weight: bold;">Library from: ${share.shared_by_email}</div>
+                                        <div style="font-size: 12px; color: ${statusColor}; margin: 5px 0;">
+                                            Status: ${statusText} • ${new Date(share.created_at).toLocaleDateString()}
+                                        </div>
+                                        ${share.status === 'accepted' ? `
+                                            <button onclick="loadSharedLibraries()" style="background: #007bff; color: white; padding: 5px 10px; border: none; border-radius: 3px; cursor: pointer; font-size: 12px;">View Library</button>
+                                        ` : ''}
+                                    </div>
+                                `;
+                            }).join('');
+                        }
+                    }
+
+                    // Update active shares section
+                    const activeContainer = document.getElementById('activeShares');
+                    if (activeContainer) {
+                        if (!activeShares || activeShares.length === 0) {
+                            activeContainer.innerHTML = '<div style="text-align: center; color: #666;">No active shares. Invite users above to start sharing.</div>';
+                        } else {
+                            activeContainer.innerHTML = activeShares.map(share => `
+                                <div style="margin-bottom: 10px; padding: 10px; border: 1px solid #28a745; border-radius: 4px; background-color: #d4edda;">
+                                    <div style="font-weight: bold; color: #155724;">Shared with: ${share.shared_with_email}</div>
+                                    <div style="font-size: 12px; color: #666; margin: 5px 0;">
+                                        Accepted: ${share.accepted_at ? new Date(share.accepted_at).toLocaleDateString() : 'Recently'}
+                                    </div>
+                                    <button onclick="revokeShare('${share.id}')" style="background: #dc3545; color: white; padding: 5px 10px; border: none; border-radius: 3px; cursor: pointer; font-size: 12px;">Revoke Access</button>
+                                </div>
+                            `).join('');
+                        }
+                    }
+
+                } catch (error) {
+                    console.error('Error loading sharing data:', error);
+                }
+            };
+
+            // Approve a share request
+            window.approveShare = async function(shareId) {
+                try {
+                    const { error } = await supabase
+                        .from('library_shares')
+                        .update({
+                            status: 'accepted',
+                            accepted_at: new Date().toISOString()
+                        })
+                        .eq('id', shareId);
+
+                    if (error) {
+                        alert('Error approving share: ' + error.message);
+                        return;
+                    }
+
+                    alert('Share approved successfully!');
+                    await loadSharingData();
+
+                } catch (error) {
+                    console.error('Error approving share:', error);
+                    alert('Error approving share: ' + error.message);
+                }
+            };
+
+            // Reject a share request
+            window.rejectShare = async function(shareId) {
+                try {
+                    const { error } = await supabase
+                        .from('library_shares')
+                        .update({
+                            status: 'rejected',
+                            rejected_at: new Date().toISOString()
+                        })
+                        .eq('id', shareId);
+
+                    if (error) {
+                        alert('Error rejecting share: ' + error.message);
+                        return;
+                    }
+
+                    alert('Share rejected.');
+                    await loadSharingData();
+
+                } catch (error) {
+                    console.error('Error rejecting share:', error);
+                    alert('Error rejecting share: ' + error.message);
+                }
+            };
+
+            // Revoke an active share
+            window.revokeShare = async function(shareId) {
+                try {
+                    if (!confirm('Are you sure you want to revoke this share? The user will lose access to your library.')) {
+                        return;
+                    }
+
+                    const { error } = await supabase
+                        .from('library_shares')
+                        .delete()
+                        .eq('id', shareId);
+
+                    if (error) {
+                        alert('Error revoking share: ' + error.message);
+                        return;
+                    }
+
+                    alert('Share revoked successfully.');
+                    await loadSharingData();
+
+                } catch (error) {
+                    console.error('Error revoking share:', error);
+                    alert('Error revoking share: ' + error.message);
                 }
             };
 
