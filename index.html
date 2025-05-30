@@ -5302,17 +5302,19 @@ window.resetPassword = async function() {
 
             window.loadEnvironmentalDefaults = async function() {
                 try {
-                    if (!window.currentUser) {
+                    // Get current user the same way other DOPE functions do
+                    const currentUser = (await supabase.auth.getUser()).data.user;
+                    if (!currentUser) {
                         console.log('No current user, skipping environmental defaults load');
                         return;
                     }
                     
-                    console.log('Loading environmental defaults for DOPE form');
+                    console.log('Loading environmental defaults for DOPE form, user ID:', currentUser.id);
                     
-                    const { data, error } = await window.supabaseClient
+                    const { data, error } = await supabase
                         .from('user_preferences')
                         .select('*')
-                        .eq('user_id', window.currentUser.id)
+                        .eq('user_id', currentUser.id)
                         .single();
                     
                     if (error && error.code !== 'PGRST116') {
