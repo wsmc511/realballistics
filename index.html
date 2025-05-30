@@ -7304,6 +7304,32 @@ window.resetPassword = async function() {
             html += '</div>';
             legend.innerHTML = html;
         }
+
+        // Initialize pending shares check when page loads
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Wait a moment for authentication to complete
+            setTimeout(async () => {
+                if (window.currentUser && window.supabaseClient) {
+                    console.log('Checking for pending shares for user:', window.currentUser.email);
+                    await checkAndAcceptPendingShares();
+                }
+            }, 2000);
+        });
+
+        // Also check when user is set (for dynamic login)
+        const originalCurrentUser = window.currentUser;
+        Object.defineProperty(window, 'currentUser', {
+            get: function() {
+                return originalCurrentUser;
+            },
+            set: function(value) {
+                originalCurrentUser = value;
+                if (value && window.supabaseClient) {
+                    console.log('User set, checking pending shares for:', value.email);
+                    setTimeout(() => checkAndAcceptPendingShares(), 1000);
+                }
+            }
+        });
         
     </script>
     
