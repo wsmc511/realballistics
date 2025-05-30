@@ -2149,14 +2149,20 @@
                 const temperatureUnit = document.getElementById('defaultTemperatureUnit').value;
                 
                 const humidityValue = document.getElementById('defaultHumidity').value;
-                const humidity = humidityValue ? parseFloat(humidityValue) : 77;
+                const humidity = humidityValue !== '' ? parseFloat(humidityValue) : 77;
                 
                 const pressureValue = document.getElementById('defaultPressure').value;
-                const pressure = pressureValue ? parseFloat(pressureValue) : 30.1;
+                const pressure = pressureValue !== '' ? parseFloat(pressureValue) : 30.1;
                 const pressureUnit = document.getElementById('defaultPressureUnit').value;
                 
                 const altitudeValue = document.getElementById('defaultAltitude').value;
-                const altitude = altitudeValue ? parseFloat(altitudeValue) : 100;
+                const altitude = altitudeValue !== '' ? parseFloat(altitudeValue) : 100;
+                
+                console.log('Form field debug:', {
+                    humidityValue, humidityParsed: humidity,
+                    pressureValue, pressureParsed: pressure,
+                    altitudeValue, altitudeParsed: altitude
+                });
                 const altitudeReference = document.getElementById('defaultAltitudeReference').value;
                 
                 console.log('Environmental values:', {
