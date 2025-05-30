@@ -5295,10 +5295,11 @@ window.resetPassword = async function() {
                     setTimeout(() => {
                         loadDopeDropdownsDirect();
                         console.log('Date and time embedded directly in HTML');
-                        // Apply environmental defaults after dropdowns are loaded
+                        // Apply environmental defaults after all auto-selections are complete
                         setTimeout(() => {
+                            console.log('Final step: applying environmental defaults after auto-selections');
                             loadEnvironmentalDefaults();
-                        }, 200);
+                        }, 1000);
                     }, 50);
                 }
             };
