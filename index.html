@@ -2290,15 +2290,8 @@
             }
         };
 
-        window.savePreferences = function() {
-            localStorage.setItem('ballistic_units', document.getElementById('defaultUnits').value);
-            localStorage.setItem('ballistic_temp', document.getElementById('defaultTemp').value);
-            localStorage.setItem('ballistic_humidity', document.getElementById('defaultHumidity').value);
-            localStorage.setItem('ballistic_pressure', document.getElementById('defaultPressure').value);
-            localStorage.setItem('ballistic_altitude', document.getElementById('defaultAltitude').value);
-            
-            alert('Preferences saved successfully!');
-        };
+        // Removed conflicting localStorage-only savePreferences function
+        // The database version is defined earlier in the file
 
         window.sendLibraryInvite = async function() {
             const email = document.getElementById('inviteEmail').value.trim();
