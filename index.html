@@ -1776,6 +1776,26 @@
                             </select>
                         </div>
                         
+                        <div style="margin-bottom: 20px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Default Temperature (°F):</label>
+                            <input type="number" id="defaultTemperature" step="1" min="-50" max="150" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" placeholder="59">
+                        </div>
+                        
+                        <div style="margin-bottom: 20px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Default Humidity (%):</label>
+                            <input type="number" id="defaultHumidity" step="1" min="0" max="100" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" placeholder="78">
+                        </div>
+                        
+                        <div style="margin-bottom: 20px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Default Pressure (inHg):</label>
+                            <input type="number" id="defaultPressure" step="0.01" min="25" max="35" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" placeholder="29.92">
+                        </div>
+                        
+                        <div style="margin-bottom: 20px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Default Altitude (ft):</label>
+                            <input type="number" id="defaultAltitude" step="1" min="-1000" max="15000" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" placeholder="0">
+                        </div>
+                        
                         <button onclick="savePreferences()" style="background-color: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer;">Save Preferences</button>
                     </div>
                 `;
@@ -2035,9 +2055,15 @@
                 
                 console.log('Preferences query result:', { data, error });
                 
-                if (error && error.code !== 'PGRST116') {
+                // Handle the case where no preferences exist yet (PGRST116) or other acceptable errors
+                if (error && error.code !== 'PGRST116' && error.code !== 'PGRST301') {
                     console.error('Error loading preferences:', error);
                     return;
+                }
+                
+                // If no data found, use defaults
+                if (!data) {
+                    console.log('No existing preferences found, using defaults');
                 }
                 
                 // Map the database values back to the form controls
@@ -2050,9 +2076,26 @@
                 const distanceUnitSelect = document.getElementById('defaultDistanceUnit');
                 if (distanceUnitSelect) distanceUnitSelect.value = distanceUnit;
                 
-                const velocityUnit = isMetric ? 'mps' : 'fps';
+                const velocityUnit = data?.default_velocity_unit || 'fps';
                 const velocityUnitSelect = document.getElementById('defaultVelocityUnit');
                 if (velocityUnitSelect) velocityUnitSelect.value = velocityUnit;
+                
+                // Load environmental defaults
+                const temperature = data?.default_temperature || 59;
+                const temperatureInput = document.getElementById('defaultTemperature');
+                if (temperatureInput) temperatureInput.value = temperature;
+                
+                const humidity = data?.default_humidity || 78;
+                const humidityInput = document.getElementById('defaultHumidity');
+                if (humidityInput) humidityInput.value = humidity;
+                
+                const pressure = data?.default_pressure || 29.92;
+                const pressureInput = document.getElementById('defaultPressure');
+                if (pressureInput) pressureInput.value = pressure;
+                
+                const altitude = data?.default_altitude || 0;
+                const altitudeInput = document.getElementById('defaultAltitude');
+                if (altitudeInput) altitudeInput.value = altitude;
                 
             } catch (error) {
                 console.error('Error loading user preferences:', error);
@@ -2071,6 +2114,10 @@
                 const darkMode = document.getElementById('darkModeToggle').checked;
                 const distanceUnit = document.getElementById('defaultDistanceUnit').value;
                 const velocityUnit = document.getElementById('defaultVelocityUnit').value;
+                const temperature = parseFloat(document.getElementById('defaultTemperature').value) || 59;
+                const humidity = parseFloat(document.getElementById('defaultHumidity').value) || 78;
+                const pressure = parseFloat(document.getElementById('defaultPressure').value) || 29.92;
+                const altitude = parseFloat(document.getElementById('defaultAltitude').value) || 0;
                 
                 // Map the form values to the existing database schema
                 const theme = darkMode ? 'dark' : 'light';
@@ -2091,6 +2138,11 @@
                         user_id: window.currentUser.id,
                         theme: theme,
                         default_units: defaultUnits,
+                        default_velocity_unit: velocityUnit,
+                        default_temperature: temperature,
+                        default_humidity: humidity,
+                        default_pressure: pressure,
+                        default_altitude: altitude,
                         updated_at: new Date().toISOString()
                     });
                 
