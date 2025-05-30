@@ -1635,7 +1635,10 @@
             // Add setup HTML content
             setupContent.innerHTML = `
                 <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-                    <h2 style="margin: 0 0 20px 0; color: #333;">Setup</h2>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h2 style="margin: 0; color: #333;">Setup</h2>
+                        <button onclick="showHomePage()" style="background: #007bff; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 14px;">🏠 Home</button>
+                    </div>
                     
                     <!-- Tab Navigation -->
                     <div style="border-bottom: 2px solid #ddd; margin-bottom: 20px;">
@@ -6319,8 +6322,12 @@ window.resetPassword = async function() {
 
                     // We'll use the shared_by_email field that's already in the library_shares table
 
-                    // For each share, we need to get the owner's email since it's not stored in the share record
-                    // We'll use the owner_id to identify the library and show the user_id as identifier
+                    // For now, use partial user IDs since getting emails requires admin access
+                    // Multiple shared libraries will be handled properly by showing each separately
+                    const sharesWithEmails = shares.map((share, index) => ({
+                        ...share,
+                        ownerEmail: `Shared Library ${index + 1} (${share.owner_id.substring(0, 8)}...)`
+                    }));
                     
                     // Show modal with available shared libraries
                     const modalHTML = `
@@ -6330,9 +6337,9 @@ window.resetPassword = async function() {
                                 <p style="color: #666; margin-bottom: 20px;">Select bullets from shared libraries to copy to your own library:</p>
                                 
                                 <div id="sharedLibrariesContent">
-                                    ${shares.map(share => `
+                                    ${sharesWithEmails.map((share, index) => `
                                         <div style="margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 5px;">
-                                            <h4 style="margin: 0 0 10px 0; color: #007bff;">Shared Library (Owner: ${share.owner_id.substring(0, 8)}...)</h4>
+                                            <h4 style="margin: 0 0 10px 0; color: #007bff;">Library shared by: ${share.ownerEmail}</h4>
                                             <div id="bullets_${share.owner_id}" style="margin-top: 10px;">
                                                 Loading bullets...
                                             </div>
