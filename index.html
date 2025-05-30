@@ -1919,11 +1919,10 @@
                 const { error } = await window.supabaseClient
                     .from('library_shares')
                     .insert({
-                        owner_user_id: window.currentUser.id,
+                        owner_id: window.currentUser.id,
                         shared_with_email: email,
-                        share_firearm_library: true,
-                        share_bullet_library: true,
-                        created_at: new Date().toISOString()
+                        share_type: 'both',
+                        permissions: 'view'
                     });
                 
                 if (error) {
@@ -1939,6 +1938,79 @@
             } catch (error) {
                 console.error('Error sharing libraries:', error);
                 alert('Error sharing libraries. Please try again.');
+            }
+        };
+
+        window.loadSharingData = async function() {
+            try {
+                if (!window.currentUser) return;
+                
+                // Load users I'm sharing with
+                const { data: sharedWith, error: sharedWithError } = await window.supabaseClient
+                    .from('library_shares')
+                    .select('*')
+                    .eq('owner_id', window.currentUser.id);
+                
+                // Load libraries shared with me
+                const { data: sharedFrom, error: sharedFromError } = await window.supabaseClient
+                    .from('library_shares')
+                    .select('*')
+                    .eq('shared_with_user_id', window.currentUser.id);
+                
+                const sharedWithList = document.getElementById('sharedWithList');
+                const sharedFromList = document.getElementById('sharedFromList');
+                
+                if (sharedWithList) {
+                    if (sharedWith && sharedWith.length > 0) {
+                        sharedWithList.innerHTML = sharedWith.map(share => 
+                            `<div style="margin-bottom: 10px; padding: 10px; background-color: white; border-radius: 4px;">
+                                Email: ${share.shared_with_email}
+                                <br>Type: ${share.share_type} | Status: ${share.status}
+                                <button onclick="removeShare('${share.id}')" style="background-color: #dc3545; color: white; padding: 4px 8px; border: none; border-radius: 4px; cursor: pointer; float: right;">Remove</button>
+                            </div>`
+                        ).join('');
+                    } else {
+                        sharedWithList.innerHTML = 'No libraries currently shared.';
+                    }
+                }
+                
+                if (sharedFromList) {
+                    if (sharedFrom && sharedFrom.length > 0) {
+                        sharedFromList.innerHTML = sharedFrom.map(share => 
+                            `<div style="margin-bottom: 10px; padding: 10px; background-color: white; border-radius: 4px;">
+                                Shared by: ${share.shared_with_email || 'Unknown user'}
+                                <br>Type: ${share.share_type} | Status: ${share.status}
+                            </div>`
+                        ).join('');
+                    } else {
+                        sharedFromList.innerHTML = 'No libraries shared with you.';
+                    }
+                }
+                
+            } catch (error) {
+                console.error('Error loading sharing data:', error);
+            }
+        };
+
+        window.removeShare = async function(shareId) {
+            try {
+                const { error } = await window.supabaseClient
+                    .from('library_shares')
+                    .delete()
+                    .eq('id', shareId);
+                
+                if (error) {
+                    console.error('Error removing share:', error);
+                    alert('Error removing share: ' + error.message);
+                    return;
+                }
+                
+                alert('Share removed successfully!');
+                loadSharingData();
+                
+            } catch (error) {
+                console.error('Error removing share:', error);
+                alert('Error removing share. Please try again.');
             }
         };
 
