@@ -2179,17 +2179,28 @@
                 
                 console.log('Saving preferences for user:', window.currentUser.id);
                 
+                // Capture values immediately when save is clicked, before anything can reset them
+                const humidityElement = document.getElementById('defaultHumidity');
+                const pressureElement = document.getElementById('defaultPressure');
+                const altitudeElement = document.getElementById('defaultAltitude');
+                
+                // Store the current values from the DOM immediately
+                const humidityValue = humidityElement?.value || '';
+                const pressureValue = pressureElement?.value || '';
+                const altitudeValue = altitudeElement?.value || '';
+                
+                console.log('Immediate capture of form values:', {
+                    humidity: humidityValue,
+                    pressure: pressureValue,
+                    altitude: altitudeValue
+                });
+                
                 const darkMode = document.getElementById('darkModeToggle').checked;
                 const distanceUnit = document.getElementById('defaultDistanceUnit').value;
                 const velocityUnit = document.getElementById('defaultVelocityUnit').value;
                 const temperatureValue = document.getElementById('defaultTemperature').value;
                 const temperature = temperatureValue ? parseFloat(temperatureValue) : null;
                 const temperatureUnit = document.getElementById('defaultTemperatureUnit').value;
-                
-                // Debug: Check actual DOM element values before reading
-                const humidityElement = document.getElementById('defaultHumidity');
-                const pressureElement = document.getElementById('defaultPressure');
-                const altitudeElement = document.getElementById('defaultAltitude');
                 
                 console.log('DOM elements debug:', {
                     humidityElement: humidityElement,
@@ -2200,15 +2211,11 @@
                     altitudeElementValue: altitudeElement?.value
                 });
                 
-                const humidityValue = humidityElement?.value || '';
+                // Use the captured values instead of re-reading from DOM
                 const humidity = humidityValue !== '' ? parseFloat(humidityValue) : null;
-                
-                const pressureValue = pressureElement?.value || '';
                 const pressure = pressureValue !== '' ? parseFloat(pressureValue) : null;
-                const pressureUnit = document.getElementById('defaultPressureUnit').value;
-                
-                const altitudeValue = altitudeElement?.value || '';
                 const altitude = altitudeValue !== '' ? parseFloat(altitudeValue) : null;
+                const pressureUnit = document.getElementById('defaultPressureUnit').value;
                 
                 console.log('Form field debug:', {
                     humidityValue, humidityParsed: humidity,
