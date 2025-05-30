@@ -2033,15 +2033,17 @@
                     return;
                 }
                 
-                const darkMode = data?.dark_mode || false;
+                // Map the database values back to the form controls
+                const darkMode = data?.theme === 'dark';
                 const darkModeToggle = document.getElementById('darkModeToggle');
                 if (darkModeToggle) darkModeToggle.checked = darkMode;
                 
-                const distanceUnit = data?.default_distance_unit || 'yards';
+                const isMetric = data?.default_units === 'metric';
+                const distanceUnit = isMetric ? 'meters' : 'yards';
                 const distanceUnitSelect = document.getElementById('defaultDistanceUnit');
                 if (distanceUnitSelect) distanceUnitSelect.value = distanceUnit;
                 
-                const velocityUnit = data?.default_velocity_unit || 'fps';
+                const velocityUnit = isMetric ? 'mps' : 'fps';
                 const velocityUnitSelect = document.getElementById('defaultVelocityUnit');
                 if (velocityUnitSelect) velocityUnitSelect.value = velocityUnit;
                 
@@ -2061,13 +2063,16 @@
                 const distanceUnit = document.getElementById('defaultDistanceUnit').value;
                 const velocityUnit = document.getElementById('defaultVelocityUnit').value;
                 
+                // Map the form values to the existing database schema
+                const theme = darkMode ? 'dark' : 'light';
+                const defaultUnits = (distanceUnit === 'meters' || velocityUnit === 'mps') ? 'metric' : 'imperial';
+                
                 const { error } = await window.supabaseClient
                     .from('user_preferences')
                     .upsert({
                         user_id: window.currentUser.id,
-                        dark_mode: darkMode,
-                        default_distance_unit: distanceUnit,
-                        default_velocity_unit: velocityUnit,
+                        theme: theme,
+                        default_units: defaultUnits,
                         updated_at: new Date().toISOString()
                     });
                 
