@@ -5345,10 +5345,13 @@ window.resetPassword = async function() {
                         
                         if (data.default_temperature && tempField) {
                             tempField.value = data.default_temperature;
+                            tempField.dispatchEvent(new Event('input', { bubbles: true }));
+                            tempField.dispatchEvent(new Event('change', { bubbles: true }));
                             console.log('Set temperature to:', data.default_temperature);
                         }
                         if (data.default_temperature_unit && tempUnitField) {
                             tempUnitField.value = data.default_temperature_unit;
+                            tempUnitField.dispatchEvent(new Event('change', { bubbles: true }));
                             console.log('Set temperature unit to:', data.default_temperature_unit);
                         }
                         
@@ -5357,6 +5360,8 @@ window.resetPassword = async function() {
                         console.log('Humidity field found:', humidityField);
                         if (data.default_humidity && humidityField) {
                             humidityField.value = data.default_humidity;
+                            humidityField.dispatchEvent(new Event('input', { bubbles: true }));
+                            humidityField.dispatchEvent(new Event('change', { bubbles: true }));
                             console.log('Set humidity to:', data.default_humidity);
                         }
                         
@@ -5368,10 +5373,13 @@ window.resetPassword = async function() {
                         
                         if (data.default_pressure && pressureField) {
                             pressureField.value = data.default_pressure;
+                            pressureField.dispatchEvent(new Event('input', { bubbles: true }));
+                            pressureField.dispatchEvent(new Event('change', { bubbles: true }));
                             console.log('Set pressure to:', data.default_pressure);
                         }
                         if (data.default_pressure_unit && pressureUnitField) {
                             pressureUnitField.value = data.default_pressure_unit;
+                            pressureUnitField.dispatchEvent(new Event('change', { bubbles: true }));
                             console.log('Set pressure unit to:', data.default_pressure_unit);
                         }
                         
@@ -5383,10 +5391,13 @@ window.resetPassword = async function() {
                         
                         if (data.default_altitude && altitudeField) {
                             altitudeField.value = data.default_altitude;
+                            altitudeField.dispatchEvent(new Event('input', { bubbles: true }));
+                            altitudeField.dispatchEvent(new Event('change', { bubbles: true }));
                             console.log('Set altitude to:', data.default_altitude);
                         }
                         if (data.default_altitude_reference && altitudeRefField) {
                             altitudeRefField.value = data.default_altitude_reference;
+                            altitudeRefField.dispatchEvent(new Event('change', { bubbles: true }));
                             console.log('Set altitude reference to:', data.default_altitude_reference);
                         }
                         
