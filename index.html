@@ -1635,9 +1635,9 @@
             // Add setup HTML content
             setupContent.innerHTML = `
                 <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+                        <button onclick="showHomePage()" style="background-color: #6c757d; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer;">🏠 Home</button>
                         <h2 style="margin: 0; color: #333;">Setup</h2>
-                        <button onclick="showHomePage()" style="background: #007bff; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 14px;">🏠 Home</button>
                     </div>
                     
                     <!-- Tab Navigation -->
@@ -2101,6 +2101,7 @@
                 const shareData = {
                     owner_id: window.currentUser.id,
                     shared_with_email: email,
+                    shared_from_email: window.currentUser.email,
                     share_type: 'both',
                     permissions: 'view'
                 };
@@ -6322,27 +6323,11 @@ window.resetPassword = async function() {
 
                     // We'll use the shared_by_email field that's already in the library_shares table
 
-                    // Get owner emails by looking up who has shared with them (reverse lookup)
-                    const sharesWithEmails = await Promise.all(
-                        shares.map(async (share, index) => {
-                            // Look for any share where this owner_id is the shared_with_user_id to get their email
-                            const { data: ownerShareData } = await supabase
-                                .from('library_shares')
-                                .select('shared_with_email')
-                                .eq('shared_with_user_id', share.owner_id)
-                                .limit(1);
-                            
-                            let ownerEmail = `Shared Library ${index + 1}`;
-                            if (ownerShareData && ownerShareData.length > 0) {
-                                ownerEmail = ownerShareData[0].shared_with_email;
-                            } else {
-                                // If no reverse lookup found, show partial ID
-                                ownerEmail = `User ${share.owner_id.substring(0, 8)}...`;
-                            }
-                            
-                            return { ...share, ownerEmail };
-                        })
-                    );
+                    // Now that we have the shared_from_email field, we can use it directly
+                    const sharesWithEmails = shares.map(share => ({
+                        ...share,
+                        ownerEmail: share.shared_from_email || `User ${share.owner_id.substring(0, 8)}...`
+                    }));
                     
                     // Show modal with available shared libraries
                     const modalHTML = `
