@@ -1916,14 +1916,16 @@
                     return;
                 }
                 
+                const shareData = {
+                    owner_id: window.currentUser.id,
+                    shared_with_email: email,
+                    share_type: 'both',
+                    permissions: 'view'
+                };
+                
                 const { error } = await window.supabaseClient
                     .from('library_shares')
-                    .insert({
-                        owner_id: window.currentUser.id,
-                        shared_with_email: email,
-                        share_type: 'both',
-                        permissions: 'view'
-                    });
+                    .insert(shareData);
                 
                 if (error) {
                     console.error('Error sharing libraries:', error);
@@ -1931,7 +1933,7 @@
                     return;
                 }
                 
-                alert('Libraries shared with ' + email + ' successfully!');
+                alert(`Libraries shared with ${email} successfully!`);
                 document.getElementById('shareEmail').value = '';
                 loadSharingData();
                 
@@ -2011,6 +2013,47 @@
             } catch (error) {
                 console.error('Error removing share:', error);
                 alert('Error removing share. Please try again.');
+            }
+        };
+
+        // Function to check and accept pending shares for current user
+        window.checkAndAcceptPendingShares = async function() {
+            try {
+                if (!window.currentUser || !window.currentUser.email) return;
+                
+                // Find pending shares for this user's email
+                const { data: pendingShares, error } = await window.supabaseClient
+                    .from('library_shares')
+                    .select('*')
+                    .eq('shared_with_email', window.currentUser.email)
+                    .eq('status', 'pending');
+                
+                if (error) {
+                    console.error('Error checking pending shares:', error);
+                    return;
+                }
+                
+                if (pendingShares && pendingShares.length > 0) {
+                    // Update pending shares to accepted and add user ID
+                    const { error: updateError } = await window.supabaseClient
+                        .from('library_shares')
+                        .update({
+                            shared_with_user_id: window.currentUser.id,
+                            status: 'accepted',
+                            accepted_at: new Date().toISOString()
+                        })
+                        .eq('shared_with_email', window.currentUser.email)
+                        .eq('status', 'pending');
+                    
+                    if (updateError) {
+                        console.error('Error accepting pending shares:', updateError);
+                    } else {
+                        console.log(`Accepted ${pendingShares.length} pending shares for ${window.currentUser.email}`);
+                    }
+                }
+                
+            } catch (error) {
+                console.error('Error in checkAndAcceptPendingShares:', error);
             }
         };
 
@@ -2740,27 +2783,77 @@ window.resetPassword = async function() {
                 if (!select || !currentUser) return;
 
                 try {
-                    const { data, error } = await supabase
+                    // Check and accept pending shares first
+                    await checkAndAcceptPendingShares();
+                    
+                    // Load user's own bullets
+                    const { data: ownBullets, error: ownError } = await supabase
                         .from('bullet_library')
                         .select('*')
                         .eq('user_id', currentUser.id)
                         .order('manufacturer_name', { ascending: true });
 
-                    if (error) {
-                        console.error('Error loading bullet library:', error);
+                    if (ownError) {
+                        console.error('Error loading own bullet library:', ownError);
                         return;
+                    }
+
+                    // Load shared bullets from accepted shares
+                    const { data: acceptedShares, error: shareError } = await supabase
+                        .from('library_shares')
+                        .select('owner_id, share_type')
+                        .eq('shared_with_user_id', currentUser.id)
+                        .eq('status', 'accepted')
+                        .in('share_type', ['bullets', 'both']);
+
+                    let sharedBullets = [];
+                    if (acceptedShares && acceptedShares.length > 0) {
+                        const ownerIds = acceptedShares.map(share => share.owner_id);
+                        
+                        const { data: bullets, error: bulletsError } = await supabase
+                            .from('bullet_library')
+                            .select('*, owner_email:user_id')
+                            .in('user_id', ownerIds)
+                            .order('manufacturer_name', { ascending: true });
+
+                        if (!bulletsError && bullets) {
+                            sharedBullets = bullets;
+                        }
                     }
 
                     // Clear existing options except the default
                     select.innerHTML = '<option value="">Select a saved bullet (optional)</option>';
 
-                    // Add bullet options
-                    data.forEach(bullet => {
-                        const option = document.createElement('option');
-                        option.value = JSON.stringify(bullet);
-                        option.textContent = `${bullet.manufacturer_name} ${bullet.caliber} ${bullet.grain}gr ${bullet.bullet_type} (BC: ${bullet.ballistic_coefficient})`;
-                        select.appendChild(option);
-                    });
+                    // Add user's own bullets
+                    if (ownBullets && ownBullets.length > 0) {
+                        const ownGroup = document.createElement('optgroup');
+                        ownGroup.label = 'My Bullets';
+                        
+                        ownBullets.forEach(bullet => {
+                            const option = document.createElement('option');
+                            option.value = JSON.stringify(bullet);
+                            option.textContent = `${bullet.manufacturer_name} ${bullet.caliber} ${bullet.grain}gr ${bullet.bullet_type} (BC: ${bullet.ballistic_coefficient})`;
+                            ownGroup.appendChild(option);
+                        });
+                        
+                        select.appendChild(ownGroup);
+                    }
+
+                    // Add shared bullets
+                    if (sharedBullets && sharedBullets.length > 0) {
+                        const sharedGroup = document.createElement('optgroup');
+                        sharedGroup.label = 'Shared Bullets';
+                        
+                        sharedBullets.forEach(bullet => {
+                            const option = document.createElement('option');
+                            option.value = JSON.stringify(bullet);
+                            option.textContent = `${bullet.manufacturer_name} ${bullet.caliber} ${bullet.grain}gr ${bullet.bullet_type} (BC: ${bullet.ballistic_coefficient}) [Shared]`;
+                            sharedGroup.appendChild(option);
+                        });
+                        
+                        select.appendChild(sharedGroup);
+                    }
+
                 } catch (error) {
                     console.error('Error loading bullet library dropdown:', error);
                 }
