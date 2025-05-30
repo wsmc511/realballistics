@@ -2163,7 +2163,7 @@
                     if (sharedFrom && sharedFrom.length > 0) {
                         sharedFromList.innerHTML = sharedFrom.map(share => 
                             `<div style="margin-bottom: 10px; padding: 10px; background-color: white; border-radius: 4px;">
-                                Shared by: ${share.shared_with_email || 'Unknown user'}
+                                Owner: ${share.shared_from_email || 'Unknown user'}
                                 <br>Type: ${share.share_type} | Status: ${share.status}
                             </div>`
                         ).join('');
