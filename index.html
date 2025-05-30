@@ -5291,11 +5291,14 @@ window.resetPassword = async function() {
                         </div>
                     `;
                     
-                    // Load dropdowns and apply user preferences after form is created
+                    // Load dropdowns first, then apply user preferences after form is created
                     setTimeout(() => {
                         loadDopeDropdownsDirect();
-                        loadEnvironmentalDefaults();
                         console.log('Date and time embedded directly in HTML');
+                        // Apply environmental defaults after dropdowns are loaded
+                        setTimeout(() => {
+                            loadEnvironmentalDefaults();
+                        }, 200);
                     }, 50);
                 }
             };
