@@ -5291,11 +5291,84 @@ window.resetPassword = async function() {
                         </div>
                     `;
                     
-                    // Load dropdowns after form is created
+                    // Load dropdowns and apply user preferences after form is created
                     setTimeout(() => {
                         loadDopeDropdownsDirect();
+                        loadEnvironmentalDefaults();
                         console.log('Date and time embedded directly in HTML');
                     }, 50);
+                }
+            };
+
+            window.loadEnvironmentalDefaults = async function() {
+                try {
+                    if (!window.currentUser) {
+                        console.log('No current user, skipping environmental defaults load');
+                        return;
+                    }
+                    
+                    console.log('Loading environmental defaults for DOPE form');
+                    
+                    const { data, error } = await window.supabaseClient
+                        .from('user_preferences')
+                        .select('*')
+                        .eq('user_id', window.currentUser.id)
+                        .single();
+                    
+                    if (error && error.code !== 'PGRST116') {
+                        console.error('Error loading environmental defaults:', error);
+                        return;
+                    }
+                    
+                    if (data) {
+                        console.log('Applying environmental defaults from user preferences:', data);
+                        
+                        // Auto-populate temperature if available
+                        if (data.default_temperature) {
+                            const tempField = document.getElementById('temperature');
+                            if (tempField) tempField.value = data.default_temperature;
+                        }
+                        
+                        if (data.default_temperature_unit) {
+                            const tempUnitField = document.getElementById('temperature_unit');
+                            if (tempUnitField) tempUnitField.value = data.default_temperature_unit;
+                        }
+                        
+                        // Auto-populate humidity if available
+                        if (data.default_humidity) {
+                            const humidityField = document.getElementById('humidity');
+                            if (humidityField) humidityField.value = data.default_humidity;
+                        }
+                        
+                        // Auto-populate pressure if available
+                        if (data.default_pressure) {
+                            const pressureField = document.getElementById('barometric_pressure');
+                            if (pressureField) pressureField.value = data.default_pressure;
+                        }
+                        
+                        if (data.default_pressure_unit) {
+                            const pressureUnitField = document.getElementById('pressure_unit');
+                            if (pressureUnitField) pressureUnitField.value = data.default_pressure_unit;
+                        }
+                        
+                        // Auto-populate altitude if available
+                        if (data.default_altitude) {
+                            const altitudeField = document.getElementById('altitude');
+                            if (altitudeField) altitudeField.value = data.default_altitude;
+                        }
+                        
+                        if (data.default_altitude_reference) {
+                            const altitudeRefField = document.getElementById('altitude_reference');
+                            if (altitudeRefField) altitudeRefField.value = data.default_altitude_reference;
+                        }
+                        
+                        console.log('Environmental defaults applied successfully');
+                    } else {
+                        console.log('No user preferences found, using form defaults');
+                    }
+                    
+                } catch (error) {
+                    console.error('Error in loadEnvironmentalDefaults:', error);
                 }
             };
 
