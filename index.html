@@ -2180,6 +2180,8 @@
                         default_altitude: altitude,
                         default_altitude_reference: altitudeReference,
                         updated_at: new Date().toISOString()
+                    }, {
+                        onConflict: 'user_id'
                     });
                 
                 console.log('Save preferences result:', { data, error });
