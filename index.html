@@ -6563,7 +6563,7 @@ window.resetPassword = async function() {
                     // Load shares WITH you (both pending and accepted)
                     const { data: sharedWithYou, error: sharedError } = await supabase
                         .from('library_shares')
-                        .select('id, owner_id, share_type, permissions, created_at, accepted_at, status')
+                        .select('id, owner_id, shared_from_email, share_type, permissions, created_at, accepted_at, status')
                         .eq('shared_with_email', currentUser.email);
 
                     console.log('Shared with you result:', { sharedWithYou, sharedError });
@@ -6624,7 +6624,7 @@ window.resetPassword = async function() {
                                     const statusColor = share.status === 'accepted' ? '#28a745' : share.status === 'pending' ? '#ffc107' : '#dc3545';
                                     html += `
                                         <div style="background: white; padding: 10px; margin-bottom: 10px; border-radius: 4px; border: 1px solid #ddd;">
-                                            <p><strong>Owner ID:</strong> ${share.owner_id}</p>
+                                            <p><strong>Owner:</strong> ${share.shared_from_email || 'Unknown User'}</p>
                                             <p><strong>Type:</strong> ${share.share_type} libraries</p>
                                             <p><strong>Status:</strong> <span style="color: ${statusColor}; font-weight: bold;">${share.status}</span></p>
                                             ${share.status === 'pending' ? `
