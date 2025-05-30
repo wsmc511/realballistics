@@ -1789,13 +1789,13 @@
                         
                         <div style="margin-bottom: 20px;">
                             <label style="display: block; margin-bottom: 5px; font-weight: bold;">Default Humidity (%):</label>
-                            <input type="number" id="defaultHumidity" step="1" min="0" max="100" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" oninput="window.userEditingPreferences = true; console.log('Humidity input changed to:', this.value);" onchange="console.log('Humidity changed event:', this.value);" onblur="console.log('Humidity blur event:', this.value);">
+                            <input type="number" id="defaultHumidity" step="1" min="0" max="100" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" oninput="window.userEditingPreferences = true; window.lastHumidityValue = this.value; console.log('Humidity input changed to:', this.value);" onchange="window.lastHumidityValue = this.value; console.log('Humidity changed event:', this.value);" onblur="window.lastHumidityValue = this.value; console.log('Humidity blur event:', this.value);">
                         </div>
                         
                         <div style="margin-bottom: 20px;">
                             <label style="display: block; margin-bottom: 5px; font-weight: bold;">Default Pressure:</label>
                             <div style="display: flex; gap: 10px;">
-                                <input type="number" id="defaultPressure" step="0.01" min="20" max="35" style="flex: 2; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" oninput="window.userEditingPreferences = true; console.log('Pressure input changed to:', this.value);" onchange="console.log('Pressure changed event:', this.value);">
+                                <input type="number" id="defaultPressure" step="0.01" min="20" max="35" style="flex: 2; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" oninput="window.userEditingPreferences = true; window.lastPressureValue = this.value; console.log('Pressure input changed to:', this.value);" onchange="window.lastPressureValue = this.value; console.log('Pressure changed event:', this.value);">
                                 <select id="defaultPressureUnit" style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
                                     <option value="inHg">inHg</option>
                                     <option value="mb">mb</option>
@@ -1806,7 +1806,7 @@
                         <div style="margin-bottom: 20px;">
                             <label style="display: block; margin-bottom: 5px; font-weight: bold;">Default Altitude:</label>
                             <div style="display: flex; gap: 10px;">
-                                <input type="number" id="defaultAltitude" step="1" min="-1000" max="15000" style="flex: 2; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" oninput="window.userEditingPreferences = true; console.log('Altitude input changed to:', this.value);" onchange="console.log('Altitude changed event:', this.value);">
+                                <input type="number" id="defaultAltitude" step="1" min="-1000" max="15000" style="flex: 2; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" oninput="window.userEditingPreferences = true; window.lastAltitudeValue = this.value; console.log('Altitude input changed to:', this.value);" onchange="window.lastAltitudeValue = this.value; console.log('Altitude changed event:', this.value);">
                                 <select id="defaultAltitudeReference" style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
                                     <option value="ASL">Above Sea Level</option>
                                     <option value="BSL">Below Sea Level</option>
@@ -2184,15 +2184,18 @@
                 const pressureElement = document.getElementById('defaultPressure');
                 const altitudeElement = document.getElementById('defaultAltitude');
                 
-                // Store the current values from the DOM immediately
-                const humidityValue = humidityElement?.value || '';
-                const pressureValue = pressureElement?.value || '';
-                const altitudeValue = altitudeElement?.value || '';
+                // Use stored values from input handlers or fall back to DOM
+                const humidityValue = window.lastHumidityValue || humidityElement?.value || '';
+                const pressureValue = window.lastPressureValue || pressureElement?.value || '';
+                const altitudeValue = window.lastAltitudeValue || altitudeElement?.value || '';
                 
-                console.log('Immediate capture of form values:', {
-                    humidity: humidityValue,
-                    pressure: pressureValue,
-                    altitude: altitudeValue
+                console.log('Using stored values from input handlers:', {
+                    storedHumidity: window.lastHumidityValue,
+                    storedPressure: window.lastPressureValue,
+                    storedAltitude: window.lastAltitudeValue,
+                    finalHumidity: humidityValue,
+                    finalPressure: pressureValue,
+                    finalAltitude: altitudeValue
                 });
                 
                 const darkMode = document.getElementById('darkModeToggle').checked;
