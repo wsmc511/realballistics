@@ -5338,32 +5338,56 @@ window.resetPassword = async function() {
                         console.log('Applying environmental defaults from button click:', data);
                         
                         // Set temperature
-                        if (data.default_temperature) {
-                            document.getElementById('temperature').value = data.default_temperature;
+                        const tempField = document.getElementById('temperature');
+                        const tempUnitField = document.getElementById('temperature_unit');
+                        console.log('Temperature field found:', tempField);
+                        console.log('Temperature unit field found:', tempUnitField);
+                        
+                        if (data.default_temperature && tempField) {
+                            tempField.value = data.default_temperature;
+                            console.log('Set temperature to:', data.default_temperature);
                         }
-                        if (data.default_temperature_unit) {
-                            document.getElementById('temperature_unit').value = data.default_temperature_unit;
+                        if (data.default_temperature_unit && tempUnitField) {
+                            tempUnitField.value = data.default_temperature_unit;
+                            console.log('Set temperature unit to:', data.default_temperature_unit);
                         }
                         
                         // Set humidity
-                        if (data.default_humidity) {
-                            document.getElementById('humidity').value = data.default_humidity;
+                        const humidityField = document.getElementById('humidity');
+                        console.log('Humidity field found:', humidityField);
+                        if (data.default_humidity && humidityField) {
+                            humidityField.value = data.default_humidity;
+                            console.log('Set humidity to:', data.default_humidity);
                         }
                         
                         // Set pressure
-                        if (data.default_pressure) {
-                            document.getElementById('barometric_pressure').value = data.default_pressure;
+                        const pressureField = document.getElementById('barometric_pressure');
+                        const pressureUnitField = document.getElementById('pressure_unit');
+                        console.log('Pressure field found:', pressureField);
+                        console.log('Pressure unit field found:', pressureUnitField);
+                        
+                        if (data.default_pressure && pressureField) {
+                            pressureField.value = data.default_pressure;
+                            console.log('Set pressure to:', data.default_pressure);
                         }
-                        if (data.default_pressure_unit) {
-                            document.getElementById('pressure_unit').value = data.default_pressure_unit;
+                        if (data.default_pressure_unit && pressureUnitField) {
+                            pressureUnitField.value = data.default_pressure_unit;
+                            console.log('Set pressure unit to:', data.default_pressure_unit);
                         }
                         
                         // Set altitude
-                        if (data.default_altitude) {
-                            document.getElementById('altitude').value = data.default_altitude;
+                        const altitudeField = document.getElementById('altitude');
+                        const altitudeRefField = document.getElementById('altitude_reference');
+                        console.log('Altitude field found:', altitudeField);
+                        console.log('Altitude reference field found:', altitudeRefField);
+                        
+                        if (data.default_altitude && altitudeField) {
+                            altitudeField.value = data.default_altitude;
+                            console.log('Set altitude to:', data.default_altitude);
                         }
-                        if (data.default_altitude_reference) {
-                            document.getElementById('altitude_reference').value = data.default_altitude_reference;
+                        if (data.default_altitude_reference && altitudeRefField) {
+                            altitudeRefField.value = data.default_altitude_reference;
+                            console.log('Set altitude reference to:', data.default_altitude_reference);
                         }
                         
                         document.getElementById('environmental_status').textContent = `Loaded: ${data.default_temperature}°${data.default_temperature_unit}, ${data.default_humidity}% humidity, ${data.default_pressure} ${data.default_pressure_unit}, ${data.default_altitude}ft ${data.default_altitude_reference}`;
