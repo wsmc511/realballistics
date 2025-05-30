@@ -2098,10 +2098,10 @@
                 const velocityUnitSelect = document.getElementById('defaultVelocityUnit');
                 if (velocityUnitSelect) velocityUnitSelect.value = velocityUnit;
                 
-                // Load environmental defaults
+                // Load environmental defaults - only populate if field is empty
                 const temperature = data?.default_temperature || 79;
                 const temperatureInput = document.getElementById('defaultTemperature');
-                if (temperatureInput) temperatureInput.value = temperature;
+                if (temperatureInput && temperatureInput.value === '') temperatureInput.value = temperature;
                 
                 const temperatureUnit = data?.default_temperature_unit || 'F';
                 const temperatureUnitSelect = document.getElementById('defaultTemperatureUnit');
@@ -2109,11 +2109,11 @@
                 
                 const humidity = data?.default_humidity || 77;
                 const humidityInput = document.getElementById('defaultHumidity');
-                if (humidityInput) humidityInput.value = humidity;
+                if (humidityInput && humidityInput.value === '') humidityInput.value = humidity;
                 
                 const pressure = data?.default_pressure || 30.1;
                 const pressureInput = document.getElementById('defaultPressure');
-                if (pressureInput) pressureInput.value = pressure;
+                if (pressureInput && pressureInput.value === '') pressureInput.value = pressure;
                 
                 const pressureUnit = data?.default_pressure_unit || 'inHg';
                 const pressureUnitSelect = document.getElementById('defaultPressureUnit');
@@ -2121,7 +2121,7 @@
                 
                 const altitude = data?.default_altitude || 100;
                 const altitudeInput = document.getElementById('defaultAltitude');
-                if (altitudeInput) altitudeInput.value = altitude;
+                if (altitudeInput && altitudeInput.value === '') altitudeInput.value = altitude;
                 
                 const altitudeReference = data?.default_altitude_reference || 'ASL';
                 const altitudeReferenceSelect = document.getElementById('defaultAltitudeReference');
