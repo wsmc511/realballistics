@@ -5100,6 +5100,15 @@ window.resetPassword = async function() {
                                 </select>
                             </div>
                             
+                            <!-- Environmental Defaults Button -->
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Environmental Conditions:</label>
+                                <div style="display: flex; gap: 10px;">
+                                    <button type="button" onclick="loadEnvironmentalDefaultsButton()" style="padding: 8px 15px; border: 1px solid #17a2b8; background-color: #17a2b8; color: white; border-radius: 4px; cursor: pointer;">Load Saved Defaults</button>
+                                    <span id="environmental_status" style="padding: 8px; color: #666;">Click to load your saved environmental preferences</span>
+                                </div>
+                            </div>
+
                             <!-- Temperature -->
                             <div class="form-group" style="margin-bottom: 15px;">
                                 <label style="display: block; margin-bottom: 5px; font-weight: bold;">Temperature:</label>
@@ -5291,54 +5300,85 @@ window.resetPassword = async function() {
                         </div>
                     `;
                     
-                    // Load user preferences first, then populate form with defaults
-                    setTimeout(async () => {
-                        // Get user preferences before creating form
-                        const currentUser = (await supabase.auth.getUser()).data.user;
-                        let userPrefs = {};
-                        
-                        if (currentUser) {
-                            const { data, error } = await supabase
-                                .from('user_preferences')
-                                .select('*')
-                                .eq('user_id', currentUser.id)
-                                .single();
-                                
-                            if (data && !error) {
-                                userPrefs = data;
-                                console.log('Loaded user preferences for form creation:', userPrefs);
-                            }
-                        }
-                        
-                        // Now update the form HTML with default values
-                        const tempField = document.getElementById('temperature');
-                        const humidityField = document.getElementById('humidity');
-                        const pressureField = document.getElementById('barometric_pressure');
-                        const altitudeField = document.getElementById('altitude');
-                        
-                        if (tempField && userPrefs.default_temperature) {
-                            tempField.value = userPrefs.default_temperature;
-                            tempField.defaultValue = userPrefs.default_temperature;
-                        }
-                        
-                        if (humidityField && userPrefs.default_humidity) {
-                            humidityField.value = userPrefs.default_humidity;
-                            humidityField.defaultValue = userPrefs.default_humidity;
-                        }
-                        
-                        if (pressureField && userPrefs.default_pressure) {
-                            pressureField.value = userPrefs.default_pressure;
-                            pressureField.defaultValue = userPrefs.default_pressure;
-                        }
-                        
-                        if (altitudeField && userPrefs.default_altitude) {
-                            altitudeField.value = userPrefs.default_altitude;
-                            altitudeField.defaultValue = userPrefs.default_altitude;
-                        }
-                        
+                    // Load dropdowns and prepare form
+                    setTimeout(() => {
                         loadDopeDropdownsDirect();
                         console.log('Date and time embedded directly in HTML');
                     }, 50);
+                }
+            };
+
+            window.loadEnvironmentalDefaultsButton = async function() {
+                try {
+                    const currentUser = (await supabase.auth.getUser()).data.user;
+                    if (!currentUser) {
+                        document.getElementById('environmental_status').textContent = 'Please log in to load preferences';
+                        document.getElementById('environmental_status').style.color = '#dc3545';
+                        return;
+                    }
+                    
+                    console.log('Loading environmental defaults via button click, user ID:', currentUser.id);
+                    document.getElementById('environmental_status').textContent = 'Loading preferences...';
+                    document.getElementById('environmental_status').style.color = '#007bff';
+                    
+                    const { data, error } = await supabase
+                        .from('user_preferences')
+                        .select('*')
+                        .eq('user_id', currentUser.id)
+                        .single();
+                    
+                    if (error && error.code !== 'PGRST116') {
+                        console.error('Error loading environmental defaults:', error);
+                        document.getElementById('environmental_status').textContent = 'Error loading preferences';
+                        document.getElementById('environmental_status').style.color = '#dc3545';
+                        return;
+                    }
+                    
+                    if (data) {
+                        console.log('Applying environmental defaults from button click:', data);
+                        
+                        // Set temperature
+                        if (data.default_temperature) {
+                            document.getElementById('temperature').value = data.default_temperature;
+                        }
+                        if (data.default_temperature_unit) {
+                            document.getElementById('temperature_unit').value = data.default_temperature_unit;
+                        }
+                        
+                        // Set humidity
+                        if (data.default_humidity) {
+                            document.getElementById('humidity').value = data.default_humidity;
+                        }
+                        
+                        // Set pressure
+                        if (data.default_pressure) {
+                            document.getElementById('barometric_pressure').value = data.default_pressure;
+                        }
+                        if (data.default_pressure_unit) {
+                            document.getElementById('pressure_unit').value = data.default_pressure_unit;
+                        }
+                        
+                        // Set altitude
+                        if (data.default_altitude) {
+                            document.getElementById('altitude').value = data.default_altitude;
+                        }
+                        if (data.default_altitude_reference) {
+                            document.getElementById('altitude_reference').value = data.default_altitude_reference;
+                        }
+                        
+                        document.getElementById('environmental_status').textContent = `Loaded: ${data.default_temperature}°${data.default_temperature_unit}, ${data.default_humidity}% humidity, ${data.default_pressure} ${data.default_pressure_unit}, ${data.default_altitude}ft ${data.default_altitude_reference}`;
+                        document.getElementById('environmental_status').style.color = '#28a745';
+                        
+                        console.log('Environmental defaults loaded successfully via button');
+                    } else {
+                        document.getElementById('environmental_status').textContent = 'No saved preferences found';
+                        document.getElementById('environmental_status').style.color = '#6c757d';
+                    }
+                    
+                } catch (error) {
+                    console.error('Error in loadEnvironmentalDefaultsButton:', error);
+                    document.getElementById('environmental_status').textContent = 'Error loading preferences';
+                    document.getElementById('environmental_status').style.color = '#dc3545';
                 }
             };
 
