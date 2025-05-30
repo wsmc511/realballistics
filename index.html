@@ -1868,10 +1868,13 @@
             if (tabName === 'account') {
                 loadUserProfile();
             } else if (tabName === 'preferences') {
-                // Add a small delay to allow the DOM to settle, then load preferences
-                setTimeout(() => {
-                    loadUserPreferences();
-                }, 100);
+                // Only load preferences if this is the first time opening the tab
+                if (!window.preferencesLoaded) {
+                    setTimeout(() => {
+                        loadUserPreferences();
+                        window.preferencesLoaded = true;
+                    }, 100);
+                }
             } else if (tabName === 'sharing') {
                 loadSharingData();
             }
@@ -2101,23 +2104,25 @@
                 const velocityUnitSelect = document.getElementById('defaultVelocityUnit');
                 if (velocityUnitSelect) velocityUnitSelect.value = velocityUnit;
                 
-                // Load environmental defaults - only if user hasn't started editing
-                if (!window.userEditingPreferences) {
-                    const temperature = data?.default_temperature || 79;
+                // Load environmental defaults from database if they exist
+                if (data?.default_temperature) {
                     const temperatureInput = document.getElementById('defaultTemperature');
-                    if (temperatureInput) temperatureInput.value = temperature;
-                    
-                    const humidity = data?.default_humidity || 77;
+                    if (temperatureInput) temperatureInput.value = data.default_temperature;
+                }
+                
+                if (data?.default_humidity) {
                     const humidityInput = document.getElementById('defaultHumidity');
-                    if (humidityInput) humidityInput.value = humidity;
-                    
-                    const pressure = data?.default_pressure || 30.1;
+                    if (humidityInput) humidityInput.value = data.default_humidity;
+                }
+                
+                if (data?.default_pressure) {
                     const pressureInput = document.getElementById('defaultPressure');
-                    if (pressureInput) pressureInput.value = pressure;
-                    
-                    const altitude = data?.default_altitude || 100;
+                    if (pressureInput) pressureInput.value = data.default_pressure;
+                }
+                
+                if (data?.default_altitude) {
                     const altitudeInput = document.getElementById('defaultAltitude');
-                    if (altitudeInput) altitudeInput.value = altitude;
+                    if (altitudeInput) altitudeInput.value = data.default_altitude;
                 }
                 
                 // Always load unit selectors
@@ -2151,18 +2156,18 @@
                 const distanceUnit = document.getElementById('defaultDistanceUnit').value;
                 const velocityUnit = document.getElementById('defaultVelocityUnit').value;
                 const temperatureValue = document.getElementById('defaultTemperature').value;
-                const temperature = temperatureValue ? parseFloat(temperatureValue) : 79;
+                const temperature = temperatureValue ? parseFloat(temperatureValue) : null;
                 const temperatureUnit = document.getElementById('defaultTemperatureUnit').value;
                 
                 const humidityValue = document.getElementById('defaultHumidity').value;
-                const humidity = humidityValue !== '' ? parseFloat(humidityValue) : 77;
+                const humidity = humidityValue !== '' ? parseFloat(humidityValue) : null;
                 
                 const pressureValue = document.getElementById('defaultPressure').value;
-                const pressure = pressureValue !== '' ? parseFloat(pressureValue) : 30.1;
+                const pressure = pressureValue !== '' ? parseFloat(pressureValue) : null;
                 const pressureUnit = document.getElementById('defaultPressureUnit').value;
                 
                 const altitudeValue = document.getElementById('defaultAltitude').value;
-                const altitude = altitudeValue !== '' ? parseFloat(altitudeValue) : 100;
+                const altitude = altitudeValue !== '' ? parseFloat(altitudeValue) : null;
                 
                 console.log('Form field debug:', {
                     humidityValue, humidityParsed: humidity,
