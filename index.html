@@ -5343,6 +5343,9 @@ window.resetPassword = async function() {
                             console.log('Temperature field found:', !!tempField, 'Setting value:', data.default_temperature);
                             if (tempField) {
                                 tempField.value = data.default_temperature;
+                                tempField.setAttribute('value', data.default_temperature);
+                                tempField.style.color = '#000';
+                                tempField.style.fontWeight = 'normal';
                                 console.log('Temperature field value after setting:', tempField.value);
                             }
                         }
@@ -5362,6 +5365,9 @@ window.resetPassword = async function() {
                             console.log('Humidity field found:', !!humidityField, 'Setting value:', data.default_humidity);
                             if (humidityField) {
                                 humidityField.value = data.default_humidity;
+                                humidityField.setAttribute('value', data.default_humidity);
+                                humidityField.style.color = '#000';
+                                humidityField.style.fontWeight = 'normal';
                                 console.log('Humidity field value after setting:', humidityField.value);
                             }
                         }
@@ -5372,6 +5378,9 @@ window.resetPassword = async function() {
                             console.log('Pressure field found:', !!pressureField, 'Setting value:', data.default_pressure);
                             if (pressureField) {
                                 pressureField.value = data.default_pressure;
+                                pressureField.setAttribute('value', data.default_pressure);
+                                pressureField.style.color = '#000';
+                                pressureField.style.fontWeight = 'normal';
                                 console.log('Pressure field value after setting:', pressureField.value);
                             }
                         }
@@ -5391,6 +5400,9 @@ window.resetPassword = async function() {
                             console.log('Altitude field found:', !!altitudeField, 'Setting value:', data.default_altitude);
                             if (altitudeField) {
                                 altitudeField.value = data.default_altitude;
+                                altitudeField.setAttribute('value', data.default_altitude);
+                                altitudeField.style.color = '#000';
+                                altitudeField.style.fontWeight = 'normal';
                                 console.log('Altitude field value after setting:', altitudeField.value);
                             }
                         }
