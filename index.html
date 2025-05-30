@@ -1789,13 +1789,13 @@
                         
                         <div style="margin-bottom: 20px;">
                             <label style="display: block; margin-bottom: 5px; font-weight: bold;">Default Humidity (%):</label>
-                            <input type="number" id="defaultHumidity" step="1" min="0" max="100" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            <input type="number" id="defaultHumidity" step="1" min="0" max="100" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" oninput="window.userEditingPreferences = true;">
                         </div>
                         
                         <div style="margin-bottom: 20px;">
                             <label style="display: block; margin-bottom: 5px; font-weight: bold;">Default Pressure:</label>
                             <div style="display: flex; gap: 10px;">
-                                <input type="number" id="defaultPressure" step="0.01" min="20" max="35" style="flex: 2; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                <input type="number" id="defaultPressure" step="0.01" min="20" max="35" style="flex: 2; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" oninput="window.userEditingPreferences = true;">
                                 <select id="defaultPressureUnit" style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
                                     <option value="inHg">inHg</option>
                                     <option value="mb">mb</option>
@@ -1806,7 +1806,7 @@
                         <div style="margin-bottom: 20px;">
                             <label style="display: block; margin-bottom: 5px; font-weight: bold;">Default Altitude:</label>
                             <div style="display: flex; gap: 10px;">
-                                <input type="number" id="defaultAltitude" step="1" min="-1000" max="15000" style="flex: 2; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                <input type="number" id="defaultAltitude" step="1" min="-1000" max="15000" style="flex: 2; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" oninput="window.userEditingPreferences = true;">
                                 <select id="defaultAltitudeReference" style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
                                     <option value="ASL">Above Sea Level</option>
                                     <option value="BSL">Below Sea Level</option>
@@ -1868,7 +1868,10 @@
             if (tabName === 'account') {
                 loadUserProfile();
             } else if (tabName === 'preferences') {
-                loadUserPreferences();
+                // Add a small delay to allow the DOM to settle, then load preferences
+                setTimeout(() => {
+                    loadUserPreferences();
+                }, 100);
             } else if (tabName === 'sharing') {
                 loadSharingData();
             }
@@ -2098,30 +2101,33 @@
                 const velocityUnitSelect = document.getElementById('defaultVelocityUnit');
                 if (velocityUnitSelect) velocityUnitSelect.value = velocityUnit;
                 
-                // Load environmental defaults
-                const temperature = data?.default_temperature || 79;
-                const temperatureInput = document.getElementById('defaultTemperature');
-                if (temperatureInput) temperatureInput.value = temperature;
+                // Load environmental defaults - only if user hasn't started editing
+                if (!window.userEditingPreferences) {
+                    const temperature = data?.default_temperature || 79;
+                    const temperatureInput = document.getElementById('defaultTemperature');
+                    if (temperatureInput) temperatureInput.value = temperature;
+                    
+                    const humidity = data?.default_humidity || 77;
+                    const humidityInput = document.getElementById('defaultHumidity');
+                    if (humidityInput) humidityInput.value = humidity;
+                    
+                    const pressure = data?.default_pressure || 30.1;
+                    const pressureInput = document.getElementById('defaultPressure');
+                    if (pressureInput) pressureInput.value = pressure;
+                    
+                    const altitude = data?.default_altitude || 100;
+                    const altitudeInput = document.getElementById('defaultAltitude');
+                    if (altitudeInput) altitudeInput.value = altitude;
+                }
                 
+                // Always load unit selectors
                 const temperatureUnit = data?.default_temperature_unit || 'F';
                 const temperatureUnitSelect = document.getElementById('defaultTemperatureUnit');
                 if (temperatureUnitSelect) temperatureUnitSelect.value = temperatureUnit;
                 
-                const humidity = data?.default_humidity || 77;
-                const humidityInput = document.getElementById('defaultHumidity');
-                if (humidityInput) humidityInput.value = humidity;
-                
-                const pressure = data?.default_pressure || 30.1;
-                const pressureInput = document.getElementById('defaultPressure');
-                if (pressureInput) pressureInput.value = pressure;
-                
                 const pressureUnit = data?.default_pressure_unit || 'inHg';
                 const pressureUnitSelect = document.getElementById('defaultPressureUnit');
                 if (pressureUnitSelect) pressureUnitSelect.value = pressureUnit;
-                
-                const altitude = data?.default_altitude || 100;
-                const altitudeInput = document.getElementById('defaultAltitude');
-                if (altitudeInput) altitudeInput.value = altitude;
                 
                 const altitudeReference = data?.default_altitude_reference || 'ASL';
                 const altitudeReferenceSelect = document.getElementById('defaultAltitudeReference');
@@ -2213,6 +2219,9 @@
                 }
                 
                 alert('Preferences saved successfully!');
+                
+                // Reset the editing flag after successful save
+                window.userEditingPreferences = false;
                 
             } catch (error) {
                 console.error('Error saving preferences:', error);
