@@ -1803,6 +1803,145 @@
             }
         };
 
+        // Missing functions for setup page functionality
+        window.updateProfile = async function() {
+            try {
+                const displayName = document.getElementById('profileDisplayName').value.trim();
+                
+                const { error } = await window.supabaseClient.auth.updateUser({
+                    data: { display_name: displayName }
+                });
+                
+                if (error) {
+                    alert('Error updating profile: ' + error.message);
+                    return;
+                }
+                
+                alert('Profile updated successfully!');
+                
+            } catch (error) {
+                console.error('Error updating profile:', error);
+                alert('Error updating profile. Please try again.');
+            }
+        };
+
+        window.showChangePassword = function() {
+            document.getElementById('changePasswordSection').style.display = 'block';
+        };
+
+        window.cancelChangePassword = function() {
+            document.getElementById('changePasswordSection').style.display = 'none';
+            document.getElementById('currentPassword').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmNewPassword').value = '';
+        };
+
+        window.loadUserPreferences = async function() {
+            try {
+                if (!window.currentUser) return;
+                
+                const { data, error } = await window.supabaseClient
+                    .from('user_preferences')
+                    .select('*')
+                    .eq('user_id', window.currentUser.id)
+                    .single();
+                
+                if (error && error.code !== 'PGRST116') {
+                    console.error('Error loading preferences:', error);
+                    return;
+                }
+                
+                const darkMode = data?.dark_mode || false;
+                const darkModeToggle = document.getElementById('darkModeToggle');
+                if (darkModeToggle) darkModeToggle.checked = darkMode;
+                
+                const distanceUnit = data?.default_distance_unit || 'yards';
+                const distanceUnitSelect = document.getElementById('defaultDistanceUnit');
+                if (distanceUnitSelect) distanceUnitSelect.value = distanceUnit;
+                
+                const velocityUnit = data?.default_velocity_unit || 'fps';
+                const velocityUnitSelect = document.getElementById('defaultVelocityUnit');
+                if (velocityUnitSelect) velocityUnitSelect.value = velocityUnit;
+                
+            } catch (error) {
+                console.error('Error loading user preferences:', error);
+            }
+        };
+
+        window.savePreferences = async function() {
+            try {
+                if (!window.currentUser) {
+                    alert('Please log in to save preferences.');
+                    return;
+                }
+                
+                const darkMode = document.getElementById('darkModeToggle').checked;
+                const distanceUnit = document.getElementById('defaultDistanceUnit').value;
+                const velocityUnit = document.getElementById('defaultVelocityUnit').value;
+                
+                const { error } = await window.supabaseClient
+                    .from('user_preferences')
+                    .upsert({
+                        user_id: window.currentUser.id,
+                        dark_mode: darkMode,
+                        default_distance_unit: distanceUnit,
+                        default_velocity_unit: velocityUnit,
+                        updated_at: new Date().toISOString()
+                    });
+                
+                if (error) {
+                    console.error('Error saving preferences:', error);
+                    alert('Error saving preferences: ' + error.message);
+                    return;
+                }
+                
+                alert('Preferences saved successfully!');
+                
+            } catch (error) {
+                console.error('Error saving preferences:', error);
+                alert('Error saving preferences. Please try again.');
+            }
+        };
+
+        window.shareLibraries = async function() {
+            try {
+                if (!window.currentUser) {
+                    alert('Please log in to share libraries.');
+                    return;
+                }
+                
+                const email = document.getElementById('shareEmail').value.trim();
+                if (!email) {
+                    alert('Please enter an email address.');
+                    return;
+                }
+                
+                const { error } = await window.supabaseClient
+                    .from('library_shares')
+                    .insert({
+                        owner_user_id: window.currentUser.id,
+                        shared_with_email: email,
+                        share_firearm_library: true,
+                        share_bullet_library: true,
+                        created_at: new Date().toISOString()
+                    });
+                
+                if (error) {
+                    console.error('Error sharing libraries:', error);
+                    alert('Error sharing libraries: ' + error.message);
+                    return;
+                }
+                
+                alert('Libraries shared with ' + email + ' successfully!');
+                document.getElementById('shareEmail').value = '';
+                loadSharingData();
+                
+            } catch (error) {
+                console.error('Error sharing libraries:', error);
+                alert('Error sharing libraries. Please try again.');
+            }
+        };
+
         window.changeTheme = function() {
             const theme = document.getElementById('themeSelect').value;
             localStorage.setItem('ballistic_theme', theme);
