@@ -1220,6 +1220,46 @@
         <!-- End Shooting Profile Section -->
     </div>
 
+    <!-- Caliber Picker Modal -->
+    <div id="caliberPickerModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 10000;">
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: white; padding: 20px; border-radius: 10px; max-width: 800px; max-height: 80vh; overflow-y: auto; width: 90%;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3 id="caliberPickerTitle">Select Caliber</h3>
+                <button onclick="closeCaliberPicker()" style="background: none; border: none; font-size: 24px; cursor: pointer;">&times;</button>
+            </div>
+            
+            <!-- Filter by type -->
+            <div style="margin-bottom: 15px;">
+                <label>Filter by Type:</label>
+                <select id="caliberTypeFilter" onchange="filterCalibersByType()" style="margin-left: 10px; padding: 5px;">
+                    <option value="">All Types</option>
+                    <option value="Pistol">Pistol</option>
+                    <option value="Rifle">Rifle</option>
+                    <option value="Revolver">Revolver</option>
+                    <option value="Pistol/SMG">Pistol/SMG</option>
+                </select>
+            </div>
+            
+            <!-- Caliber selection table -->
+            <div style="max-height: 400px; overflow-y: auto; border: 1px solid #ddd;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead style="background-color: #f8f9fa; position: sticky; top: 0;">
+                        <tr>
+                            <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Type</th>
+                            <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Caliber</th>
+                            <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Metric</th>
+                            <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Notes</th>
+                            <th style="padding: 10px; border: 1px solid #ddd; text-align: center;">Select</th>
+                        </tr>
+                    </thead>
+                    <tbody id="caliberTableBody">
+                        <!-- Caliber rows will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script>
         // Navigation Functions
@@ -5100,14 +5140,7 @@ window.resetPassword = async function() {
                                 </select>
                             </div>
                             
-                            <!-- Environmental Defaults Button -->
-                            <div class="form-group" style="margin-bottom: 15px;">
-                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Environmental Conditions:</label>
-                                <div style="display: flex; gap: 10px;">
-                                    <button type="button" onclick="loadEnvironmentalDefaultsButton()" style="padding: 8px 15px; border: 1px solid #17a2b8; background-color: #17a2b8; color: white; border-radius: 4px; cursor: pointer;">Load Saved Defaults</button>
-                                    <span id="environmental_status" style="padding: 8px; color: #666;">Click to load your saved environmental preferences</span>
-                                </div>
-                            </div>
+
 
                             <!-- Temperature -->
                             <div class="form-group" style="margin-bottom: 15px;">
@@ -5308,118 +5341,110 @@ window.resetPassword = async function() {
                 }
             };
 
-            window.loadEnvironmentalDefaultsButton = async function() {
+
+
+            // Caliber picker functionality
+            let currentCaliberData = [];
+            let currentPickerTarget = null;
+
+            window.showCaliberPicker = async function(targetType) {
+                currentPickerTarget = targetType;
+                
+                if (targetType === 'bullet') {
+                    document.getElementById('caliberPickerTitle').textContent = 'Select Bullet Caliber';
+                } else if (targetType === 'firearm') {
+                    document.getElementById('caliberPickerTitle').textContent = 'Select Firearm Caliber';
+                }
+                
+                document.getElementById('caliberPickerModal').style.display = 'block';
+                document.getElementById('caliberTypeFilter').value = '';
+                
+                await loadCaliberData(targetType);
+            };
+
+            window.closeCaliberPicker = function() {
+                document.getElementById('caliberPickerModal').style.display = 'none';
+                currentPickerTarget = null;
+                currentCaliberData = [];
+            };
+
+            window.loadCaliberData = async function(targetType) {
                 try {
-                    const currentUser = (await supabase.auth.getUser()).data.user;
-                    if (!currentUser) {
-                        document.getElementById('environmental_status').textContent = 'Please log in to load preferences';
-                        document.getElementById('environmental_status').style.color = '#dc3545';
-                        return;
-                    }
-                    
-                    console.log('Loading environmental defaults via button click, user ID:', currentUser.id);
-                    document.getElementById('environmental_status').textContent = 'Loading preferences...';
-                    document.getElementById('environmental_status').style.color = '#007bff';
+                    const tableName = targetType === 'bullet' ? 'bullet_calibers' : 'firearm_calibers';
                     
                     const { data, error } = await supabase
-                        .from('user_preferences')
+                        .from(tableName)
                         .select('*')
-                        .eq('user_id', currentUser.id)
-                        .single();
+                        .order(targetType === 'bullet' ? 'bullet_caliber_name' : 'caliber_imperial');
                     
-                    if (error && error.code !== 'PGRST116') {
-                        console.error('Error loading environmental defaults:', error);
-                        document.getElementById('environmental_status').textContent = 'Error loading preferences';
-                        document.getElementById('environmental_status').style.color = '#dc3545';
+                    if (error) {
+                        console.error('Error loading caliber data:', error);
+                        document.getElementById('caliberTableBody').innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px;">Error loading calibers</td></tr>';
                         return;
                     }
                     
-                    if (data) {
-                        console.log('Applying environmental defaults from button click:', data);
-                        
-                        // Set temperature
-                        const tempField = document.getElementById('temperature');
-                        const tempUnitField = document.getElementById('temperature_unit');
-                        console.log('Temperature field found:', tempField);
-                        console.log('Temperature unit field found:', tempUnitField);
-                        
-                        if (data.default_temperature && tempField) {
-                            // Try replacing the field entirely
-                            const newTempField = tempField.cloneNode(true);
-                            newTempField.value = data.default_temperature;
-                            newTempField.defaultValue = data.default_temperature;
-                            tempField.parentNode.replaceChild(newTempField, tempField);
-                            console.log('Replaced temperature field with value:', data.default_temperature);
-                        }
-                        if (data.default_temperature_unit && tempUnitField) {
-                            tempUnitField.value = data.default_temperature_unit;
-                            tempUnitField.dispatchEvent(new Event('change', { bubbles: true }));
-                            console.log('Set temperature unit to:', data.default_temperature_unit);
-                        }
-                        
-                        // Set humidity
-                        const humidityField = document.getElementById('humidity');
-                        console.log('Humidity field found:', humidityField);
-                        if (data.default_humidity && humidityField) {
-                            const newHumidityField = humidityField.cloneNode(true);
-                            newHumidityField.value = data.default_humidity;
-                            newHumidityField.defaultValue = data.default_humidity;
-                            humidityField.parentNode.replaceChild(newHumidityField, humidityField);
-                            console.log('Replaced humidity field with value:', data.default_humidity);
-                        }
-                        
-                        // Set pressure
-                        const pressureField = document.getElementById('barometric_pressure');
-                        const pressureUnitField = document.getElementById('pressure_unit');
-                        console.log('Pressure field found:', pressureField);
-                        console.log('Pressure unit field found:', pressureUnitField);
-                        
-                        if (data.default_pressure && pressureField) {
-                            const newPressureField = pressureField.cloneNode(true);
-                            newPressureField.value = data.default_pressure;
-                            newPressureField.defaultValue = data.default_pressure;
-                            pressureField.parentNode.replaceChild(newPressureField, pressureField);
-                            console.log('Replaced pressure field with value:', data.default_pressure);
-                        }
-                        if (data.default_pressure_unit && pressureUnitField) {
-                            pressureUnitField.value = data.default_pressure_unit;
-                            pressureUnitField.dispatchEvent(new Event('change', { bubbles: true }));
-                            console.log('Set pressure unit to:', data.default_pressure_unit);
-                        }
-                        
-                        // Set altitude
-                        const altitudeField = document.getElementById('altitude');
-                        const altitudeRefField = document.getElementById('altitude_reference');
-                        console.log('Altitude field found:', altitudeField);
-                        console.log('Altitude reference field found:', altitudeRefField);
-                        
-                        if (data.default_altitude && altitudeField) {
-                            const newAltitudeField = altitudeField.cloneNode(true);
-                            newAltitudeField.value = data.default_altitude;
-                            newAltitudeField.defaultValue = data.default_altitude;
-                            altitudeField.parentNode.replaceChild(newAltitudeField, altitudeField);
-                            console.log('Replaced altitude field with value:', data.default_altitude);
-                        }
-                        if (data.default_altitude_reference && altitudeRefField) {
-                            altitudeRefField.value = data.default_altitude_reference;
-                            altitudeRefField.dispatchEvent(new Event('change', { bubbles: true }));
-                            console.log('Set altitude reference to:', data.default_altitude_reference);
-                        }
-                        
-                        document.getElementById('environmental_status').textContent = `Loaded: ${data.default_temperature}°${data.default_temperature_unit}, ${data.default_humidity}% humidity, ${data.default_pressure} ${data.default_pressure_unit}, ${data.default_altitude}ft ${data.default_altitude_reference}`;
-                        document.getElementById('environmental_status').style.color = '#28a745';
-                        
-                        console.log('Environmental defaults loaded successfully via button');
-                    } else {
-                        document.getElementById('environmental_status').textContent = 'No saved preferences found';
-                        document.getElementById('environmental_status').style.color = '#6c757d';
-                    }
+                    currentCaliberData = data;
+                    displayCaliberData(data);
                     
                 } catch (error) {
-                    console.error('Error in loadEnvironmentalDefaultsButton:', error);
-                    document.getElementById('environmental_status').textContent = 'Error loading preferences';
-                    document.getElementById('environmental_status').style.color = '#dc3545';
+                    console.error('Error in loadCaliberData:', error);
+                    document.getElementById('caliberTableBody').innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px;">Error loading calibers</td></tr>';
                 }
+            };
+
+            window.displayCaliberData = function(data) {
+                const tbody = document.getElementById('caliberTableBody');
+                
+                if (!data || data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px;">No calibers found</td></tr>';
+                    return;
+                }
+                
+                tbody.innerHTML = data.map(caliber => {
+                    const type = caliber.bullet_type || caliber.firearm_type;
+                    const name = caliber.bullet_caliber_name || caliber.caliber_imperial;
+                    const metric = caliber.metric_equivalent || caliber.metric_name || '-';
+                    const notes = caliber.notes || '-';
+                    
+                    return `
+                        <tr style="cursor: pointer;" onclick="selectCaliber('${name}')">
+                            <td style="padding: 8px; border: 1px solid #ddd;">${type}</td>
+                            <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">${name}</td>
+                            <td style="padding: 8px; border: 1px solid #ddd;">${metric}</td>
+                            <td style="padding: 8px; border: 1px solid #ddd; font-size: 0.9em;">${notes}</td>
+                            <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">
+                                <button onclick="selectCaliber('${name}')" style="background-color: #007bff; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer;">Select</button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            };
+
+            window.filterCalibersByType = function() {
+                const selectedType = document.getElementById('caliberTypeFilter').value;
+                
+                if (!selectedType) {
+                    displayCaliberData(currentCaliberData);
+                    return;
+                }
+                
+                const filtered = currentCaliberData.filter(caliber => {
+                    const type = caliber.bullet_type || caliber.firearm_type;
+                    return type === selectedType;
+                });
+                
+                displayCaliberData(filtered);
+            };
+
+            window.selectCaliber = function(caliberName) {
+                if (currentPickerTarget === 'bullet') {
+                    document.getElementById('bullet_caliber_direct').value = caliberName;
+                } else if (currentPickerTarget === 'firearm') {
+                    // Will implement firearm caliber selection later
+                    console.log('Selected firearm caliber:', caliberName);
+                }
+                
+                closeCaliberPicker();
             };
 
             window.loadEnvironmentalDefaults = async function() {
@@ -7484,7 +7509,10 @@ window.resetPassword = async function() {
                         </div>
                         <div style="margin-bottom: 15px;">
                             <label style="display: block; margin-bottom: 5px;">Caliber:</label>
-                            <input type="text" id="bullet_caliber_direct" placeholder="e.g. .308 Win, 6.5 Creedmoor" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                <input type="text" id="bullet_caliber_direct" placeholder="Selected caliber will appear here" readonly style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: #f8f9fa;">
+                                <button type="button" onclick="showCaliberPicker('bullet')" style="padding: 8px 15px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">Select Caliber</button>
+                            </div>
                         </div>
                         <div style="margin-bottom: 15px;">
                             <label style="display: block; margin-bottom: 5px;">Grain Weight:</label>
