@@ -1283,7 +1283,10 @@
                         <button onclick="showHomePage()" style="background-color: #6c757d; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer;">? Home</button>
                         <h2 style="margin: 0;">Bullet Library</h2>
                     </div>
-                    <button onclick="showAddBulletFormDirect()" style="background-color: #007BFF; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin-bottom: 15px;">Add New Bullet</button>
+                    <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                        <button onclick="showAddBulletFormDirect()" style="background-color: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">Add New Bullet</button>
+                        <button onclick="loadSharedLibraries()" style="background-color: #007BFF; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">Load Shared Library</button>
+                    </div>
                     <div id="bulletLibraryContent">Loading your bullets...</div>
                 </div>
             `;
@@ -6197,6 +6200,18 @@ window.resetPassword = async function() {
                 }
             };
 
+            window.loadSharedLibraries = async function() {
+                console.log('Loading shared libraries...');
+                try {
+                    await checkAndAcceptPendingShares();
+                    await loadBulletLibraryDirect();
+                    alert('Shared libraries refreshed successfully!');
+                } catch (error) {
+                    console.error('Error loading shared libraries:', error);
+                    alert('Error loading shared libraries: ' + error.message);
+                }
+            };
+
             window.loadBulletLibraryDirect = async function() {
                 try {
                     if (!currentUser) {
@@ -7307,29 +7322,33 @@ window.resetPassword = async function() {
 
         // Initialize pending shares check when page loads
         document.addEventListener('DOMContentLoaded', async function() {
-            // Wait a moment for authentication to complete
+            // Check for pending shares after a delay to allow authentication
             setTimeout(async () => {
                 if (window.currentUser && window.supabaseClient) {
-                    console.log('Checking for pending shares for user:', window.currentUser.email);
-                    await checkAndAcceptPendingShares();
+                    console.log('Auto-checking for pending shares for user:', window.currentUser.email);
+                    try {
+                        await checkAndAcceptPendingShares();
+                    } catch (error) {
+                        console.error('Error in auto-check for pending shares:', error);
+                    }
                 }
-            }, 2000);
+            }, 3000);
         });
 
-        // Also check when user is set (for dynamic login)
-        const originalCurrentUser = window.currentUser;
-        Object.defineProperty(window, 'currentUser', {
-            get: function() {
-                return originalCurrentUser;
-            },
-            set: function(value) {
-                originalCurrentUser = value;
-                if (value && window.supabaseClient) {
-                    console.log('User set, checking pending shares for:', value.email);
-                    setTimeout(() => checkAndAcceptPendingShares(), 1000);
+        // Also trigger share check when bullet library loads
+        const originalLoadBulletLibraryDirect = window.loadBulletLibraryDirect;
+        window.loadBulletLibraryDirect = async function() {
+            // Check for pending shares before loading library
+            if (window.currentUser && window.supabaseClient) {
+                try {
+                    await checkAndAcceptPendingShares();
+                } catch (error) {
+                    console.error('Error checking shares before library load:', error);
                 }
             }
-        });
+            // Call original function
+            return originalLoadBulletLibraryDirect.call(this);
+        };
         
     </script>
     
