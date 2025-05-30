@@ -5344,10 +5344,12 @@ window.resetPassword = async function() {
                         console.log('Temperature unit field found:', tempUnitField);
                         
                         if (data.default_temperature && tempField) {
-                            tempField.value = data.default_temperature;
-                            tempField.dispatchEvent(new Event('input', { bubbles: true }));
-                            tempField.dispatchEvent(new Event('change', { bubbles: true }));
-                            console.log('Set temperature to:', data.default_temperature);
+                            // Try replacing the field entirely
+                            const newTempField = tempField.cloneNode(true);
+                            newTempField.value = data.default_temperature;
+                            newTempField.defaultValue = data.default_temperature;
+                            tempField.parentNode.replaceChild(newTempField, tempField);
+                            console.log('Replaced temperature field with value:', data.default_temperature);
                         }
                         if (data.default_temperature_unit && tempUnitField) {
                             tempUnitField.value = data.default_temperature_unit;
@@ -5359,10 +5361,11 @@ window.resetPassword = async function() {
                         const humidityField = document.getElementById('humidity');
                         console.log('Humidity field found:', humidityField);
                         if (data.default_humidity && humidityField) {
-                            humidityField.value = data.default_humidity;
-                            humidityField.dispatchEvent(new Event('input', { bubbles: true }));
-                            humidityField.dispatchEvent(new Event('change', { bubbles: true }));
-                            console.log('Set humidity to:', data.default_humidity);
+                            const newHumidityField = humidityField.cloneNode(true);
+                            newHumidityField.value = data.default_humidity;
+                            newHumidityField.defaultValue = data.default_humidity;
+                            humidityField.parentNode.replaceChild(newHumidityField, humidityField);
+                            console.log('Replaced humidity field with value:', data.default_humidity);
                         }
                         
                         // Set pressure
@@ -5372,10 +5375,11 @@ window.resetPassword = async function() {
                         console.log('Pressure unit field found:', pressureUnitField);
                         
                         if (data.default_pressure && pressureField) {
-                            pressureField.value = data.default_pressure;
-                            pressureField.dispatchEvent(new Event('input', { bubbles: true }));
-                            pressureField.dispatchEvent(new Event('change', { bubbles: true }));
-                            console.log('Set pressure to:', data.default_pressure);
+                            const newPressureField = pressureField.cloneNode(true);
+                            newPressureField.value = data.default_pressure;
+                            newPressureField.defaultValue = data.default_pressure;
+                            pressureField.parentNode.replaceChild(newPressureField, pressureField);
+                            console.log('Replaced pressure field with value:', data.default_pressure);
                         }
                         if (data.default_pressure_unit && pressureUnitField) {
                             pressureUnitField.value = data.default_pressure_unit;
@@ -5390,10 +5394,11 @@ window.resetPassword = async function() {
                         console.log('Altitude reference field found:', altitudeRefField);
                         
                         if (data.default_altitude && altitudeField) {
-                            altitudeField.value = data.default_altitude;
-                            altitudeField.dispatchEvent(new Event('input', { bubbles: true }));
-                            altitudeField.dispatchEvent(new Event('change', { bubbles: true }));
-                            console.log('Set altitude to:', data.default_altitude);
+                            const newAltitudeField = altitudeField.cloneNode(true);
+                            newAltitudeField.value = data.default_altitude;
+                            newAltitudeField.defaultValue = data.default_altitude;
+                            altitudeField.parentNode.replaceChild(newAltitudeField, altitudeField);
+                            console.log('Replaced altitude field with value:', data.default_altitude);
                         }
                         if (data.default_altitude_reference && altitudeRefField) {
                             altitudeRefField.value = data.default_altitude_reference;
