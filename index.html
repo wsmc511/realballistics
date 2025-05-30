@@ -1789,13 +1789,13 @@
                         
                         <div style="margin-bottom: 20px;">
                             <label style="display: block; margin-bottom: 5px; font-weight: bold;">Default Humidity (%):</label>
-                            <input type="number" id="defaultHumidity" step="1" min="0" max="100" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" oninput="window.userEditingPreferences = true; console.log('Humidity input changed to:', this.value);">
+                            <input type="number" id="defaultHumidity" step="1" min="0" max="100" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" oninput="window.userEditingPreferences = true; console.log('Humidity input changed to:', this.value);" onchange="console.log('Humidity changed event:', this.value);" onblur="console.log('Humidity blur event:', this.value);">
                         </div>
                         
                         <div style="margin-bottom: 20px;">
                             <label style="display: block; margin-bottom: 5px; font-weight: bold;">Default Pressure:</label>
                             <div style="display: flex; gap: 10px;">
-                                <input type="number" id="defaultPressure" step="0.01" min="20" max="35" style="flex: 2; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" oninput="window.userEditingPreferences = true;">
+                                <input type="number" id="defaultPressure" step="0.01" min="20" max="35" style="flex: 2; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" oninput="window.userEditingPreferences = true; console.log('Pressure input changed to:', this.value);" onchange="console.log('Pressure changed event:', this.value);">
                                 <select id="defaultPressureUnit" style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
                                     <option value="inHg">inHg</option>
                                     <option value="mb">mb</option>
@@ -1806,7 +1806,7 @@
                         <div style="margin-bottom: 20px;">
                             <label style="display: block; margin-bottom: 5px; font-weight: bold;">Default Altitude:</label>
                             <div style="display: flex; gap: 10px;">
-                                <input type="number" id="defaultAltitude" step="1" min="-1000" max="15000" style="flex: 2; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" oninput="window.userEditingPreferences = true;">
+                                <input type="number" id="defaultAltitude" step="1" min="-1000" max="15000" style="flex: 2; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" oninput="window.userEditingPreferences = true; console.log('Altitude input changed to:', this.value);" onchange="console.log('Altitude changed event:', this.value);">
                                 <select id="defaultAltitudeReference" style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
                                     <option value="ASL">Above Sea Level</option>
                                     <option value="BSL">Below Sea Level</option>
@@ -1868,8 +1868,8 @@
             if (tabName === 'account') {
                 loadUserProfile();
             } else if (tabName === 'preferences') {
-                // Only load preferences if this is the first time opening the tab
-                if (!window.preferencesLoaded) {
+                // Only load preferences if this is the first time opening the tab and user isn't editing
+                if (!window.preferencesLoaded && !window.userEditingPreferences) {
                     setTimeout(() => {
                         loadUserPreferences();
                         window.preferencesLoaded = true;
@@ -2107,22 +2107,40 @@
                 // Load environmental defaults from database if they exist, but only if fields are empty
                 if (data?.default_temperature) {
                     const temperatureInput = document.getElementById('defaultTemperature');
-                    if (temperatureInput && !temperatureInput.value) temperatureInput.value = data.default_temperature;
+                    if (temperatureInput && !temperatureInput.value) {
+                        console.log('Loading temperature from DB:', data.default_temperature);
+                        temperatureInput.value = data.default_temperature;
+                    }
                 }
                 
                 if (data?.default_humidity) {
                     const humidityInput = document.getElementById('defaultHumidity');
-                    if (humidityInput && !humidityInput.value) humidityInput.value = data.default_humidity;
+                    console.log('Humidity field check:', {
+                        hasData: !!data?.default_humidity,
+                        currentValue: humidityInput?.value,
+                        willLoad: !!(humidityInput && !humidityInput.value),
+                        dbValue: data.default_humidity
+                    });
+                    if (humidityInput && !humidityInput.value) {
+                        console.log('Loading humidity from DB:', data.default_humidity);
+                        humidityInput.value = data.default_humidity;
+                    }
                 }
                 
                 if (data?.default_pressure) {
                     const pressureInput = document.getElementById('defaultPressure');
-                    if (pressureInput && !pressureInput.value) pressureInput.value = data.default_pressure;
+                    if (pressureInput && !pressureInput.value) {
+                        console.log('Loading pressure from DB:', data.default_pressure);
+                        pressureInput.value = data.default_pressure;
+                    }
                 }
                 
                 if (data?.default_altitude) {
                     const altitudeInput = document.getElementById('defaultAltitude');
-                    if (altitudeInput && !altitudeInput.value) altitudeInput.value = data.default_altitude;
+                    if (altitudeInput && !altitudeInput.value) {
+                        console.log('Loading altitude from DB:', data.default_altitude);
+                        altitudeInput.value = data.default_altitude;
+                    }
                 }
                 
                 // Always load unit selectors
