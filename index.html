@@ -2069,6 +2069,12 @@
                     return;
                 }
                 
+                console.log('loadUserPreferences() called - checking if user is editing:', window.userEditingPreferences);
+                if (window.userEditingPreferences) {
+                    console.log('User is editing preferences - skipping load to preserve form values');
+                    return;
+                }
+                
                 console.log('Loading preferences for user:', window.currentUser.id);
                 
                 const { data, error } = await window.supabaseClient
@@ -2167,6 +2173,9 @@
                     alert('Please log in to save preferences.');
                     return;
                 }
+                
+                console.log('Save button clicked - preventing preference loading');
+                window.userEditingPreferences = true;
                 
                 console.log('Saving preferences for user:', window.currentUser.id);
                 
