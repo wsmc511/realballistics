@@ -6322,12 +6322,27 @@ window.resetPassword = async function() {
 
                     // We'll use the shared_by_email field that's already in the library_shares table
 
-                    // For now, use partial user IDs since getting emails requires admin access
-                    // Multiple shared libraries will be handled properly by showing each separately
-                    const sharesWithEmails = shares.map((share, index) => ({
-                        ...share,
-                        ownerEmail: `Shared Library ${index + 1} (${share.owner_id.substring(0, 8)}...)`
-                    }));
+                    // Get owner emails by looking up who has shared with them (reverse lookup)
+                    const sharesWithEmails = await Promise.all(
+                        shares.map(async (share, index) => {
+                            // Look for any share where this owner_id is the shared_with_user_id to get their email
+                            const { data: ownerShareData } = await supabase
+                                .from('library_shares')
+                                .select('shared_with_email')
+                                .eq('shared_with_user_id', share.owner_id)
+                                .limit(1);
+                            
+                            let ownerEmail = `Shared Library ${index + 1}`;
+                            if (ownerShareData && ownerShareData.length > 0) {
+                                ownerEmail = ownerShareData[0].shared_with_email;
+                            } else {
+                                // If no reverse lookup found, show partial ID
+                                ownerEmail = `User ${share.owner_id.substring(0, 8)}...`;
+                            }
+                            
+                            return { ...share, ownerEmail };
+                        })
+                    );
                     
                     // Show modal with available shared libraries
                     const modalHTML = `
@@ -7714,7 +7729,7 @@ window.resetPassword = async function() {
             });
             
             // Remove the specific dynamic content that gets added by library functions
-            const dynamicIds = ['activeFirearmLibrary', 'activeBulletLibrary', 'activeDopeSection'];
+            const dynamicIds = ['activeFirearmLibrary', 'activeBulletLibrary', 'activeDopeSection', 'activeSetupSection'];
             dynamicIds.forEach(id => {
                 const element = document.getElementById(id);
                 if (element && element.parentNode) {
