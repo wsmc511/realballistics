@@ -5328,6 +5328,14 @@ window.resetPassword = async function() {
                     
                     if (data) {
                         console.log('Applying environmental defaults from user preferences:', data);
+                        console.log('Exact values from database:');
+                        console.log('- Temperature:', data.default_temperature);
+                        console.log('- Temperature Unit:', data.default_temperature_unit);
+                        console.log('- Humidity:', data.default_humidity);
+                        console.log('- Pressure:', data.default_pressure);
+                        console.log('- Pressure Unit:', data.default_pressure_unit);
+                        console.log('- Altitude:', data.default_altitude);
+                        console.log('- Altitude Reference:', data.default_altitude_reference);
                         
                         // Auto-populate temperature if available
                         if (data.default_temperature) {
@@ -5358,7 +5366,7 @@ window.resetPassword = async function() {
                             }
                         }
                         
-                        // Auto-populate pressure if available
+                        // Auto-populate pressure if available (note: user_preferences uses 'default_pressure', DOPE form uses 'barometric_pressure')
                         if (data.default_pressure) {
                             const pressureField = document.getElementById('barometric_pressure');
                             console.log('Pressure field found:', !!pressureField, 'Setting value:', data.default_pressure);
@@ -5397,6 +5405,15 @@ window.resetPassword = async function() {
                         }
                         
                         console.log('Environmental defaults applied successfully');
+                        
+                        // Verify the values are still there after a short delay
+                        setTimeout(() => {
+                            console.log('Verifying environmental values are still in form:');
+                            console.log('- Temperature field value:', document.getElementById('temperature')?.value);
+                            console.log('- Humidity field value:', document.getElementById('humidity')?.value);
+                            console.log('- Pressure field value:', document.getElementById('barometric_pressure')?.value);
+                            console.log('- Altitude field value:', document.getElementById('altitude')?.value);
+                        }, 500);
                     } else {
                         console.log('No user preferences found, using form defaults');
                     }
