@@ -5342,10 +5342,13 @@ window.resetPassword = async function() {
                             const tempField = document.getElementById('temperature');
                             console.log('Temperature field found:', !!tempField, 'Setting value:', data.default_temperature);
                             if (tempField) {
+                                tempField.removeAttribute('placeholder');
                                 tempField.value = data.default_temperature;
                                 tempField.setAttribute('value', data.default_temperature);
                                 tempField.style.color = '#000';
-                                tempField.style.fontWeight = 'normal';
+                                tempField.style.fontWeight = 'bold';
+                                tempField.dispatchEvent(new Event('input', { bubbles: true }));
+                                tempField.dispatchEvent(new Event('change', { bubbles: true }));
                                 console.log('Temperature field value after setting:', tempField.value);
                             }
                         }
@@ -5364,10 +5367,13 @@ window.resetPassword = async function() {
                             const humidityField = document.getElementById('humidity');
                             console.log('Humidity field found:', !!humidityField, 'Setting value:', data.default_humidity);
                             if (humidityField) {
+                                humidityField.removeAttribute('placeholder');
                                 humidityField.value = data.default_humidity;
                                 humidityField.setAttribute('value', data.default_humidity);
                                 humidityField.style.color = '#000';
-                                humidityField.style.fontWeight = 'normal';
+                                humidityField.style.fontWeight = 'bold';
+                                humidityField.dispatchEvent(new Event('input', { bubbles: true }));
+                                humidityField.dispatchEvent(new Event('change', { bubbles: true }));
                                 console.log('Humidity field value after setting:', humidityField.value);
                             }
                         }
@@ -5377,10 +5383,13 @@ window.resetPassword = async function() {
                             const pressureField = document.getElementById('barometric_pressure');
                             console.log('Pressure field found:', !!pressureField, 'Setting value:', data.default_pressure);
                             if (pressureField) {
+                                pressureField.removeAttribute('placeholder');
                                 pressureField.value = data.default_pressure;
                                 pressureField.setAttribute('value', data.default_pressure);
                                 pressureField.style.color = '#000';
-                                pressureField.style.fontWeight = 'normal';
+                                pressureField.style.fontWeight = 'bold';
+                                pressureField.dispatchEvent(new Event('input', { bubbles: true }));
+                                pressureField.dispatchEvent(new Event('change', { bubbles: true }));
                                 console.log('Pressure field value after setting:', pressureField.value);
                             }
                         }
@@ -5399,10 +5408,13 @@ window.resetPassword = async function() {
                             const altitudeField = document.getElementById('altitude');
                             console.log('Altitude field found:', !!altitudeField, 'Setting value:', data.default_altitude);
                             if (altitudeField) {
+                                altitudeField.removeAttribute('placeholder');
                                 altitudeField.value = data.default_altitude;
                                 altitudeField.setAttribute('value', data.default_altitude);
                                 altitudeField.style.color = '#000';
-                                altitudeField.style.fontWeight = 'normal';
+                                altitudeField.style.fontWeight = 'bold';
+                                altitudeField.dispatchEvent(new Event('input', { bubbles: true }));
+                                altitudeField.dispatchEvent(new Event('change', { bubbles: true }));
                                 console.log('Altitude field value after setting:', altitudeField.value);
                             }
                         }
@@ -5418,13 +5430,26 @@ window.resetPassword = async function() {
                         
                         console.log('Environmental defaults applied successfully');
                         
-                        // Verify the values are still there after a short delay
+                        // Verify the values are still there and try alternative display method
                         setTimeout(() => {
                             console.log('Verifying environmental values are still in form:');
                             console.log('- Temperature field value:', document.getElementById('temperature')?.value);
                             console.log('- Humidity field value:', document.getElementById('humidity')?.value);
                             console.log('- Pressure field value:', document.getElementById('barometric_pressure')?.value);
                             console.log('- Altitude field value:', document.getElementById('altitude')?.value);
+                            
+                            // Force visual update by temporarily focusing and blurring fields
+                            const envFields = ['temperature', 'humidity', 'barometric_pressure', 'altitude'];
+                            envFields.forEach(fieldId => {
+                                const field = document.getElementById(fieldId);
+                                if (field && field.value) {
+                                    field.focus();
+                                    field.select();
+                                    field.blur();
+                                    field.style.backgroundColor = '#e8f5e8';
+                                    console.log(`Force-updated ${fieldId} display with value:`, field.value);
+                                }
+                            });
                         }, 500);
                     } else {
                         console.log('No user preferences found, using form defaults');
