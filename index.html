@@ -2159,14 +2159,28 @@
                 const temperature = temperatureValue ? parseFloat(temperatureValue) : null;
                 const temperatureUnit = document.getElementById('defaultTemperatureUnit').value;
                 
-                const humidityValue = document.getElementById('defaultHumidity').value;
+                // Debug: Check actual DOM element values before reading
+                const humidityElement = document.getElementById('defaultHumidity');
+                const pressureElement = document.getElementById('defaultPressure');
+                const altitudeElement = document.getElementById('defaultAltitude');
+                
+                console.log('DOM elements debug:', {
+                    humidityElement: humidityElement,
+                    humidityElementValue: humidityElement?.value,
+                    pressureElement: pressureElement,
+                    pressureElementValue: pressureElement?.value,
+                    altitudeElement: altitudeElement,
+                    altitudeElementValue: altitudeElement?.value
+                });
+                
+                const humidityValue = humidityElement?.value || '';
                 const humidity = humidityValue !== '' ? parseFloat(humidityValue) : null;
                 
-                const pressureValue = document.getElementById('defaultPressure').value;
+                const pressureValue = pressureElement?.value || '';
                 const pressure = pressureValue !== '' ? parseFloat(pressureValue) : null;
                 const pressureUnit = document.getElementById('defaultPressureUnit').value;
                 
-                const altitudeValue = document.getElementById('defaultAltitude').value;
+                const altitudeValue = altitudeElement?.value || '';
                 const altitude = altitudeValue !== '' ? parseFloat(altitudeValue) : null;
                 
                 console.log('Form field debug:', {
