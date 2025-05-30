@@ -2020,13 +2020,20 @@
 
         window.loadUserPreferences = async function() {
             try {
-                if (!window.currentUser) return;
+                if (!window.currentUser) {
+                    console.log('No current user, skipping preferences load');
+                    return;
+                }
+                
+                console.log('Loading preferences for user:', window.currentUser.id);
                 
                 const { data, error } = await window.supabaseClient
                     .from('user_preferences')
                     .select('*')
                     .eq('user_id', window.currentUser.id)
                     .single();
+                
+                console.log('Preferences query result:', { data, error });
                 
                 if (error && error.code !== 'PGRST116') {
                     console.error('Error loading preferences:', error);
@@ -2059,6 +2066,8 @@
                     return;
                 }
                 
+                console.log('Saving preferences for user:', window.currentUser.id);
+                
                 const darkMode = document.getElementById('darkModeToggle').checked;
                 const distanceUnit = document.getElementById('defaultDistanceUnit').value;
                 const velocityUnit = document.getElementById('defaultVelocityUnit').value;
@@ -2067,7 +2076,16 @@
                 const theme = darkMode ? 'dark' : 'light';
                 const defaultUnits = (distanceUnit === 'meters' || velocityUnit === 'mps') ? 'metric' : 'imperial';
                 
-                const { error } = await window.supabaseClient
+                console.log('Preferences data to save:', {
+                    user_id: window.currentUser.id,
+                    theme: theme,
+                    default_units: defaultUnits,
+                    darkMode,
+                    distanceUnit,
+                    velocityUnit
+                });
+                
+                const { data, error } = await window.supabaseClient
                     .from('user_preferences')
                     .upsert({
                         user_id: window.currentUser.id,
@@ -2075,6 +2093,8 @@
                         default_units: defaultUnits,
                         updated_at: new Date().toISOString()
                     });
+                
+                console.log('Save preferences result:', { data, error });
                 
                 if (error) {
                     console.error('Error saving preferences:', error);
