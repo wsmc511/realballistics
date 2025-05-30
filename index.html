@@ -5291,15 +5291,53 @@ window.resetPassword = async function() {
                         </div>
                     `;
                     
-                    // Load dropdowns first, then apply user preferences after form is created
-                    setTimeout(() => {
+                    // Load user preferences first, then populate form with defaults
+                    setTimeout(async () => {
+                        // Get user preferences before creating form
+                        const currentUser = (await supabase.auth.getUser()).data.user;
+                        let userPrefs = {};
+                        
+                        if (currentUser) {
+                            const { data, error } = await supabase
+                                .from('user_preferences')
+                                .select('*')
+                                .eq('user_id', currentUser.id)
+                                .single();
+                                
+                            if (data && !error) {
+                                userPrefs = data;
+                                console.log('Loaded user preferences for form creation:', userPrefs);
+                            }
+                        }
+                        
+                        // Now update the form HTML with default values
+                        const tempField = document.getElementById('temperature');
+                        const humidityField = document.getElementById('humidity');
+                        const pressureField = document.getElementById('barometric_pressure');
+                        const altitudeField = document.getElementById('altitude');
+                        
+                        if (tempField && userPrefs.default_temperature) {
+                            tempField.value = userPrefs.default_temperature;
+                            tempField.defaultValue = userPrefs.default_temperature;
+                        }
+                        
+                        if (humidityField && userPrefs.default_humidity) {
+                            humidityField.value = userPrefs.default_humidity;
+                            humidityField.defaultValue = userPrefs.default_humidity;
+                        }
+                        
+                        if (pressureField && userPrefs.default_pressure) {
+                            pressureField.value = userPrefs.default_pressure;
+                            pressureField.defaultValue = userPrefs.default_pressure;
+                        }
+                        
+                        if (altitudeField && userPrefs.default_altitude) {
+                            altitudeField.value = userPrefs.default_altitude;
+                            altitudeField.defaultValue = userPrefs.default_altitude;
+                        }
+                        
                         loadDopeDropdownsDirect();
                         console.log('Date and time embedded directly in HTML');
-                        // Apply environmental defaults after all auto-selections are complete
-                        setTimeout(() => {
-                            console.log('Final step: applying environmental defaults after auto-selections');
-                            loadEnvironmentalDefaults();
-                        }, 1000);
                     }, 50);
                 }
             };
