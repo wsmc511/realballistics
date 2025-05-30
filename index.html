@@ -6203,12 +6203,202 @@ window.resetPassword = async function() {
             window.loadSharedLibraries = async function() {
                 console.log('Loading shared libraries...');
                 try {
+                    if (!currentUser) {
+                        alert('Please log in to access shared libraries.');
+                        return;
+                    }
+
+                    // First, check and accept any pending shares
                     await checkAndAcceptPendingShares();
-                    await loadBulletLibraryDirect();
-                    alert('Shared libraries refreshed successfully!');
+
+                    // Then show available shared libraries
+                    await showSharedLibrarySelector();
+                    
                 } catch (error) {
                     console.error('Error loading shared libraries:', error);
                     alert('Error loading shared libraries: ' + error.message);
+                }
+            };
+
+            window.showSharedLibrarySelector = async function() {
+                try {
+                    // Get all accepted shares for this user
+                    const { data: shares, error } = await supabase
+                        .from('library_shares')
+                        .select(`
+                            *,
+                            shared_by_user:shared_by_user_id(email)
+                        `)
+                        .eq('shared_with_email', currentUser.email)
+                        .eq('status', 'accepted')
+                        .not('shared_with_user_id', 'is', null);
+
+                    if (error) {
+                        console.error('Error fetching shared libraries:', error);
+                        alert('Error fetching shared libraries: ' + error.message);
+                        return;
+                    }
+
+                    if (!shares || shares.length === 0) {
+                        alert('No shared libraries available. Ask other users to share their libraries with you first.');
+                        return;
+                    }
+
+                    // Show modal with available shared libraries
+                    const modalHTML = `
+                        <div id="sharedLibraryModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center;">
+                            <div style="background: white; padding: 20px; border-radius: 8px; max-width: 600px; max-height: 80vh; overflow-y: auto; width: 95%;">
+                                <h3 style="margin-top: 0;">Available Shared Libraries</h3>
+                                <p style="color: #666; margin-bottom: 20px;">Select bullets from shared libraries to copy to your own library:</p>
+                                
+                                <div id="sharedLibrariesContent">
+                                    ${shares.map(share => `
+                                        <div style="margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 5px;">
+                                            <h4 style="margin: 0 0 10px 0; color: #007bff;">Library shared by: ${share.shared_by_user?.email || 'Unknown'}</h4>
+                                            <div id="bullets_${share.shared_by_user_id}" style="margin-top: 10px;">
+                                                Loading bullets...
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                                
+                                <div style="margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;">
+                                    <button onclick="closeSharedLibraryModal()" style="background: #6c757d; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer;">Close</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                    document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+                    // Load bullets for each shared library
+                    for (const share of shares) {
+                        await loadSharedBullets(share.shared_by_user_id);
+                    }
+
+                } catch (error) {
+                    console.error('Error showing shared library selector:', error);
+                    alert('Error showing shared libraries: ' + error.message);
+                }
+            };
+
+            window.loadSharedBullets = async function(sharedByUserId) {
+                try {
+                    const { data: bullets, error } = await supabase
+                        .from('bullet_library')
+                        .select('*')
+                        .eq('user_id', sharedByUserId)
+                        .order('manufacturer_name', { ascending: true });
+
+                    if (error) {
+                        console.error('Error loading shared bullets:', error);
+                        return;
+                    }
+
+                    const container = document.getElementById(`bullets_${sharedByUserId}`);
+                    if (!container) return;
+
+                    if (!bullets || bullets.length === 0) {
+                        container.innerHTML = '<p style="color: #666;">No bullets in this library.</p>';
+                        return;
+                    }
+
+                    container.innerHTML = `
+                        <div style="margin-bottom: 10px;">
+                            <button onclick="selectAllSharedBullets('${sharedByUserId}')" style="background: #28a745; color: white; padding: 5px 10px; border: none; border-radius: 3px; cursor: pointer; font-size: 12px;">Select All</button>
+                            <button onclick="copySelectedBullets('${sharedByUserId}')" style="background: #007bff; color: white; padding: 5px 10px; border: none; border-radius: 3px; cursor: pointer; font-size: 12px; margin-left: 5px;">Copy Selected</button>
+                        </div>
+                        <div style="max-height: 200px; overflow-y: auto; border: 1px solid #eee; padding: 10px;">
+                            ${bullets.map(bullet => `
+                                <div style="margin-bottom: 8px; padding: 8px; border: 1px solid #ddd; border-radius: 3px; display: flex; align-items: center;">
+                                    <input type="checkbox" id="bullet_${bullet.id}" value="${bullet.id}" style="margin-right: 8px;">
+                                    <label for="bullet_${bullet.id}" style="flex: 1; cursor: pointer; font-size: 14px;">
+                                        <strong>${bullet.manufacturer_name}</strong> ${bullet.caliber} ${bullet.grain}gr 
+                                        (BC: ${bullet.ballistic_coefficient}, ${bullet.drag_model})
+                                        ${bullet.bullet_type ? `- ${bullet.bullet_type}` : ''}
+                                    </label>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+
+                } catch (error) {
+                    console.error('Error loading shared bullets:', error);
+                }
+            };
+
+            window.selectAllSharedBullets = function(userId) {
+                const container = document.getElementById(`bullets_${userId}`);
+                const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+                const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+                
+                checkboxes.forEach(cb => {
+                    cb.checked = !allChecked;
+                });
+            };
+
+            window.copySelectedBullets = async function(userId) {
+                try {
+                    const container = document.getElementById(`bullets_${userId}`);
+                    const selectedCheckboxes = container.querySelectorAll('input[type="checkbox"]:checked');
+                    
+                    if (selectedCheckboxes.length === 0) {
+                        alert('Please select at least one bullet to copy.');
+                        return;
+                    }
+
+                    const bulletIds = Array.from(selectedCheckboxes).map(cb => parseInt(cb.value));
+                    
+                    // Get the full bullet data
+                    const { data: bulletsData, error: fetchError } = await supabase
+                        .from('bullet_library')
+                        .select('*')
+                        .in('id', bulletIds);
+
+                    if (fetchError) {
+                        alert('Error fetching bullet data: ' + fetchError.message);
+                        return;
+                    }
+
+                    // Copy bullets to current user's library
+                    const newBullets = bulletsData.map(bullet => ({
+                        user_id: currentUser.id,
+                        manufacturer_name: bullet.manufacturer_name,
+                        caliber: bullet.caliber,
+                        grain: bullet.grain,
+                        ballistic_coefficient: bullet.ballistic_coefficient,
+                        drag_model: bullet.drag_model,
+                        bullet_type: bullet.bullet_type,
+                        lot_number: bullet.lot_number,
+                        production_date: bullet.production_date,
+                        purchase_date: bullet.purchase_date,
+                        muzzle_velocity: bullet.muzzle_velocity,
+                        muzzle_energy: bullet.muzzle_energy
+                    }));
+
+                    const { error: insertError } = await supabase
+                        .from('bullet_library')
+                        .insert(newBullets);
+
+                    if (insertError) {
+                        alert('Error copying bullets: ' + insertError.message);
+                        return;
+                    }
+
+                    alert(`Successfully copied ${bulletIds.length} bullet${bulletIds.length > 1 ? 's' : ''} to your library!`);
+                    closeSharedLibraryModal();
+                    await loadBulletLibraryDirect();
+
+                } catch (error) {
+                    console.error('Error copying bullets:', error);
+                    alert('Error copying bullets: ' + error.message);
+                }
+            };
+
+            window.closeSharedLibraryModal = function() {
+                const modal = document.getElementById('sharedLibraryModal');
+                if (modal) {
+                    modal.remove();
                 }
             };
 
