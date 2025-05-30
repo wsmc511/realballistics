@@ -6330,7 +6330,7 @@ window.resetPassword = async function() {
                                     ${shares.map(share => `
                                         <div style="margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 5px;">
                                             <h4 style="margin: 0 0 10px 0; color: #007bff;">Library shared by: ${share.shared_by_email || 'Unknown'}</h4>
-                                            <div id="bullets_${share.shared_by_user_id}" style="margin-top: 10px;">
+                                            <div id="bullets_${share.owner_id}" style="margin-top: 10px;">
                                                 Loading bullets...
                                             </div>
                                         </div>
@@ -6348,7 +6348,7 @@ window.resetPassword = async function() {
 
                     // Load bullets for each shared library
                     for (const share of shares) {
-                        await loadSharedBullets(share.shared_by_user_id);
+                        await loadSharedBullets(share.owner_id);
                     }
 
                 } catch (error) {
@@ -6371,7 +6371,10 @@ window.resetPassword = async function() {
                     }
 
                     const container = document.getElementById(`bullets_${sharedByUserId}`);
-                    if (!container) return;
+                    if (!container) {
+                        console.error('Container not found for user ID:', sharedByUserId);
+                        return;
+                    }
 
                     if (!bullets || bullets.length === 0) {
                         container.innerHTML = '<p style="color: #666;">No bullets in this library.</p>';
