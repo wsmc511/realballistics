@@ -1433,6 +1433,143 @@
             }
         };
 
+        // Load bullet library for management page (includes shared bullets)
+        window.loadBulletLibraryDirect = async function() {
+            try {
+                const content = document.getElementById('bulletLibraryContent');
+                if (!content || !currentUser) {
+                    console.error('Content element or currentUser not found');
+                    return;
+                }
+
+                // Check and accept pending shares first
+                await checkAndAcceptPendingShares();
+                
+                // Load user's own bullets
+                const { data: ownBullets, error: ownError } = await supabase
+                    .from('bullet_library')
+                    .select('*')
+                    .eq('user_id', currentUser.id)
+                    .order('manufacturer_name', { ascending: true });
+
+                if (ownError) {
+                    console.error('Error loading own bullets:', ownError);
+                    content.innerHTML = '<p>Error loading bullets. Please try again.</p>';
+                    return;
+                }
+
+                // Load shared bullets from accepted shares
+                const { data: acceptedShares } = await supabase
+                    .from('library_shares')
+                    .select('owner_id, share_type')
+                    .eq('shared_with_user_id', currentUser.id)
+                    .eq('status', 'accepted')
+                    .in('share_type', ['bullets', 'both']);
+
+                let sharedBullets = [];
+                if (acceptedShares && acceptedShares.length > 0) {
+                    const ownerIds = acceptedShares.map(share => share.owner_id);
+                    
+                    const { data: bullets } = await supabase
+                        .from('bullet_library')
+                        .select('*')
+                        .in('user_id', ownerIds)
+                        .order('manufacturer_name', { ascending: true });
+
+                    if (bullets) {
+                        sharedBullets = bullets;
+                    }
+                }
+
+                // Build the HTML content
+                let html = '';
+                
+                // My bullets section
+                if (ownBullets && ownBullets.length > 0) {
+                    html += `
+                        <div style="margin-bottom: 30px;">
+                            <h3 style="color: #333; border-bottom: 2px solid #007bff; padding-bottom: 5px;">My Bullets</h3>
+                            <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+                                <thead>
+                                    <tr style="background-color: #f8f9fa;">
+                                        <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Manufacturer</th>
+                                        <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Caliber</th>
+                                        <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Grain</th>
+                                        <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">BC</th>
+                                        <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Drag</th>
+                                        <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Type</th>
+                                        <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>`;
+                    
+                    ownBullets.forEach(bullet => {
+                        html += `
+                            <tr>
+                                <td style="border: 1px solid #ddd; padding: 8px;">${bullet.manufacturer_name}</td>
+                                <td style="border: 1px solid #ddd; padding: 8px;">${bullet.caliber}</td>
+                                <td style="border: 1px solid #ddd; padding: 8px;">${bullet.grain}</td>
+                                <td style="border: 1px solid #ddd; padding: 8px;">${bullet.ballistic_coefficient}</td>
+                                <td style="border: 1px solid #ddd; padding: 8px;">${bullet.drag_model}</td>
+                                <td style="border: 1px solid #ddd; padding: 8px;">${bullet.bullet_type}</td>
+                                <td style="border: 1px solid #ddd; padding: 8px;">
+                                    <button onclick="deleteBullet(${bullet.id})" style="background-color: #dc3545; color: white; padding: 4px 8px; border: none; border-radius: 4px; cursor: pointer;">Delete</button>
+                                </td>
+                            </tr>`;
+                    });
+                    
+                    html += '</tbody></table></div>';
+                }
+
+                // Shared bullets section
+                if (sharedBullets && sharedBullets.length > 0) {
+                    html += `
+                        <div style="margin-bottom: 30px;">
+                            <h3 style="color: #333; border-bottom: 2px solid #28a745; padding-bottom: 5px;">Shared Bullets (View Only)</h3>
+                            <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+                                <thead>
+                                    <tr style="background-color: #f8f9fa;">
+                                        <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Manufacturer</th>
+                                        <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Caliber</th>
+                                        <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Grain</th>
+                                        <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">BC</th>
+                                        <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Drag</th>
+                                        <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Type</th>
+                                    </tr>
+                                </thead>
+                                <tbody>`;
+                    
+                    sharedBullets.forEach(bullet => {
+                        html += `
+                            <tr style="background-color: #f0f8f0;">
+                                <td style="border: 1px solid #ddd; padding: 8px;">${bullet.manufacturer_name}</td>
+                                <td style="border: 1px solid #ddd; padding: 8px;">${bullet.caliber}</td>
+                                <td style="border: 1px solid #ddd; padding: 8px;">${bullet.grain}</td>
+                                <td style="border: 1px solid #ddd; padding: 8px;">${bullet.ballistic_coefficient}</td>
+                                <td style="border: 1px solid #ddd; padding: 8px;">${bullet.drag_model}</td>
+                                <td style="border: 1px solid #ddd; padding: 8px;">${bullet.bullet_type}</td>
+                            </tr>`;
+                    });
+                    
+                    html += '</tbody></table></div>';
+                }
+
+                // If no bullets at all
+                if ((!ownBullets || ownBullets.length === 0) && (!sharedBullets || sharedBullets.length === 0)) {
+                    html = '<p style="text-align: center; padding: 20px; color: #666;">No bullets in your library yet. Click "Add New Bullet" to get started!</p>';
+                }
+
+                content.innerHTML = html;
+
+            } catch (error) {
+                console.error('Error loading bullet library:', error);
+                const content = document.getElementById('bulletLibraryContent');
+                if (content) {
+                    content.innerHTML = '<p>Error loading bullets. Please try again.</p>';
+                }
+            }
+        };
+
         // Setup Page Functions
         window.showSetup = async function() {
             console.log('showSetup function called');
