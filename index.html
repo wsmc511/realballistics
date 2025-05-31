@@ -2770,6 +2770,7 @@
                 const { data: { session } } = await supabase.auth.getSession();
                 if (session) {
                     currentUser = session.user;
+                    window.currentUser = session.user; // Ensure global access
                     document.getElementById('loginForm').style.display = 'none';
                     document.getElementById('appContent').style.display = 'block';
                 } else {
@@ -2891,6 +2892,7 @@
                 }
 
                 currentUser = data.user;
+                window.currentUser = data.user; // Ensure global access
                 document.getElementById('loginForm').style.display = 'none';
                 document.getElementById('appContent').style.display = 'block';
                 authMessage.innerHTML = '';
