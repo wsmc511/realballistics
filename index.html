@@ -6079,38 +6079,31 @@ window.resetPassword = async function() {
                 }, 100);
             };
 
-            // Firearm Library Functions
+            // Firearm Library Functions - Following exact pattern from working bullet library
             window.showFirearmLibrary = function() {
                 console.log('showFirearmLibrary function called');
                 
                 // Hide all other sections
+                document.getElementById('homePage').style.display = 'none';
+                document.getElementById('shootingProfileSection').style.display = 'none';
+                
                 const hideElement = (id) => {
                     const element = document.getElementById(id);
                     if (element) element.style.display = 'none';
                 };
-                hideElement('homePage');
-                hideElement('shootingProfileSection');
                 hideElement('bulletLibrarySection');
-                hideElement('ballisticForm');
-                hideElement('addBulletForm');
                 hideElement('filterSection');
+                hideElement('ballisticForm');
+                hideElement('compareForm');
+                hideElement('compareResults');
+                hideElement('addBulletForm');
                 hideElement('activeBulletLibrary');
                 hideElement('activeDopeSection');
                 
-                // Create Firearm Library content  
+                // Create firearm library directly in the main app content (exact pattern from bullet library)
                 const appContent = document.getElementById('appContent');
-                
-                // Check if activeFirearmLibrary already exists and remove it
-                const existingSection = document.getElementById('activeFirearmLibrary');
-                if (existingSection) {
-                    existingSection.remove();
-                }
-                
                 const firearmContent = document.createElement('div');
                 firearmContent.id = 'activeFirearmLibrary';
-                firearmContent.style.display = 'block';
-                firearmContent.style.position = 'relative';
-                firearmContent.style.zIndex = '1';
                 firearmContent.innerHTML = `
                     <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
                         <button onclick="showHomePage()" style="background-color: #6c757d; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer;">🏠 Home</button>
@@ -6274,12 +6267,240 @@ window.resetPassword = async function() {
                             <p>Loading firearm profiles...</p>
                         </div>
                     </div>
+                    <div style="background-color: white; padding: 20px; border-radius: 8px; border: 1px solid #ddd;">
+                        <h3>Your Firearm Profiles</h3>
+                        <div id="firearmLibraryContent">Loading your firearms...</div>
+                    </div>
                 `;
                 
+                // Remove any existing active firearm library (exact pattern from bullet library)
+                const existing = document.getElementById('activeFirearmLibrary');
+                if (existing) existing.remove();
+                
+                // Add the new firearm library (exact pattern from bullet library)
                 appContent.appendChild(firearmContent);
                 
-                // Load existing firearm profiles
-                loadFirearmProfiles();
+                // Load the firearms (exact pattern from bullet library)
+                loadFirearmLibraryDirect();
+            };
+
+            // Load firearm library for management page - exact copy of bullet library pattern
+            window.loadFirearmLibraryDirect = async function() {
+                try {
+                    if (!currentUser) {
+                        document.getElementById('firearmLibraryContent').innerHTML = 
+                            '<p style="text-align: center; padding: 20px;">Please log in to view your firearms.</p>';
+                        return;
+                    }
+
+                    console.log('Loading firearms for user:', currentUser.id);
+
+                    const { data: firearms, error } = await supabase
+                        .from('firearm_profile')
+                        .select('*')
+                        .eq('user_id', currentUser.id)
+                        .order('profile_name', { ascending: true });
+
+                    const firearmLibraryContent = document.getElementById('firearmLibraryContent');
+                    if (!firearmLibraryContent) return;
+
+                    if (error) {
+                        console.error('Error loading firearms:', error);
+                        firearmLibraryContent.innerHTML = '<p>Error loading firearms. Please try again.</p>';
+                        return;
+                    }
+
+                    if (firearms && firearms.length > 0) {
+                        let tableHTML = `
+                            <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                <thead>
+                                    <tr style="background-color: #f8f9fa; border-bottom: 2px solid #dee2e6;">
+                                        <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left; font-weight: bold;">Profile Name</th>
+                                        <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left; font-weight: bold;">Shooter</th>
+                                        <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left; font-weight: bold;">Type</th>
+                                        <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left; font-weight: bold;">Firearm</th>
+                                        <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left; font-weight: bold;">Caliber</th>
+                                        <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left; font-weight: bold;">Barrel</th>
+                                        <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left; font-weight: bold;">Zero</th>
+                                        <th style="border: 1px solid #dee2e6; padding: 12px; text-align: center; font-weight: bold;">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                        `;
+
+                        firearms.forEach(firearm => {
+                            tableHTML += `
+                                <tr style="border-bottom: 1px solid #dee2e6;">
+                                    <td style="border: 1px solid #dee2e6; padding: 10px;">${firearm.profile_name}</td>
+                                    <td style="border: 1px solid #dee2e6; padding: 10px;">${firearm.shooter_name}</td>
+                                    <td style="border: 1px solid #dee2e6; padding: 10px;">${firearm.firearm_type}</td>
+                                    <td style="border: 1px solid #dee2e6; padding: 10px;">${firearm.firearm_name}</td>
+                                    <td style="border: 1px solid #dee2e6; padding: 10px;">${firearm.caliber}</td>
+                                    <td style="border: 1px solid #dee2e6; padding: 10px;">${firearm.barrel_length ? firearm.barrel_length + '"' : 'N/A'}</td>
+                                    <td style="border: 1px solid #dee2e6; padding: 10px;">${firearm.zero_distance ? firearm.zero_distance + ' yds' : 'N/A'}</td>
+                                    <td style="border: 1px solid #dee2e6; padding: 10px; text-align: center;">
+                                        <button onclick="editFirearmDirect('${firearm.id}')" style="background-color: #007bff; color: white; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; margin-right: 5px;">Edit</button>
+                                        <button onclick="deleteFirearmDirect('${firearm.id}')" style="background-color: #dc3545; color: white; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer;">Delete</button>
+                                    </td>
+                                </tr>
+                            `;
+                        });
+
+                        tableHTML += '</tbody></table>';
+                        firearmLibraryContent.innerHTML = tableHTML;
+                        console.log('Firearm table rendered successfully, total firearms:', firearms.length);
+                    } else {
+                        firearmLibraryContent.innerHTML = '<p style="text-align: center; padding: 20px;">No firearms found. Click "Add New Firearm" to get started.</p>';
+                    }
+                } catch (error) {
+                    console.error('Error in loadFirearmLibraryDirect:', error);
+                    const firearmLibraryContent = document.getElementById('firearmLibraryContent');
+                    if (firearmLibraryContent) {
+                        firearmLibraryContent.innerHTML = '<p>Error loading firearms. Please try again.</p>';
+                    }
+                }
+            };
+
+            window.editFirearmDirect = async function(firearmId) {
+                try {
+                    const { data: firearm, error } = await supabase
+                        .from('firearm_profile')
+                        .select('*')
+                        .eq('id', firearmId)
+                        .single();
+
+                    if (error) {
+                        alert('Error loading firearm data: ' + error.message);
+                        return;
+                    }
+
+                    const firearmLibraryContent = document.getElementById('firearmLibraryContent');
+                    firearmLibraryContent.innerHTML = `
+                        <div style="background-color: white; padding: 20px; border-radius: 8px; border: 1px solid #ddd;">
+                            <h3>Edit Firearm Profile</h3>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                                <div>
+                                    <label style="display: block; margin-bottom: 5px; font-weight: bold;">Profile Name:</label>
+                                    <input type="text" id="edit_firearm_profile_name" value="${firearm.profile_name}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" required>
+                                </div>
+                                <div>
+                                    <label style="display: block; margin-bottom: 5px; font-weight: bold;">Shooter Name:</label>
+                                    <input type="text" id="edit_firearm_shooter_name" value="${firearm.shooter_name}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" required>
+                                </div>
+                                <div>
+                                    <label style="display: block; margin-bottom: 5px; font-weight: bold;">Firearm Type:</label>
+                                    <select id="edit_firearm_type" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" required>
+                                        <option value="">Select</option>
+                                        <option value="Rifle" ${firearm.firearm_type === 'Rifle' ? 'selected' : ''}>Rifle</option>
+                                        <option value="Pistol" ${firearm.firearm_type === 'Pistol' ? 'selected' : ''}>Pistol</option>
+                                        <option value="Shotgun" ${firearm.firearm_type === 'Shotgun' ? 'selected' : ''}>Shotgun</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label style="display: block; margin-bottom: 5px; font-weight: bold;">Firearm Name:</label>
+                                    <input type="text" id="edit_firearm_name" value="${firearm.firearm_name}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" required>
+                                </div>
+                                <div>
+                                    <label style="display: block; margin-bottom: 5px; font-weight: bold;">Caliber:</label>
+                                    <input type="text" id="edit_firearm_caliber" value="${firearm.caliber}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" required>
+                                </div>
+                                <div>
+                                    <label style="display: block; margin-bottom: 5px; font-weight: bold;">Barrel Length (inches):</label>
+                                    <input type="number" id="edit_firearm_barrel_length" value="${firearm.barrel_length || ''}" step="0.1" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                </div>
+                                <div>
+                                    <label style="display: block; margin-bottom: 5px; font-weight: bold;">Barrel Twist Rate:</label>
+                                    <select id="edit_firearm_barrel_twist_rate" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                        <option value="">Select</option>
+                                        <option value="1:7" ${firearm.barrel_twist_rate === '1:7' ? 'selected' : ''}>1:7</option>
+                                        <option value="1:8" ${firearm.barrel_twist_rate === '1:8' ? 'selected' : ''}>1:8</option>
+                                        <option value="1:9" ${firearm.barrel_twist_rate === '1:9' ? 'selected' : ''}>1:9</option>
+                                        <option value="1:9.25" ${firearm.barrel_twist_rate === '1:9.25' ? 'selected' : ''}>1:9.25</option>
+                                        <option value="1:10" ${firearm.barrel_twist_rate === '1:10' ? 'selected' : ''}>1:10</option>
+                                        <option value="1:11" ${firearm.barrel_twist_rate === '1:11' ? 'selected' : ''}>1:11</option>
+                                        <option value="1:12" ${firearm.barrel_twist_rate === '1:12' ? 'selected' : ''}>1:12</option>
+                                        <option value="1:14" ${firearm.barrel_twist_rate === '1:14' ? 'selected' : ''}>1:14</option>
+                                        <option value="1:16" ${firearm.barrel_twist_rate === '1:16' ? 'selected' : ''}>1:16</option>
+                                        <option value="1:18.75" ${firearm.barrel_twist_rate === '1:18.75' ? 'selected' : ''}>1:18.75</option>
+                                        <option value="1:20" ${firearm.barrel_twist_rate === '1:20' ? 'selected' : ''}>1:20</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label style="display: block; margin-bottom: 5px; font-weight: bold;">Optic Name:</label>
+                                    <input type="text" id="edit_firearm_optic_name" value="${firearm.optic_name || ''}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                </div>
+                                <div>
+                                    <label style="display: block; margin-bottom: 5px; font-weight: bold;">Zero Distance (yards):</label>
+                                    <input type="number" id="edit_firearm_zero_distance" value="${firearm.zero_distance || ''}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                </div>
+                                <div>
+                                    <label style="display: block; margin-bottom: 5px; font-weight: bold;">Height Over Bore (inches):</label>
+                                    <input type="number" id="edit_firearm_height_over_bore" value="${firearm.height_over_bore || ''}" step="0.01" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                                <button onclick="updateFirearmDirect('${firearmId}')" style="background-color: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">Update Firearm</button>
+                                <button onclick="loadFirearmLibraryDirect()" style="background-color: #6c757d; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">Cancel</button>
+                            </div>
+                        </div>
+                    `;
+                } catch (e) {
+                    alert('Error loading firearm data. Please try again.');
+                }
+            };
+
+            window.updateFirearmDirect = async function(firearmId) {
+                try {
+                    const firearmData = {
+                        profile_name: document.getElementById('edit_firearm_profile_name').value,
+                        shooter_name: document.getElementById('edit_firearm_shooter_name').value,
+                        firearm_type: document.getElementById('edit_firearm_type').value,
+                        firearm_name: document.getElementById('edit_firearm_name').value,
+                        caliber: document.getElementById('edit_firearm_caliber').value,
+                        barrel_length: parseFloat(document.getElementById('edit_firearm_barrel_length').value) || null,
+                        barrel_twist_rate: document.getElementById('edit_firearm_barrel_twist_rate').value || null,
+                        optic_name: document.getElementById('edit_firearm_optic_name').value || null,
+                        zero_distance: parseInt(document.getElementById('edit_firearm_zero_distance').value) || null,
+                        height_over_bore: parseFloat(document.getElementById('edit_firearm_height_over_bore').value) || null
+                    };
+
+                    const { error } = await supabase
+                        .from('firearm_profile')
+                        .update(firearmData)
+                        .eq('id', firearmId);
+
+                    if (error) {
+                        alert('Error updating firearm: ' + error.message);
+                        return;
+                    }
+
+                    alert('Firearm updated successfully!');
+                    await loadFirearmLibraryDirect();
+                } catch (e) {
+                    alert('Error updating firearm. Please try again.');
+                }
+            };
+
+            window.deleteFirearmDirect = async function(firearmId) {
+                if (confirm('Are you sure you want to delete this firearm profile?')) {
+                    try {
+                        const { error } = await supabase
+                            .from('firearm_profile')
+                            .delete()
+                            .eq('id', firearmId);
+
+                        if (error) {
+                            alert('Error deleting firearm: ' + error.message);
+                            return;
+                        }
+
+                        alert('Firearm deleted successfully!');
+                        await loadFirearmLibraryDirect();
+                    } catch (error) {
+                        console.error('Error deleting firearm:', error);
+                        alert('Error deleting firearm: ' + error.message);
+                    }
+                }
             };
 
             window.showAddFirearmForm = function() {
