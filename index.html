@@ -6352,16 +6352,27 @@ window.resetPassword = async function() {
 
                         tableHTML += '</tbody></table>';
                         console.log('About to set innerHTML with table HTML, length:', tableHTML.length);
+                        
+                        // Clear any existing content first
+                        firearmLibraryContent.innerHTML = '';
+                        
+                        // Force display styles before adding content
+                        firearmLibraryContent.style.cssText = 'display: block !important; visibility: visible !important; opacity: 1 !important; position: static !important; z-index: 999 !important;';
+                        
+                        // Insert the table HTML
                         firearmLibraryContent.innerHTML = tableHTML;
+                        
+                        // Force parent container to be visible
+                        let parent = firearmLibraryContent.parentElement;
+                        while (parent && parent !== document.body) {
+                            parent.style.cssText = 'display: block !important; visibility: visible !important; opacity: 1 !important;';
+                            parent = parent.parentElement;
+                        }
+                        
                         console.log('Firearm table rendered successfully, total firearms:', firearms.length);
                         console.log('Element innerHTML after setting:', firearmLibraryContent.innerHTML.length, 'characters');
-                        
-                        // Force display to ensure visibility
-                        firearmLibraryContent.style.display = 'block';
-                        firearmLibraryContent.style.visibility = 'visible';
-                        firearmLibraryContent.style.opacity = '1';
-                        firearmLibraryContent.parentElement.style.display = 'block';
-                        firearmLibraryContent.parentElement.style.visibility = 'visible';
+                        console.log('Element computed style display:', window.getComputedStyle(firearmLibraryContent).display);
+                        console.log('Element computed style visibility:', window.getComputedStyle(firearmLibraryContent).visibility);
                     } else {
                         firearmLibraryContent.innerHTML = '<p style="text-align: center; padding: 20px;">No firearms found. Click "Add New Firearm" to get started.</p>';
                     }
