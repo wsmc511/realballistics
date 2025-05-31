@@ -1923,6 +1923,9 @@
                     window.supabase.from('zero_profiles').select('user_id, created_at').limit(1000)
                 ]);
 
+                console.log('User profiles loaded:', userProfiles);
+                console.log('Profile error:', profileError);
+
                 if (profileError) {
                     console.error('Error loading user profiles:', profileError);
                     userApprovalContent.innerHTML = '<p style="color: red;">Error loading user profiles. Please ensure the user_profile table exists in your database.</p>';
@@ -1988,8 +1991,9 @@
                 const pendingCount = userIds.filter(id => allUsers[id].profile.status === 'pending').length;
                 const approvedCount = userIds.filter(id => allUsers[id].profile.status === 'approved').length;
                 const revokedCount = userIds.filter(id => allUsers[id].profile.status === 'revoked').length;
+                const deletionCount = userIds.filter(id => allUsers[id].profile.status === 'deletion_requested').length;
                 
-                userCount.textContent = `Total users: ${userIds.length} (${pendingCount} pending, ${approvedCount} approved, ${revokedCount} revoked)`;
+                userCount.textContent = `Total users: ${userIds.length} (${pendingCount} pending, ${approvedCount} approved, ${revokedCount} revoked, ${deletionCount} deletion requests)`;
                 
                 if (userIds.length === 0) {
                     userApprovalContent.innerHTML = '<p>No users found.</p>';
