@@ -1769,6 +1769,30 @@
             if (adminPanel) {
                 adminPanel.remove();
             }
+            // Show the home page
+            const homePage = document.getElementById('homePage');
+            if (homePage) {
+                homePage.style.display = 'block';
+            }
+        };
+
+        window.updateUserNotes = async function(userId, notes) {
+            try {
+                const { error } = await window.supabase
+                    .from('user_profile')
+                    .update({ notes: notes })
+                    .eq('user_id', userId);
+
+                if (error) {
+                    console.error('Error updating user notes:', error);
+                    alert('Failed to update notes. Please try again.');
+                } else {
+                    console.log('User notes updated successfully for user:', userId);
+                }
+            } catch (error) {
+                console.error('Error updating user notes:', error);
+                alert('Failed to update notes. Please try again.');
+            }
         };
 
         // Track user login for admin visibility
@@ -1910,6 +1934,7 @@
                                 <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left; font-weight: bold;">Email</th>
                                 <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left; font-weight: bold;">Role</th>
                                 <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left; font-weight: bold;">Status</th>
+                                <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left; font-weight: bold;">Notes</th>
                                 <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left; font-weight: bold;">Activity</th>
                                 <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left; font-weight: bold;">Registered</th>
                                 <th style="border: 1px solid #dee2e6; padding: 12px; text-align: center; font-weight: bold;">Actions</th>
@@ -1951,6 +1976,7 @@
                         statusColor = '#6c757d'; // revoked - gray
                     }
                     
+                    const notesValue = profile.notes || '';
                     tableHTML += `
                         <tr style="border-bottom: 1px solid #dee2e6;">
                             <td style="border: 1px solid #dee2e6; padding: 10px;">${fullName}</td>
@@ -1959,7 +1985,13 @@
                                 <span style="padding: 4px 8px; border-radius: 4px; font-size: 12px; background-color: ${isAdmin ? '#dc3545' : '#007bff'}; color: white;">${roleDisplay}</span>
                             </td>
                             <td style="border: 1px solid #dee2e6; padding: 10px;">
-                                <span style="padding: 4px 8px; border-radius: 4px; font-size: 12px; background-color: ${statusColor}; color: white;">${statusText}</span>
+                                <span style="padding: 4px 8px; border-radius: 4px; font-size: 12px; background-color: ${statusColor}; color: white;">${profile.status}</span>
+                            </td>
+                            <td style="border: 1px solid #dee2e6; padding: 10px;">
+                                <input type="text" value="${notesValue}" 
+                                       onblur="updateUserNotes('${userId}', this.value)"
+                                       style="width: 100%; border: none; background: transparent; font-size: 12px; padding: 4px;"
+                                       placeholder="Add notes...">
                             </td>
                             <td style="border: 1px solid #dee2e6; padding: 10px; text-align: center;">${totalActivity} items</td>
                             <td style="border: 1px solid #dee2e6; padding: 10px;">${registeredDate}</td>
@@ -2624,27 +2656,42 @@ User Data Summary:
 
         window.deleteAccount = async function() {
             try {
-                // Delete all user data first
-                await window.supabaseClient.from('dope_engagements').delete().eq('user_id', window.currentUser.id);
-                await window.supabaseClient.from('ballistic_sessions').delete().eq('user_id', window.currentUser.id);
-                await window.supabaseClient.from('bullet_library').delete().eq('user_id', window.currentUser.id);
-                await window.supabaseClient.from('firearm_profile').delete().eq('user_id', window.currentUser.id);
+                console.log('Starting account deletion process...');
                 
-                // Delete auth user (note: this might require admin privileges)
-                const { error } = await window.supabaseClient.auth.admin.deleteUser(window.currentUser.id);
+                // Delete all user data from all tables
+                const deletions = [
+                    window.supabase.from('ballistic_sessions').delete().eq('user_id', window.currentUser.id),
+                    window.supabase.from('bullet_library').delete().eq('user_id', window.currentUser.id),
+                    window.supabase.from('dope_engagements').delete().eq('user_id', window.currentUser.id),
+                    window.supabase.from('firearm_profile').delete().eq('user_id', window.currentUser.id),
+                    window.supabase.from('library_shares').delete().eq('user_id', window.currentUser.id),
+                    window.supabase.from('library_shares').delete().eq('shared_with_user_id', window.currentUser.id),
+                    window.supabase.from('user_preferences').delete().eq('user_id', window.currentUser.id),
+                    window.supabase.from('user_profile').delete().eq('user_id', window.currentUser.id)
+                ];
                 
-                if (error) {
-                    console.error('Error deleting account:', error);
-                    alert('Error deleting account. Please contact support.');
-                    return;
+                // Execute all deletions
+                const results = await Promise.allSettled(deletions);
+                
+                // Check for any errors
+                const failures = results.filter(result => result.status === 'rejected');
+                if (failures.length > 0) {
+                    console.error('Some data deletion failed:', failures);
                 }
                 
-                alert('Account deleted successfully. You will now be logged out.');
-                logout();
+                console.log('User data deleted successfully');
+                
+                // Log out the user (this will effectively "delete" their session)
+                await window.supabase.auth.signOut();
+                
+                alert('Account data deleted successfully. You have been logged out.');
+                
+                // Redirect to home and refresh
+                window.location.href = '/';
                 
             } catch (error) {
                 console.error('Error deleting account:', error);
-                alert('Error deleting account. Please contact support.');
+                alert('Error deleting account data. Please try again or contact support.');
             }
         };
 
