@@ -1747,10 +1747,10 @@
                     { data: dopeData, error: dopeError },
                     { data: zeroProfiles, error: zeroError }
                 ] = await Promise.all([
-                    supabase.from('bullet_library').select('user_id, created_at').limit(1000),
-                    supabase.from('firearm_profile').select('user_id, created_at').limit(1000),
-                    supabase.from('dope_sessions').select('user_id, created_at').limit(1000),
-                    supabase.from('zero_profiles').select('user_id, created_at').limit(1000)
+                    window.supabase.from('bullet_library').select('user_id, created_at').limit(1000),
+                    window.supabase.from('firearm_profile').select('user_id, created_at').limit(1000),
+                    window.supabase.from('dope_sessions').select('user_id, created_at').limit(1000),
+                    window.supabase.from('zero_profiles').select('user_id, created_at').limit(1000)
                 ]);
                 
                 // Aggregate user activity data
@@ -1875,10 +1875,10 @@
                     { data: dopeData },
                     { data: zeroProfiles }
                 ] = await Promise.all([
-                    supabase.from('bullet_library').select('*').eq('user_id', userId),
-                    supabase.from('firearm_profile').select('*').eq('user_id', userId),
-                    supabase.from('dope_sessions').select('*').eq('user_id', userId),
-                    supabase.from('zero_profiles').select('*').eq('user_id', userId)
+                    window.supabase.from('bullet_library').select('*').eq('user_id', userId),
+                    window.supabase.from('firearm_profile').select('*').eq('user_id', userId),
+                    window.supabase.from('dope_sessions').select('*').eq('user_id', userId),
+                    window.supabase.from('zero_profiles').select('*').eq('user_id', userId)
                 ]);
                 
                 const modalHTML = `
@@ -1948,10 +1948,10 @@
                     { data: dopeData },
                     { data: zeroProfiles }
                 ] = await Promise.all([
-                    supabase.from('bullet_library').select('*').eq('user_id', userId),
-                    supabase.from('firearm_profile').select('*').eq('user_id', userId),
-                    supabase.from('dope_sessions').select('*').eq('user_id', userId),
-                    supabase.from('zero_profiles').select('*').eq('user_id', userId)
+                    window.supabase.from('bullet_library').select('*').eq('user_id', userId),
+                    window.supabase.from('firearm_profile').select('*').eq('user_id', userId),
+                    window.supabase.from('dope_sessions').select('*').eq('user_id', userId),
+                    window.supabase.from('zero_profiles').select('*').eq('user_id', userId)
                 ]);
 
                 const exportData = {
@@ -3167,8 +3167,9 @@ User Data Summary:
                 supabaseKey
             );
             
-            // Make supabase globally accessible for DOPE functions
+            // Make supabase globally accessible for all functions
             window.supabaseClient = supabase;
+            window.supabase = supabase;
 
             let editSessionId = null;
             let currentUser = null;
@@ -3182,10 +3183,11 @@ User Data Summary:
                     document.getElementById('loginForm').style.display = 'none';
                     document.getElementById('appContent').style.display = 'block';
                     
-                    // Wait for DOM to be ready before checking admin access
+                    // Check admin access immediately and also after a delay
+                    checkAdminAccess(); // Show admin panel button if user is admin
                     setTimeout(() => {
-                        checkAdminAccess(); // Show admin panel button if user is admin
-                    }, 500);
+                        checkAdminAccess(); // Double-check to ensure button appears
+                    }, 1000);
                 } else {
                     document.getElementById('loginForm').style.display = 'block';
                     document.getElementById('appContent').style.display = 'none';
