@@ -510,6 +510,11 @@
                         ⚙️ Setup
                         <div style="font-size: 0.9em; margin-top: 5px; opacity: 0.9;">Account, sharing, and preferences</div>
                     </button>
+                    
+                    <button id="adminPanelButton" class="home-nav-button" onclick="showAdminPanel()" style="background-color: #dc3545; color: white; padding: 20px 30px; font-size: 1.1em; border: none; border-radius: 8px; cursor: pointer; min-width: 200px; display: none;">
+                        🛡️ Admin Panel
+                        <div style="font-size: 0.9em; margin-top: 5px; opacity: 0.9;">User management and approval</div>
+                    </button>
                 </div>
             </div>
         </div>
@@ -922,6 +927,25 @@
                 </table>
                 <div id="noDopeMessage" style="text-align: center; padding: 20px; color: #666;">
                     No engagements logged yet. Click "Log New Engagement" to get started!
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin Panel Section -->
+        <div id="adminPanel" style="display: none;">
+            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+                <button onclick="showHomePage()" style="background-color: #6c757d; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer;">🏠 Home</button>
+                <h2 style="margin: 0;">Admin Panel - User Management</h2>
+            </div>
+            
+            <div style="background-color: white; padding: 20px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 20px;">
+                <h3>User Approval Management</h3>
+                <div style="margin-bottom: 15px;">
+                    <button onclick="loadAllUsers()" style="background-color: #007bff; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; margin-right: 10px;">Refresh Users</button>
+                    <span id="userCount" style="color: #666; font-size: 14px;"></span>
+                </div>
+                <div id="userApprovalContent">
+                    <p>Loading user approval data...</p>
                 </div>
             </div>
         </div>
@@ -1629,6 +1653,179 @@
                 if (content) {
                     content.innerHTML = '<p>Error loading bullets. Please try again.</p>';
                 }
+            }
+        };
+
+        // Check if user is admin and show admin panel button
+        function checkAdminAccess() {
+            const adminButton = document.getElementById('adminPanelButton');
+            if (currentUser && currentUser.id === '5df728ad-7154-4744-994a-d89bd3040946') {
+                adminButton.style.display = 'block';
+                console.log('Admin access granted - showing admin panel button');
+            } else {
+                adminButton.style.display = 'none';
+            }
+        }
+
+        // Admin Panel Functions
+        window.showAdminPanel = async function() {
+            console.log('showAdminPanel function called');
+            
+            // Check if current user is admin
+            if (!currentUser || currentUser.id !== '5df728ad-7154-4744-994a-d89bd3040946') {
+                alert('Access denied. Admin privileges required.');
+                return;
+            }
+            
+            // Hide all other sections
+            const hideElement = (id) => {
+                const element = document.getElementById(id);
+                if (element) element.style.display = 'none';
+            };
+            hideElement('homePage');
+            hideElement('shootingProfileSection');
+            hideElement('bulletLibrarySection');
+            hideElement('firearmLibrary');
+            hideElement('dopeSection');
+            hideElement('setupSection');
+            hideElement('activeBulletLibrary');
+            hideElement('activeFirearmLibrary');
+            hideElement('activeDopeSection');
+            hideElement('activeSetupSection');
+            
+            // Show admin panel
+            document.getElementById('adminPanel').style.display = 'block';
+            
+            // Load user data
+            await loadAllUsers();
+        };
+
+        window.loadAllUsers = async function() {
+            try {
+                console.log('Loading all users for admin panel');
+                
+                // Get all users from Supabase auth
+                const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
+                
+                if (authError) {
+                    console.error('Error loading auth users:', authError);
+                    document.getElementById('userApprovalContent').innerHTML = '<p style="color: red;">Error loading users. Admin API access may be required.</p>';
+                    return;
+                }
+                
+                const userApprovalContent = document.getElementById('userApprovalContent');
+                const userCount = document.getElementById('userCount');
+                
+                if (!authUsers || authUsers.users.length === 0) {
+                    userApprovalContent.innerHTML = '<p>No users found.</p>';
+                    userCount.textContent = 'Total users: 0';
+                    return;
+                }
+                
+                userCount.textContent = `Total users: ${authUsers.users.length}`;
+                
+                let tableHTML = `
+                    <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <thead>
+                            <tr style="background-color: #f8f9fa; border-bottom: 2px solid #dee2e6;">
+                                <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left; font-weight: bold;">Email</th>
+                                <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left; font-weight: bold;">Name</th>
+                                <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left; font-weight: bold;">Status</th>
+                                <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left; font-weight: bold;">Created</th>
+                                <th style="border: 1px solid #dee2e6; padding: 12px; text-align: center; font-weight: bold;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                
+                authUsers.users.forEach(user => {
+                    const isAdmin = user.id === '5df728ad-7154-4744-994a-d89bd3040946';
+                    const status = isAdmin ? 'Admin' : 'Active';
+                    const createdDate = new Date(user.created_at).toLocaleDateString();
+                    const userName = user.user_metadata?.full_name || user.user_metadata?.first_name || 'N/A';
+                    
+                    tableHTML += `
+                        <tr style="border-bottom: 1px solid #dee2e6;">
+                            <td style="border: 1px solid #dee2e6; padding: 10px;">${user.email || 'N/A'}</td>
+                            <td style="border: 1px solid #dee2e6; padding: 10px;">${userName}</td>
+                            <td style="border: 1px solid #dee2e6; padding: 10px;">
+                                <span style="padding: 4px 8px; border-radius: 4px; font-size: 12px; ${isAdmin ? 'background-color: #dc3545; color: white;' : 'background-color: #28a745; color: white;'}">${status}</span>
+                            </td>
+                            <td style="border: 1px solid #dee2e6; padding: 10px;">${createdDate}</td>
+                            <td style="border: 1px solid #dee2e6; padding: 10px; text-align: center;">
+                                ${isAdmin ? 
+                                    '<span style="color: #666; font-size: 12px;">Admin Account</span>' : 
+                                    `<button onclick="revokeUserAccess('${user.id}')" style="background-color: #dc3545; color: white; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; margin-right: 5px;">Revoke</button>
+                                     <button onclick="viewUserData('${user.id}')" style="background-color: #007bff; color: white; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer;">View Data</button>`
+                                }
+                            </td>
+                        </tr>
+                    `;
+                });
+                
+                tableHTML += '</tbody></table>';
+                userApprovalContent.innerHTML = tableHTML;
+                
+                console.log('User table rendered successfully');
+                
+            } catch (error) {
+                console.error('Error in loadAllUsers:', error);
+                document.getElementById('userApprovalContent').innerHTML = '<p style="color: red;">Error loading users. Please check console for details.</p>';
+            }
+        };
+
+        window.revokeUserAccess = async function(userId) {
+            if (!confirm('Are you sure you want to revoke access for this user? This will prevent them from logging in.')) {
+                return;
+            }
+            
+            try {
+                // Delete user from Supabase auth
+                const { error } = await supabase.auth.admin.deleteUser(userId);
+                
+                if (error) {
+                    console.error('Error revoking user access:', error);
+                    alert('Error revoking user access. Admin API permissions may be required.');
+                    return;
+                }
+                
+                alert('User access revoked successfully.');
+                await loadAllUsers(); // Refresh the list
+                
+            } catch (error) {
+                console.error('Error in revokeUserAccess:', error);
+                alert('Error revoking user access. Please try again.');
+            }
+        };
+
+        window.viewUserData = async function(userId) {
+            try {
+                // Get user's data from various tables
+                const [
+                    { data: bullets },
+                    { data: firearms },
+                    { data: dopeData },
+                    { data: zeroProfiles }
+                ] = await Promise.all([
+                    supabase.from('bullet_library').select('*').eq('user_id', userId),
+                    supabase.from('firearm_profile').select('*').eq('user_id', userId),
+                    supabase.from('dope_sessions').select('*').eq('user_id', userId),
+                    supabase.from('zero_profiles').select('*').eq('user_id', userId)
+                ]);
+                
+                const summary = `
+User Data Summary:
+• Bullets: ${bullets?.length || 0}
+• Firearms: ${firearms?.length || 0} 
+• DOPE Sessions: ${dopeData?.length || 0}
+• Zero Profiles: ${zeroProfiles?.length || 0}
+                `;
+                
+                alert(summary);
+                
+            } catch (error) {
+                console.error('Error viewing user data:', error);
+                alert('Error loading user data.');
             }
         };
 
@@ -2773,6 +2970,7 @@
                     window.currentUser = session.user; // Ensure global access
                     document.getElementById('loginForm').style.display = 'none';
                     document.getElementById('appContent').style.display = 'block';
+                    checkAdminAccess(); // Show admin panel button if user is admin
                 } else {
                     document.getElementById('loginForm').style.display = 'block';
                     document.getElementById('appContent').style.display = 'none';
