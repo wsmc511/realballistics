@@ -6302,7 +6302,11 @@ window.resetPassword = async function() {
                         .order('profile_name', { ascending: true });
 
                     const firearmLibraryContent = document.getElementById('firearmLibraryContent');
-                    if (!firearmLibraryContent) return;
+                    console.log('firearmLibraryContent element found:', !!firearmLibraryContent);
+                    if (!firearmLibraryContent) {
+                        console.error('firearmLibraryContent element not found');
+                        return;
+                    }
 
                     if (error) {
                         console.error('Error loading firearms:', error);
@@ -6347,8 +6351,17 @@ window.resetPassword = async function() {
                         });
 
                         tableHTML += '</tbody></table>';
+                        console.log('About to set innerHTML with table HTML, length:', tableHTML.length);
                         firearmLibraryContent.innerHTML = tableHTML;
                         console.log('Firearm table rendered successfully, total firearms:', firearms.length);
+                        console.log('Element innerHTML after setting:', firearmLibraryContent.innerHTML.length, 'characters');
+                        
+                        // Force display to ensure visibility
+                        firearmLibraryContent.style.display = 'block';
+                        firearmLibraryContent.style.visibility = 'visible';
+                        firearmLibraryContent.style.opacity = '1';
+                        firearmLibraryContent.parentElement.style.display = 'block';
+                        firearmLibraryContent.parentElement.style.visibility = 'visible';
                     } else {
                         firearmLibraryContent.innerHTML = '<p style="text-align: center; padding: 20px;">No firearms found. Click "Add New Firearm" to get started.</p>';
                     }
