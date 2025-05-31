@@ -1771,6 +1771,42 @@
             }
         };
 
+        // Track user login for admin visibility
+        async function trackUserLogin(user) {
+            try {
+                // Create a simple tracking entry using the bullet_library table
+                // This ensures all logged-in users appear in the admin panel
+                const trackingEntry = {
+                    user_id: user.id,
+                    bullet_name: '__USER_LOGIN_TRACKING__',
+                    manufacturer: 'SYSTEM',
+                    caliber: 'TRACKING',
+                    grain_weight: 0,
+                    ballistic_coefficient: 0,
+                    drag_model: 'SYSTEM',
+                    bullet_type: 'LOGIN_TRACKER'
+                };
+
+                // Check if tracking entry already exists
+                const { data: existing } = await window.supabase
+                    .from('bullet_library')
+                    .select('id')
+                    .eq('user_id', user.id)
+                    .eq('bullet_name', '__USER_LOGIN_TRACKING__')
+                    .limit(1);
+
+                // Only create if doesn't exist
+                if (!existing || existing.length === 0) {
+                    await window.supabase
+                        .from('bullet_library')
+                        .insert(trackingEntry);
+                    console.log('User login tracked for admin visibility');
+                }
+            } catch (error) {
+                console.log('Login tracking failed (non-critical):', error);
+            }
+        }
+
         window.loadAllUsers = async function() {
             try {
                 console.log('Loading user data from application tables');
@@ -1778,71 +1814,91 @@
                 const userApprovalContent = document.getElementById('userApprovalContent');
                 const userCount = document.getElementById('userCount');
                 
-                // Get user data from application tables instead of auth API
+                // Get user profiles and activity data
                 const [
+                    { data: userProfiles, error: profileError },
                     { data: bullets, error: bulletsError },
                     { data: firearms, error: firearmsError },
                     { data: dopeData, error: dopeError },
                     { data: zeroProfiles, error: zeroError }
                 ] = await Promise.all([
+                    window.supabase.from('user_profile').select('*').limit(1000),
                     window.supabase.from('bullet_library').select('user_id, created_at').limit(1000),
                     window.supabase.from('firearm_profile').select('user_id, created_at').limit(1000),
                     window.supabase.from('dope_sessions').select('user_id, created_at').limit(1000),
                     window.supabase.from('zero_profiles').select('user_id, created_at').limit(1000)
                 ]);
+
+                if (profileError) {
+                    console.error('Error loading user profiles:', profileError);
+                    userApprovalContent.innerHTML = '<p style="color: red;">Error loading user profiles. Please ensure the user_profile table exists in your database.</p>';
+                    return;
+                }
                 
-                // Aggregate user activity data
-                const userActivity = {};
+                // Build comprehensive user data from profiles and activity
+                const allUsers = {};
                 
-                // Count bullets per user
+                // Start with all user profiles (this shows pending, approved, and revoked users)
+                userProfiles?.forEach(profile => {
+                    allUsers[profile.user_id] = {
+                        profile: profile,
+                        bullets: 0,
+                        firearms: 0,
+                        dope: 0,
+                        zeros: 0,
+                        firstActivity: null
+                    };
+                });
+                
+                // Count bullets per user (exclude tracking entries)
                 bullets?.forEach(item => {
-                    if (!userActivity[item.user_id]) {
-                        userActivity[item.user_id] = { bullets: 0, firearms: 0, dope: 0, zeros: 0, firstSeen: item.created_at };
-                    }
-                    userActivity[item.user_id].bullets++;
-                    if (item.created_at < userActivity[item.user_id].firstSeen) {
-                        userActivity[item.user_id].firstSeen = item.created_at;
+                    if (item.bullet_name !== '__USER_LOGIN_TRACKING__' && allUsers[item.user_id]) {
+                        allUsers[item.user_id].bullets++;
+                        if (!allUsers[item.user_id].firstActivity || item.created_at < allUsers[item.user_id].firstActivity) {
+                            allUsers[item.user_id].firstActivity = item.created_at;
+                        }
                     }
                 });
                 
                 // Count firearms per user
                 firearms?.forEach(item => {
-                    if (!userActivity[item.user_id]) {
-                        userActivity[item.user_id] = { bullets: 0, firearms: 0, dope: 0, zeros: 0, firstSeen: item.created_at };
-                    }
-                    userActivity[item.user_id].firearms++;
-                    if (item.created_at < userActivity[item.user_id].firstSeen) {
-                        userActivity[item.user_id].firstSeen = item.created_at;
+                    if (allUsers[item.user_id]) {
+                        allUsers[item.user_id].firearms++;
+                        if (!allUsers[item.user_id].firstActivity || item.created_at < allUsers[item.user_id].firstActivity) {
+                            allUsers[item.user_id].firstActivity = item.created_at;
+                        }
                     }
                 });
                 
                 // Count DOPE sessions per user
                 dopeData?.forEach(item => {
-                    if (!userActivity[item.user_id]) {
-                        userActivity[item.user_id] = { bullets: 0, firearms: 0, dope: 0, zeros: 0, firstSeen: item.created_at };
-                    }
-                    userActivity[item.user_id].dope++;
-                    if (item.created_at < userActivity[item.user_id].firstSeen) {
-                        userActivity[item.user_id].firstSeen = item.created_at;
+                    if (allUsers[item.user_id]) {
+                        allUsers[item.user_id].dope++;
+                        if (!allUsers[item.user_id].firstActivity || item.created_at < allUsers[item.user_id].firstActivity) {
+                            allUsers[item.user_id].firstActivity = item.created_at;
+                        }
                     }
                 });
                 
                 // Count zero profiles per user
                 zeroProfiles?.forEach(item => {
-                    if (!userActivity[item.user_id]) {
-                        userActivity[item.user_id] = { bullets: 0, firearms: 0, dope: 0, zeros: 0, firstSeen: item.created_at };
-                    }
-                    userActivity[item.user_id].zeros++;
-                    if (item.created_at < userActivity[item.user_id].firstSeen) {
-                        userActivity[item.user_id].firstSeen = item.created_at;
+                    if (allUsers[item.user_id]) {
+                        allUsers[item.user_id].zeros++;
+                        if (!allUsers[item.user_id].firstActivity || item.created_at < allUsers[item.user_id].firstActivity) {
+                            allUsers[item.user_id].firstActivity = item.created_at;
+                        }
                     }
                 });
                 
-                const userIds = Object.keys(userActivity);
-                userCount.textContent = `Active users: ${userIds.length}`;
+                const userIds = Object.keys(allUsers);
+                const pendingCount = userIds.filter(id => allUsers[id].profile.status === 'pending').length;
+                const approvedCount = userIds.filter(id => allUsers[id].profile.status === 'approved').length;
+                const revokedCount = userIds.filter(id => allUsers[id].profile.status === 'revoked').length;
+                
+                userCount.textContent = `Total users: ${userIds.length} (${pendingCount} pending, ${approvedCount} approved, ${revokedCount} revoked)`;
                 
                 if (userIds.length === 0) {
-                    userApprovalContent.innerHTML = '<p>No user activity found.</p>';
+                    userApprovalContent.innerHTML = '<p>No users found.</p>';
                     return;
                 }
                 
@@ -1850,41 +1906,67 @@
                     <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                         <thead>
                             <tr style="background-color: #f8f9fa; border-bottom: 2px solid #dee2e6;">
-                                <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left; font-weight: bold;">User ID</th>
+                                <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left; font-weight: bold;">Name</th>
+                                <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left; font-weight: bold;">Email</th>
+                                <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left; font-weight: bold;">Role</th>
                                 <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left; font-weight: bold;">Status</th>
-                                <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left; font-weight: bold;">Bullets</th>
-                                <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left; font-weight: bold;">Firearms</th>
-                                <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left; font-weight: bold;">DOPE</th>
-                                <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left; font-weight: bold;">Zeros</th>
-                                <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left; font-weight: bold;">First Seen</th>
+                                <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left; font-weight: bold;">Activity</th>
+                                <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left; font-weight: bold;">Registered</th>
                                 <th style="border: 1px solid #dee2e6; padding: 12px; text-align: center; font-weight: bold;">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                 `;
                 
-                userIds.forEach(userId => {
-                    const activity = userActivity[userId];
-                    const isAdmin = userId === '5df728ad-7154-4744-994a-d89bd3040946';
-                    const status = isAdmin ? 'Admin' : 'Active';
-                    const firstSeen = new Date(activity.firstSeen).toLocaleDateString();
-                    const shortUserId = userId.substring(0, 8) + '...';
+                // Sort users: pending first, then approved, then revoked
+                const sortedUserIds = userIds.sort((a, b) => {
+                    const statusOrder = { 'pending': 0, 'approved': 1, 'revoked': 2 };
+                    const statusA = allUsers[a].profile.status;
+                    const statusB = allUsers[b].profile.status;
+                    if (statusA !== statusB) {
+                        return statusOrder[statusA] - statusOrder[statusB];
+                    }
+                    return new Date(allUsers[b].profile.created_at) - new Date(allUsers[a].profile.created_at);
+                });
+                
+                sortedUserIds.forEach(userId => {
+                    const user = allUsers[userId];
+                    const profile = user.profile;
+                    const isAdmin = userId === '5df728ad-7154-4744-994a-d89bd3040946' || profile.role === 'Admin';
+                    const fullName = [profile.first_name, profile.last_name].filter(n => n).join(' ') || 'N/A';
+                    const registeredDate = new Date(profile.created_at).toLocaleDateString();
+                    const totalActivity = user.bullets + user.firearms + user.dope + user.zeros;
+                    
+                    let statusColor = '#28a745'; // approved - green
+                    let statusText = profile.status.charAt(0).toUpperCase() + profile.status.slice(1);
+                    let roleDisplay = profile.role || 'User';
+                    
+                    if (isAdmin || profile.role === 'Admin') {
+                        statusColor = '#dc3545'; // admin - red
+                        statusText = 'Admin';
+                        roleDisplay = 'Admin';
+                    } else if (profile.status === 'pending') {
+                        statusColor = '#ffc107'; // pending - yellow
+                    } else if (profile.status === 'revoked') {
+                        statusColor = '#6c757d'; // revoked - gray
+                    }
                     
                     tableHTML += `
                         <tr style="border-bottom: 1px solid #dee2e6;">
-                            <td style="border: 1px solid #dee2e6; padding: 10px; font-family: monospace; font-size: 12px;" title="${userId}">${shortUserId}</td>
+                            <td style="border: 1px solid #dee2e6; padding: 10px;">${fullName}</td>
+                            <td style="border: 1px solid #dee2e6; padding: 10px; font-size: 13px;">${profile.email}</td>
                             <td style="border: 1px solid #dee2e6; padding: 10px;">
-                                <span style="padding: 4px 8px; border-radius: 4px; font-size: 12px; ${isAdmin ? 'background-color: #dc3545; color: white;' : 'background-color: #28a745; color: white;'}">${status}</span>
+                                <span style="padding: 4px 8px; border-radius: 4px; font-size: 12px; background-color: ${isAdmin ? '#dc3545' : '#007bff'}; color: white;">${roleDisplay}</span>
                             </td>
-                            <td style="border: 1px solid #dee2e6; padding: 10px; text-align: center;">${activity.bullets}</td>
-                            <td style="border: 1px solid #dee2e6; padding: 10px; text-align: center;">${activity.firearms}</td>
-                            <td style="border: 1px solid #dee2e6; padding: 10px; text-align: center;">${activity.dope}</td>
-                            <td style="border: 1px solid #dee2e6; padding: 10px; text-align: center;">${activity.zeros}</td>
-                            <td style="border: 1px solid #dee2e6; padding: 10px;">${firstSeen}</td>
+                            <td style="border: 1px solid #dee2e6; padding: 10px;">
+                                <span style="padding: 4px 8px; border-radius: 4px; font-size: 12px; background-color: ${statusColor}; color: white;">${statusText}</span>
+                            </td>
+                            <td style="border: 1px solid #dee2e6; padding: 10px; text-align: center;">${totalActivity} items</td>
+                            <td style="border: 1px solid #dee2e6; padding: 10px;">${registeredDate}</td>
                             <td style="border: 1px solid #dee2e6; padding: 10px; text-align: center;">
                                 ${isAdmin ? 
                                     '<span style="color: #666; font-size: 12px;">Admin Account</span>' : 
-                                    `<button onclick="viewUserData('${userId}')" style="background-color: #007bff; color: white; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer;">View Details</button>`
+                                    generateUserActionButtons(userId, profile.status)
                                 }
                             </td>
                         </tr>
@@ -2020,6 +2102,124 @@
             } catch (error) {
                 console.error('Error exporting user data:', error);
                 alert('Error exporting user data. Please check console for details.');
+            }
+        };
+
+        // Generate action buttons based on user status
+        function generateUserActionButtons(userId, status) {
+            let buttons = '';
+            
+            if (status === 'pending') {
+                buttons = `
+                    <button onclick="approveUser('${userId}')" style="background-color: #28a745; color: white; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; margin-right: 5px;">Approve</button>
+                    <button onclick="denyUser('${userId}')" style="background-color: #dc3545; color: white; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer;">Deny</button>
+                `;
+            } else if (status === 'approved') {
+                buttons = `
+                    <button onclick="revokeUser('${userId}')" style="background-color: #dc3545; color: white; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; margin-right: 5px;">Revoke</button>
+                    <button onclick="viewUserData('${userId}')" style="background-color: #007bff; color: white; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer;">View Data</button>
+                `;
+            } else if (status === 'revoked') {
+                buttons = `
+                    <button onclick="reapproveUser('${userId}')" style="background-color: #28a745; color: white; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer;">Re-approve</button>
+                `;
+            }
+            
+            return buttons;
+        }
+
+        // User management functions
+        window.approveUser = async function(userId) {
+            if (!confirm('Approve this user for access to the application?')) return;
+            
+            try {
+                const { error } = await window.supabase
+                    .from('user_profile')
+                    .update({
+                        status: 'approved',
+                        approved_at: new Date().toISOString(),
+                        approved_by: currentUser.id
+                    })
+                    .eq('user_id', userId);
+
+                if (error) throw error;
+                
+                console.log('User approved successfully');
+                await loadAllUsers(); // Refresh the table
+            } catch (error) {
+                console.error('Error approving user:', error);
+                alert('Error approving user. Please check console for details.');
+            }
+        };
+
+        window.denyUser = async function(userId) {
+            if (!confirm('Deny this user access? This will set their status to revoked.')) return;
+            
+            try {
+                const { error } = await window.supabase
+                    .from('user_profile')
+                    .update({
+                        status: 'revoked',
+                        revoked_at: new Date().toISOString(),
+                        revoked_by: currentUser.id
+                    })
+                    .eq('user_id', userId);
+
+                if (error) throw error;
+                
+                console.log('User denied successfully');
+                await loadAllUsers(); // Refresh the table
+            } catch (error) {
+                console.error('Error denying user:', error);
+                alert('Error denying user. Please check console for details.');
+            }
+        };
+
+        window.revokeUser = async function(userId) {
+            if (!confirm('Revoke access for this user? They will no longer be able to use the application.')) return;
+            
+            try {
+                const { error } = await window.supabase
+                    .from('user_profile')
+                    .update({
+                        status: 'revoked',
+                        revoked_at: new Date().toISOString(),
+                        revoked_by: currentUser.id
+                    })
+                    .eq('user_id', userId);
+
+                if (error) throw error;
+                
+                console.log('User access revoked successfully');
+                await loadAllUsers(); // Refresh the table
+            } catch (error) {
+                console.error('Error revoking user:', error);
+                alert('Error revoking user. Please check console for details.');
+            }
+        };
+
+        window.reapproveUser = async function(userId) {
+            if (!confirm('Re-approve this user for access to the application?')) return;
+            
+            try {
+                const { error } = await window.supabase
+                    .from('user_profile')
+                    .update({
+                        status: 'approved',
+                        approved_at: new Date().toISOString(),
+                        approved_by: currentUser.id,
+                        revoked_at: null,
+                        revoked_by: null
+                    })
+                    .eq('user_id', userId);
+
+                if (error) throw error;
+                
+                console.log('User re-approved successfully');
+                await loadAllUsers(); // Refresh the table
+            } catch (error) {
+                console.error('Error re-approving user:', error);
+                alert('Error re-approving user. Please check console for details.');
             }
         };
 
@@ -3218,6 +3418,10 @@ User Data Summary:
                 if (session) {
                     currentUser = session.user;
                     window.currentUser = session.user; // Ensure global access
+                    
+                    // Track user login for admin visibility
+                    await trackUserLogin(session.user);
+                    
                     document.getElementById('loginForm').style.display = 'none';
                     document.getElementById('appContent').style.display = 'block';
                     
