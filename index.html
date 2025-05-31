@@ -1795,6 +1795,76 @@
             }
         };
 
+        window.completeDeletion = async function(userId) {
+            if (!confirm('Are you sure you want to permanently delete this user account? This action cannot be undone and will:\n\n• Remove all user data from application tables\n• Delete the user from authentication\n• Permanently remove their account\n\nContinue?')) {
+                return;
+            }
+            
+            try {
+                console.log('Starting complete user deletion for:', userId);
+                
+                // Delete all user data from all tables
+                const deletions = [
+                    window.supabase.from('ballistic_sessions').delete().eq('user_id', userId),
+                    window.supabase.from('bullet_library').delete().eq('user_id', userId),
+                    window.supabase.from('dope_engagements').delete().eq('user_id', userId),
+                    window.supabase.from('firearm_profile').delete().eq('user_id', userId),
+                    window.supabase.from('library_shares').delete().eq('user_id', userId),
+                    window.supabase.from('library_shares').delete().eq('shared_with_user_id', userId),
+                    window.supabase.from('user_preferences').delete().eq('user_id', userId),
+                    window.supabase.from('user_profile').delete().eq('user_id', userId)
+                ];
+                
+                // Execute all data deletions
+                await Promise.allSettled(deletions);
+                
+                // Delete user from Supabase auth (admin function)
+                const { error } = await window.supabase.auth.admin.deleteUser(userId);
+                
+                if (error) {
+                    console.error('Error deleting auth user:', error);
+                    alert('User data deleted but could not remove from authentication. Please check admin permissions.');
+                } else {
+                    alert('User account completely deleted successfully.');
+                }
+                
+                await loadAllUsers(); // Refresh the list
+                
+            } catch (error) {
+                console.error('Error in completeDeletion:', error);
+                alert('Error deleting user account. Please try again.');
+            }
+        };
+
+        window.cancelDeletion = async function(userId) {
+            if (!confirm('Cancel the deletion request for this user? They will be restored to approved status.')) {
+                return;
+            }
+            
+            try {
+                const { error } = await window.supabase
+                    .from('user_profile')
+                    .update({ 
+                        status: 'approved',
+                        notes: 'Deletion request cancelled by admin on ' + new Date().toLocaleDateString()
+                    })
+                    .eq('user_id', userId);
+                
+                if (error) {
+                    console.error('Error cancelling deletion request:', error);
+                    alert('Error cancelling deletion request. Please try again.');
+                    return;
+                }
+                
+                alert('Deletion request cancelled. User restored to approved status.');
+                await loadAllUsers(); // Refresh the list
+                
+            } catch (error) {
+                console.error('Error in cancelDeletion:', error);
+                alert('Error cancelling deletion request. Please try again.');
+            }
+        };
+
         // Track user login for admin visibility
         async function trackUserLogin(user) {
             try {
@@ -1963,7 +2033,7 @@
                     const totalActivity = user.bullets + user.firearms + user.dope + user.zeros;
                     
                     let statusColor = '#28a745'; // approved - green
-                    let statusText = profile.status.charAt(0).toUpperCase() + profile.status.slice(1);
+                    let statusText = profile.status;
                     let roleDisplay = profile.role || 'User';
                     
                     if (isAdmin || profile.role === 'Admin') {
@@ -1974,6 +2044,9 @@
                         statusColor = '#ffc107'; // pending - yellow
                     } else if (profile.status === 'revoked') {
                         statusColor = '#6c757d'; // revoked - gray
+                    } else if (profile.status === 'deletion_requested') {
+                        statusColor = '#e74c3c'; // deletion requested - red
+                        statusText = 'Deletion Requested';
                     }
                     
                     const notesValue = profile.notes || '';
@@ -1998,7 +2071,27 @@
                             <td style="border: 1px solid #dee2e6; padding: 10px; text-align: center;">
                                 ${isAdmin ? 
                                     '<span style="color: #666; font-size: 12px;">Admin Account</span>' : 
-                                    generateUserActionButtons(userId, profile.status)
+                                    (function(status) {
+                                        if (status === 'pending') {
+                                            return `
+                                                <button onclick="approveUser('${userId}')" style="background: #28a745; color: white; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; margin-right: 5px; font-size: 12px;">Approve</button>
+                                                <button onclick="revokeUserAccess('${userId}')" style="background: #dc3545; color: white; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Deny</button>
+                                            `;
+                                        } else if (status === 'approved') {
+                                            return `
+                                                <button onclick="revokeUserAccess('${userId}')" style="background: #dc3545; color: white; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; margin-right: 5px; font-size: 12px;">Revoke</button>
+                                                <button onclick="viewUserData('${userId}')" style="background: #17a2b8; color: white; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">View Data</button>
+                                            `;
+                                        } else if (status === 'revoked') {
+                                            return `<button onclick="approveUser('${userId}')" style="background: #28a745; color: white; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Re-approve</button>`;
+                                        } else if (status === 'deletion_requested') {
+                                            return `
+                                                <button onclick="completeDeletion('${userId}')" style="background: #e74c3c; color: white; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; margin-right: 5px; font-size: 12px;">Complete Deletion</button>
+                                                <button onclick="cancelDeletion('${userId}')" style="background: #6c757d; color: white; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Cancel Request</button>
+                                            `;
+                                        }
+                                        return '<span style="color: #666; font-size: 12px;">No actions</span>';
+                                    })(profile.status)
                                 }
                             </td>
                         </tr>
@@ -2656,42 +2749,34 @@ User Data Summary:
 
         window.deleteAccount = async function() {
             try {
-                console.log('Starting account deletion process...');
+                console.log('Requesting account deletion...');
                 
-                // Delete all user data from all tables
-                const deletions = [
-                    window.supabase.from('ballistic_sessions').delete().eq('user_id', window.currentUser.id),
-                    window.supabase.from('bullet_library').delete().eq('user_id', window.currentUser.id),
-                    window.supabase.from('dope_engagements').delete().eq('user_id', window.currentUser.id),
-                    window.supabase.from('firearm_profile').delete().eq('user_id', window.currentUser.id),
-                    window.supabase.from('library_shares').delete().eq('user_id', window.currentUser.id),
-                    window.supabase.from('library_shares').delete().eq('shared_with_user_id', window.currentUser.id),
-                    window.supabase.from('user_preferences').delete().eq('user_id', window.currentUser.id),
-                    window.supabase.from('user_profile').delete().eq('user_id', window.currentUser.id)
-                ];
+                // Set user status to deletion_requested
+                const { error } = await window.supabase
+                    .from('user_profile')
+                    .update({ 
+                        status: 'deletion_requested',
+                        notes: 'User requested account deletion on ' + new Date().toLocaleDateString()
+                    })
+                    .eq('user_id', window.currentUser.id);
                 
-                // Execute all deletions
-                const results = await Promise.allSettled(deletions);
-                
-                // Check for any errors
-                const failures = results.filter(result => result.status === 'rejected');
-                if (failures.length > 0) {
-                    console.error('Some data deletion failed:', failures);
+                if (error) {
+                    console.error('Error requesting account deletion:', error);
+                    alert('Error requesting account deletion. Please try again or contact support.');
+                    return;
                 }
                 
-                console.log('User data deleted successfully');
+                alert('Account deletion requested successfully. Your request has been sent to administrators for review. You will be contacted once the deletion is processed.');
                 
-                // Log out the user (this will effectively "delete" their session)
+                // Log out the user
                 await window.supabase.auth.signOut();
                 
-                alert('Account data deleted successfully. You have been logged out.');
-                
-                // Redirect to home and refresh
+                // Redirect to home
                 window.location.href = '/';
                 
             } catch (error) {
-                console.error('Error deleting account:', error);
-                alert('Error deleting account data. Please try again or contact support.');
+                console.error('Error requesting account deletion:', error);
+                alert('Error requesting account deletion. Please try again or contact support.');
             }
         };
 
