@@ -1732,16 +1732,20 @@
             
             if (adminPanel) {
                 adminPanel.style.display = 'block';
-                console.log('Admin panel set to display block');
+                adminPanel.style.position = 'relative';
+                adminPanel.style.zIndex = '1000';
+                adminPanel.style.background = 'white';
+                adminPanel.style.minHeight = '100vh';
+                console.log('Admin panel set to display block with forced styles');
             } else {
                 console.error('Admin panel element not found - creating it');
                 // Create admin panel if it doesn't exist
                 const adminPanelHTML = `
-                    <div id="adminPanel" style="display: block; padding: 20px; background: white; min-height: 100vh;">
+                    <div id="adminPanel" style="display: block !important; position: fixed; top: 0; left: 0; width: 100%; height: 100%; padding: 20px; background: white; z-index: 10000; overflow-y: auto;">
                         <div style="max-width: 1200px; margin: 0 auto;">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 3px solid #dc3545; padding-bottom: 15px;">
                                 <h1 style="margin: 0; color: #dc3545;">🛡️ Admin Panel</h1>
-                                <button onclick="showHomePage()" style="background: #6c757d; color: white; padding: 12px 24px; border: none; border-radius: 6px; cursor: pointer; font-size: 16px;">← Back to Home</button>
+                                <button onclick="hideAdminPanel()" style="background: #6c757d; color: white; padding: 12px 24px; border: none; border-radius: 6px; cursor: pointer; font-size: 16px;">✕ Close</button>
                             </div>
                             
                             <div style="margin-bottom: 20px; padding: 20px; background-color: #f8f9fa; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
@@ -1757,10 +1761,18 @@
                 `;
                 
                 document.body.insertAdjacentHTML('beforeend', adminPanelHTML);
+                console.log('Admin panel HTML created and added to body');
             }
             
             // Load user data
             await loadAllUsers();
+        };
+
+        window.hideAdminPanel = function() {
+            const adminPanel = document.getElementById('adminPanel');
+            if (adminPanel) {
+                adminPanel.remove();
+            }
         };
 
         window.loadAllUsers = async function() {
