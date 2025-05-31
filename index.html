@@ -6372,6 +6372,14 @@ window.resetPassword = async function() {
                     const resultsElement = document.getElementById('firearmResults');
                     console.log('firearmResults element:', resultsElement);
                     console.log('firearmResults parent:', resultsElement?.parentElement);
+                    
+                    // Make sure the parent container is visible
+                    const parentElement = resultsElement.parentElement;
+                    if (parentElement) {
+                        parentElement.style.display = 'block';
+                        console.log('Fixed parent display to block');
+                    }
+                    
                     resultsElement.innerHTML = firearmHTML;
                     console.log('Firearm table rendered successfully');
                     console.log('Element content length:', resultsElement?.innerHTML?.length);
