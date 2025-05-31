@@ -6410,6 +6410,17 @@ window.resetPassword = async function() {
                     console.log('Firearm table rendered successfully');
                     console.log('Element content length:', resultsElement?.innerHTML?.length);
                     console.log('Element display style:', getComputedStyle(resultsElement)?.display);
+                    
+                    // Check parent visibility
+                    const parentElement = resultsElement.parentElement;
+                    console.log('Parent display style:', getComputedStyle(parentElement)?.display);
+                    console.log('Parent visibility:', getComputedStyle(parentElement)?.visibility);
+                    console.log('Parent height:', getComputedStyle(parentElement)?.height);
+                    
+                    // Check if the activeFirearmLibrary section is visible
+                    const activeSection = document.getElementById('activeFirearmLibrary');
+                    console.log('activeFirearmLibrary section:', activeSection);
+                    console.log('activeFirearmLibrary display:', getComputedStyle(activeSection)?.display);
                 } catch (error) {
                     console.error('Error loading firearms:', error);
                     document.getElementById('firearmResults').innerHTML = '<p>Error loading firearm profiles.</p>';
