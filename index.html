@@ -5440,8 +5440,16 @@ window.resetPassword = async function() {
                 if (currentPickerTarget === 'bullet') {
                     document.getElementById('bullet_caliber_direct').value = caliberName;
                 } else if (currentPickerTarget === 'firearm') {
-                    // Will implement firearm caliber selection later
-                    console.log('Selected firearm caliber:', caliberName);
+                    // Handle both new and edit forms
+                    const newFormField = document.getElementById('firearm_caliber');
+                    const editFormField = document.getElementById('edit_firearm_caliber');
+                    
+                    if (newFormField) {
+                        newFormField.value = caliberName;
+                    }
+                    if (editFormField) {
+                        editFormField.value = caliberName;
+                    }
                 }
                 
                 closeCaliberPicker();
@@ -6190,29 +6198,10 @@ window.resetPassword = async function() {
                                 </div>
                                 <div>
                                     <label style="display: block; margin-bottom: 5px; font-weight: bold;">Caliber:</label>
-                                    <select name="caliber" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" required>
-                                        <option value="">Select Caliber</option>
-                                        <option value=".223 Rem">.223 Rem</option>
-                                        <option value="5.56 NATO">5.56 NATO</option>
-                                        <option value=".308 Win">.308 Win</option>
-                                        <option value="7.62 NATO">7.62 NATO</option>
-                                        <option value="6.5 Creedmoor">6.5 Creedmoor</option>
-                                        <option value=".300 Blackout">.300 Blackout</option>
-                                        <option value=".30-06 Springfield">.30-06 Springfield</option>
-                                        <option value=".22 LR">.22 LR</option>
-                                        <option value=".243 Win">.243 Win</option>
-                                        <option value="7.62x39mm">7.62x39mm</option>
-                                        <option value="6.8 SPC">6.8 SPC</option>
-                                        <option value=".338 Lapua Magnum">.338 Lapua Magnum</option>
-                                        <option value="9mm Luger">9mm Luger</option>
-                                        <option value=".45 ACP">.45 ACP</option>
-                                        <option value=".40 S&W">.40 S&W</option>
-                                        <option value=".380 ACP">.380 ACP</option>
-                                        <option value=".357 Magnum">.357 Magnum</option>
-                                        <option value=".38 Special">.38 Special</option>
-                                        <option value="10mm Auto">10mm Auto</option>
-                                        <option value=".44 Magnum">.44 Magnum</option>
-                                    </select>
+                                    <div style="display: flex; gap: 10px; align-items: center;">
+                                        <input type="text" id="firearm_caliber" name="caliber" placeholder="Selected caliber will appear here" readonly style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: #f8f9fa;" required>
+                                        <button type="button" onclick="showCaliberPicker('firearm')" style="padding: 8px 15px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">Select Caliber</button>
+                                    </div>
                                 </div>
                                 <div>
                                     <label style="display: block; margin-bottom: 5px; font-weight: bold;">Barrel Length (inches):</label>
@@ -6283,30 +6272,10 @@ window.resetPassword = async function() {
                                 </div>
                                 <div>
                                     <label style="display: block; margin-bottom: 5px; font-weight: bold;">Caliber:</label>
-                                    <select id="edit_firearm_caliber" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-                                        <option value="">Select Caliber</option>
-                                        <option value=".223 Rem">.223 Rem</option>
-                                        <option value="5.56 NATO">5.56 NATO</option>
-                                        <option value=".308 Win">.308 Win</option>
-                                        <option value="7.62 NATO">7.62 NATO</option>
-                                        <option value="6.5 Creedmoor">6.5 Creedmoor</option>
-                                        <option value=".300 Blackout">.300 Blackout</option>
-                                        <option value=".30-06 Springfield">.30-06 Springfield</option>
-                                        <option value=".22 LR">.22 LR</option>
-                                        <option value=".243 Win">.243 Win</option>
-                                        <option value="7.62x39mm">7.62x39mm</option>
-                                        <option value="6.8 SPC">6.8 SPC</option>
-                                        <option value=".338 Lapua Magnum">.338 Lapua Magnum</option>
-                                        <option value="9mm Luger">9mm Luger</option>
-                                        <option value=".45 ACP">.45 ACP</option>
-                                        <option value=".40 S&W">.40 S&W</option>
-                                        <option value=".380 ACP">.380 ACP</option>
-                                        <option value=".357 Magnum">.357 Magnum</option>
-                                        <option value=".38 Special">.38 Special</option>
-                                        <option value="10mm Auto">10mm Auto</option>
-                                        <option value=".44 Magnum">.44 Magnum</option>
-                                    </select>
-                                </div>
+                                    <div style="display: flex; gap: 10px; align-items: center;">
+                                        <input type="text" id="edit_firearm_caliber" placeholder="Selected caliber will appear here" readonly style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: #f8f9fa;">
+                                        <button type="button" onclick="showCaliberPicker('firearm')" style="padding: 8px 15px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">Select Caliber</button>
+                                    </div>
                                 <div>
                                     <label style="display: block; margin-bottom: 5px; font-weight: bold;">Barrel Length (inches):</label>
                                     <input type="number" id="edit_firearm_barrel_length" step="0.1" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
