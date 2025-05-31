@@ -1795,6 +1795,128 @@
             }
         };
 
+        // Helper function to check access and run a function
+        window.checkAccessAndRun = async function(fn) {
+            if (await checkUserAccess()) {
+                fn();
+            }
+        };
+
+        // Protect data operations - add access check to all save functions
+        const originalFunctions = {};
+
+        // Store original functions and wrap with access checks
+        function protectFunction(functionName) {
+            if (window[functionName]) {
+                originalFunctions[functionName] = window[functionName];
+                window[functionName] = async function(...args) {
+                    if (await checkUserAccess()) {
+                        return originalFunctions[functionName].apply(this, args);
+                    }
+                };
+            }
+        }
+
+        // Apply protection when DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                // Protect all major data operations
+                protectFunction('saveBulletToLibrary');
+                protectFunction('saveFirearmProfile');
+                protectFunction('saveDOPERecord');
+                protectFunction('calculateTrajectory');
+                protectFunction('addBulletToLibrary');
+                protectFunction('addFirearmToLibrary');
+                protectFunction('loadBulletLibrary');
+                protectFunction('loadFirearmLibrary');
+                protectFunction('showBulletLibrary');
+                protectFunction('showFirearmLibrary');
+                protectFunction('showDOPE');
+                protectFunction('showShootingProfile');
+                console.log('Access protection applied to major functions');
+            }, 1000);
+        });
+
+        // Check if user has access to the application
+        async function checkUserAccess() {
+            if (!currentUser) {
+                alert('Please log in to access this feature.');
+                return false;
+            }
+            
+            try {
+                const { data: profile } = await window.supabase
+                    .from('user_profile')
+                    .select('status, subscription_status, subscription_expires_at')
+                    .eq('user_id', currentUser.id)
+                    .single();
+                
+                if (!profile) {
+                    alert('Account profile not found. Access denied. Please contact support.');
+                    await window.supabase.auth.signOut();
+                    return false;
+                }
+                
+                // Block access for pending accounts
+                if (profile.status === 'pending') {
+                    alert('Your account is pending approval. Please wait for administrator approval.');
+                    return false;
+                }
+                
+                // Block access for revoked accounts
+                if (profile.status === 'revoked') {
+                    alert('Your account access has been revoked. Please contact support.');
+                    await window.supabase.auth.signOut();
+                    return false;
+                }
+                
+                // Block access for deleted accounts
+                if (profile.status === 'deletion_requested') {
+                    alert('Your account deletion is pending. You cannot access the application.');
+                    await window.supabase.auth.signOut();
+                    return false;
+                }
+                
+                // Only allow approved accounts to continue
+                if (profile.status !== 'approved') {
+                    alert('Your account is not approved for access.');
+                    return false;
+                }
+                
+                // Check subscription status
+                if (profile.subscription_status === 'expired') {
+                    alert('Your subscription has expired. Please renew to continue using the application.');
+                    return false;
+                }
+                
+                if (profile.subscription_status === 'cancelled') {
+                    alert('Your subscription has been cancelled. Please subscribe to continue using the application.');
+                    return false;
+                }
+                
+                if (profile.subscription_status === 'suspended') {
+                    alert('Your subscription has been suspended. Please contact support.');
+                    return false;
+                }
+                
+                // Check trial expiration
+                if (profile.subscription_status === 'trial' && profile.subscription_expires_at) {
+                    const expirationDate = new Date(profile.subscription_expires_at);
+                    if (expirationDate < new Date()) {
+                        alert('Your free trial has expired. Please subscribe to continue using the application.');
+                        return false;
+                    }
+                }
+                
+                return true;
+                
+            } catch (error) {
+                console.error('Error checking user access:', error);
+                alert('Unable to verify account access. Please try again.');
+                return false;
+            }
+        }
+
         window.completeDeletion = async function(userId) {
             if (!confirm('Are you sure you want to permanently delete this user account? This action cannot be undone and will:\n\n• Remove all user data from application tables\n• Delete the user from authentication\n• Permanently remove their account\n\nContinue?')) {
                 return;
