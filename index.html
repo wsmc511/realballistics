@@ -2770,7 +2770,6 @@
                 const { data: { session } } = await supabase.auth.getSession();
                 if (session) {
                     currentUser = session.user;
-                    document.getElementById('userEmail').textContent = `Logged in as: ${currentUser.email}`;
                     document.getElementById('loginForm').style.display = 'none';
                     document.getElementById('appContent').style.display = 'block';
                 } else {
