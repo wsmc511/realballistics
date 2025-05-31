@@ -5947,7 +5947,7 @@ window.resetPassword = async function() {
                         .eq('user_id', currentUser.id)
                         .order('profile_name', { ascending: true });
 
-                    console.log('Firearms loaded:', firearms, 'Error:', firearmError);
+                    console.log('Firearms loaded for dropdowns:', firearms, 'Error:', firearmError);
 
                     if (!firearmError && firearms) {
                         const firearmSelect = document.getElementById('zeroFirearmSelect');
@@ -6325,8 +6325,10 @@ window.resetPassword = async function() {
             };
 
             window.loadFirearmProfiles = async function() {
+                console.log('loadFirearmProfiles called, currentUser:', currentUser);
                 try {
                     if (!currentUser) {
+                        console.log('No currentUser found in loadFirearmProfiles');
                         document.getElementById('firearmResults').innerHTML = '<p>Please log in to view your firearm profiles.</p>';
                         return;
                     }
