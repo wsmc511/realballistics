@@ -479,10 +479,6 @@
     </div>
 
     <div id="appContent">
-        <div class="user-info">
-            <span id="userEmail"></span>
-            <button class="logout" onclick="logout()">Logout</button>
-        </div>
         <!-- Home Page Section -->
         <div id="homePage" style="display: block;">
             <div style="text-align: center; padding: 40px 20px;">
@@ -1754,6 +1750,15 @@
                     <div id="accountTab">
                         <h3 style="margin-top: 0;">Account Management</h3>
                         
+                        <div style="background-color: #e3f2fd; padding: 15px; border-radius: 4px; margin-bottom: 20px; border: 1px solid #2196f3;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                                <div>
+                                    <strong>Logged in as:</strong> <span id="currentUserEmail" style="color: #1976d2;"></span>
+                                </div>
+                                <button onclick="logout()" style="background-color: #dc3545; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer;">Logout</button>
+                            </div>
+                        </div>
+                        
                         <div style="margin-bottom: 20px;">
                             <label style="display: block; margin-bottom: 5px; font-weight: bold;">Email Address:</label>
                             <input type="email" id="profileEmail" readonly style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: #f8f9fa;">
@@ -1836,13 +1841,12 @@
             // Load user data for account tab
             if (tabName === 'account') {
                 loadUserProfile();
-            } else if (tabName === 'preferences') {
-                // Only load preferences if this is the first time opening the tab and user isn't editing
-                if (!window.preferencesLoaded && !window.userEditingPreferences) {
-                    setTimeout(() => {
-                        loadUserPreferences();
-                        window.preferencesLoaded = true;
-                    }, 100);
+                // Also populate the current user email display
+                if (window.currentUser && window.currentUser.email) {
+                    const currentUserEmailSpan = document.getElementById('currentUserEmail');
+                    if (currentUserEmailSpan) {
+                        currentUserEmailSpan.textContent = window.currentUser.email;
+                    }
                 }
             } else if (tabName === 'sharing') {
                 loadSharingData();
