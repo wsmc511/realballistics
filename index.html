@@ -6339,6 +6339,8 @@ window.resetPassword = async function() {
                         .eq('user_id', currentUser.id)
                         .order('profile_name', { ascending: true });
 
+                    console.log('Firearm query result:', { firearms, error, userID: currentUser.id });
+
                     if (error) {
                         console.error('Error loading firearm profiles:', error);
                         document.getElementById('firearmResults').innerHTML = '<p>Error loading firearm profiles. Please ensure the firearm_profile table exists in your database.</p>';
@@ -6346,9 +6348,12 @@ window.resetPassword = async function() {
                     }
 
                     if (!firearms || firearms.length === 0) {
+                        console.log('No firearms found or empty array');
                         document.getElementById('firearmResults').innerHTML = '<p>No firearm profiles found. Click "Add New Firearm" to create your first profile.</p>';
                         return;
                     }
+
+                    console.log('About to render', firearms.length, 'firearms');
 
                     // Create table header
                     let firearmHTML = `
@@ -6397,7 +6402,9 @@ window.resetPassword = async function() {
                         </table>
                     `;
 
+                    console.log('Setting innerHTML with firearm table');
                     document.getElementById('firearmResults').innerHTML = firearmHTML;
+                    console.log('Firearm table rendered successfully');
                 } catch (error) {
                     console.error('Error loading firearms:', error);
                     document.getElementById('firearmResults').innerHTML = '<p>Error loading firearm profiles.</p>';
