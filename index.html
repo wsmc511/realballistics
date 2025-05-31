@@ -6097,10 +6097,20 @@ window.resetPassword = async function() {
                 hideElement('activeBulletLibrary');
                 hideElement('activeDopeSection');
                 
-                // Create Firearm Library content
+                // Create Firearm Library content  
                 const appContent = document.getElementById('appContent');
+                
+                // Check if activeFirearmLibrary already exists and remove it
+                const existingSection = document.getElementById('activeFirearmLibrary');
+                if (existingSection) {
+                    existingSection.remove();
+                }
+                
                 const firearmContent = document.createElement('div');
                 firearmContent.id = 'activeFirearmLibrary';
+                firearmContent.style.display = 'block';
+                firearmContent.style.position = 'relative';
+                firearmContent.style.zIndex = '1';
                 firearmContent.innerHTML = `
                     <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
                         <button onclick="showHomePage()" style="background-color: #6c757d; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer;">🏠 Home</button>
@@ -6355,52 +6365,29 @@ window.resetPassword = async function() {
 
                     console.log('About to render', firearms.length, 'firearms');
 
-                    // Create table header
+                    // Use simple HTML first to test visibility
                     let firearmHTML = `
-                        <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                            <thead>
-                                <tr style="background-color: #f8f9fa; border-bottom: 2px solid #dee2e6;">
-                                    <th style="padding: 12px; text-align: left; font-weight: 600; color: #495057;">Profile</th>
-                                    <th style="padding: 12px; text-align: left; font-weight: 600; color: #495057;">Shooter</th>
-                                    <th style="padding: 12px; text-align: left; font-weight: 600; color: #495057;">Type</th>
-                                    <th style="padding: 12px; text-align: left; font-weight: 600; color: #495057;">Firearm</th>
-                                    <th style="padding: 12px; text-align: left; font-weight: 600; color: #495057;">Caliber</th>
-                                    <th style="padding: 12px; text-align: left; font-weight: 600; color: #495057;">Barrel</th>
-                                    <th style="padding: 12px; text-align: left; font-weight: 600; color: #495057;">Twist</th>
-                                    <th style="padding: 12px; text-align: left; font-weight: 600; color: #495057;">Optic</th>
-                                    <th style="padding: 12px; text-align: left; font-weight: 600; color: #495057;">Zero</th>
-                                    <th style="padding: 12px; text-align: left; font-weight: 600; color: #495057;">HOB</th>
-                                    <th style="padding: 12px; text-align: left; font-weight: 600; color: #495057;">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
+                        <div style="background: red; padding: 20px; margin: 20px; border: 5px solid black; font-size: 24px; font-weight: bold;">
+                            TEST: Found ${firearms.length} firearm profiles
+                        </div>
+                        <div style="background: white; padding: 20px; border: 1px solid #ddd;">
                     `;
 
-                    // Add table rows
-                    firearmHTML += firearms.map((firearm, index) => `
-                        <tr style="border-bottom: 1px solid #dee2e6; ${index % 2 === 0 ? 'background-color: #fff;' : 'background-color: #f8f9fa;'}">
-                            <td style="padding: 12px; color: #007bff; font-weight: 500;">${firearm.profile_name}</td>
-                            <td style="padding: 12px; color: #495057;">${firearm.shooter_name}</td>
-                            <td style="padding: 12px; color: #495057;">${firearm.firearm_type}</td>
-                            <td style="padding: 12px; color: #495057;">${firearm.firearm_name}</td>
-                            <td style="padding: 12px; color: #495057;">${firearm.caliber}</td>
-                            <td style="padding: 12px; color: #495057;">${firearm.barrel_length ? firearm.barrel_length + '"' : '-'}</td>
-                            <td style="padding: 12px; color: #495057;">${firearm.barrel_twist_rate || '-'}</td>
-                            <td style="padding: 12px; color: #495057;">${firearm.optic_name || '-'}</td>
-                            <td style="padding: 12px; color: #495057;">${firearm.zero_distance ? firearm.zero_distance + 'yds' : '-'}</td>
-                            <td style="padding: 12px; color: #495057;">${firearm.height_over_bore ? firearm.height_over_bore + '"' : '-'}</td>
-                            <td style="padding: 12px;">
-                                <button onclick="editFirearm('${firearm.id}')" style="background-color: #17a2b8; color: white; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; margin-right: 5px; font-size: 0.875rem;">Edit</button>
-                                <button onclick="deleteFirearm('${firearm.id}')" style="background-color: #dc3545; color: white; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 0.875rem;">Delete</button>
-                            </td>
-                        </tr>
-                    `).join('');
+                    // Add simple list instead of table
+                    firearms.forEach((firearm, index) => {
+                        firearmHTML += `
+                            <div style="border: 2px solid blue; margin: 10px 0; padding: 15px; background: ${index % 2 === 0 ? '#f0f0f0' : '#ffffff'};">
+                                <h4 style="color: red; font-size: 18px;">${firearm.profile_name}</h4>
+                                <p style="font-size: 16px;"><strong>Shooter:</strong> ${firearm.shooter_name}</p>
+                                <p style="font-size: 16px;"><strong>Firearm:</strong> ${firearm.firearm_name} (${firearm.firearm_type})</p>
+                                <p style="font-size: 16px;"><strong>Caliber:</strong> ${firearm.caliber}</p>
+                                <button onclick="editFirearm('${firearm.id}')" style="background-color: #17a2b8; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; margin-right: 10px; font-size: 14px;">Edit</button>
+                                <button onclick="deleteFirearm('${firearm.id}')" style="background-color: #dc3545; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">Delete</button>
+                            </div>
+                        `;
+                    });
 
-                    // Close table
-                    firearmHTML += `
-                            </tbody>
-                        </table>
-                    `;
+                    firearmHTML += `</div>`;
 
                     console.log('Setting innerHTML with firearm table');
                     const resultsElement = document.getElementById('firearmResults');
