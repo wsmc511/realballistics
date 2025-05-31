@@ -6424,7 +6424,15 @@ window.resetPassword = async function() {
                         console.log('Fixed parent display to block');
                     }
                     
+                    // Force clear any existing content and styles
+                    resultsElement.innerHTML = '';
+                    resultsElement.style.cssText = 'display: block !important; visibility: visible !important; position: static !important; z-index: 999 !important;';
+                    
+                    // Set the content
                     resultsElement.innerHTML = firearmHTML;
+                    
+                    // Force browser to render
+                    resultsElement.offsetHeight;
                     console.log('Firearm table rendered successfully');
                     console.log('Element content length:', resultsElement?.innerHTML?.length);
                     console.log('Element display style:', getComputedStyle(resultsElement)?.display);
