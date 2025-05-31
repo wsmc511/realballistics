@@ -940,7 +940,6 @@
             <!-- Tab Navigation -->
             <div class="setup-tabs" style="display: flex; margin-bottom: 20px; border-bottom: 2px solid #ddd;">
                 <button class="setup-tab active" onclick="showSetupTab('account')" data-tab="account" style="flex: 1; padding: 10px; border: none; background: #007BFF; color: white; cursor: pointer;">Account</button>
-                <button class="setup-tab" onclick="showSetupTab('preferences')" data-tab="preferences" style="flex: 1; padding: 10px; border: none; background: #f8f9fa; color: #333; cursor: pointer;">Preferences</button>
                 <button class="setup-tab" onclick="showSetupTab('sharing')" data-tab="sharing" style="flex: 1; padding: 10px; border: none; background: #f8f9fa; color: #333; cursor: pointer;">Sharing</button>
             </div>
 
@@ -1683,7 +1682,6 @@
                     <!-- Tab Navigation -->
                     <div style="border-bottom: 2px solid #ddd; margin-bottom: 20px;">
                         <button onclick="showSetupTab('account')" id="accountTabBtn" class="setup-tab-btn" style="padding: 10px 20px; margin-right: 10px; border: none; background: #007bff; color: white; border-radius: 4px 4px 0 0; cursor: pointer;">Account</button>
-                        <button onclick="showSetupTab('preferences')" id="preferencesTabBtn" class="setup-tab-btn" style="padding: 10px 20px; margin-right: 10px; border: none; background: #6c757d; color: white; border-radius: 4px 4px 0 0; cursor: pointer;">Preferences</button>
                         <button onclick="showSetupTab('sharing')" id="sharingTabBtn" class="setup-tab-btn" style="padding: 10px 20px; border: none; background: #6c757d; color: white; border-radius: 4px 4px 0 0; cursor: pointer;">Sharing</button>
                     </div>
                     
@@ -1786,75 +1784,6 @@
                             <button onclick="changePassword()" style="background-color: #28a745; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; margin-right: 10px;">Update Password</button>
                             <button onclick="cancelChangePassword()" style="background-color: #6c757d; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer;">Cancel</button>
                         </div>
-                    </div>
-                `;
-            } else if (tabName === 'preferences') {
-                content = `
-                    <div id="preferencesTab">
-                        <h3 style="margin-top: 0;">User Preferences</h3>
-                        
-                        <div style="margin-bottom: 20px;">
-                            <label style="display: block; margin-bottom: 10px;">
-                                <input type="checkbox" id="darkModeToggle" style="margin-right: 8px;">
-                                Enable Dark Mode
-                            </label>
-                        </div>
-                        
-                        <div style="margin-bottom: 20px;">
-                            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Default Distance Unit:</label>
-                            <select id="defaultDistanceUnit" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-                                <option value="yards">Yards</option>
-                                <option value="meters">Meters</option>
-                            </select>
-                        </div>
-                        
-                        <div style="margin-bottom: 20px;">
-                            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Default Velocity Unit:</label>
-                            <select id="defaultVelocityUnit" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-                                <option value="fps">Feet per Second (fps)</option>
-                                <option value="mps">Meters per Second (m/s)</option>
-                            </select>
-                        </div>
-                        
-                        <div style="margin-bottom: 20px;">
-                            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Default Temperature:</label>
-                            <div style="display: flex; gap: 10px;">
-                                <input type="number" id="defaultTemperature" step="1" min="-50" max="150" style="flex: 2; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-                                <select id="defaultTemperatureUnit" style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-                                    <option value="F">°F</option>
-                                    <option value="C">°C</option>
-                                </select>
-                            </div>
-                        </div>
-                        
-                        <div style="margin-bottom: 20px;">
-                            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Default Humidity (%):</label>
-                            <input type="number" id="defaultHumidity" step="1" min="0" max="100" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" oninput="window.userEditingPreferences = true; window.lastHumidityValue = this.value; console.log('Humidity input changed to:', this.value);" onchange="window.lastHumidityValue = this.value; console.log('Humidity changed event:', this.value);" onblur="window.lastHumidityValue = this.value; console.log('Humidity blur event:', this.value);">
-                        </div>
-                        
-                        <div style="margin-bottom: 20px;">
-                            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Default Pressure:</label>
-                            <div style="display: flex; gap: 10px;">
-                                <input type="number" id="defaultPressure" step="0.01" min="20" max="35" style="flex: 2; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" oninput="window.userEditingPreferences = true; window.lastPressureValue = this.value; console.log('Pressure input changed to:', this.value);" onchange="window.lastPressureValue = this.value; console.log('Pressure changed event:', this.value);">
-                                <select id="defaultPressureUnit" style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-                                    <option value="inHg">inHg</option>
-                                    <option value="mb">mb</option>
-                                </select>
-                            </div>
-                        </div>
-                        
-                        <div style="margin-bottom: 20px;">
-                            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Default Altitude:</label>
-                            <div style="display: flex; gap: 10px;">
-                                <input type="number" id="defaultAltitude" step="1" min="-1000" max="15000" style="flex: 2; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" oninput="window.userEditingPreferences = true; window.lastAltitudeValue = this.value; console.log('Altitude input changed to:', this.value);" onchange="window.lastAltitudeValue = this.value; console.log('Altitude changed event:', this.value);">
-                                <select id="defaultAltitudeReference" style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-                                    <option value="ASL">Above Sea Level</option>
-                                    <option value="BSL">Below Sea Level</option>
-                                </select>
-                            </div>
-                        </div>
-                        
-                        <button onclick="savePreferences()" style="background-color: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer;">Save Preferences</button>
                     </div>
                 `;
             } else if (tabName === 'sharing') {
@@ -5385,6 +5314,13 @@ window.resetPassword = async function() {
                     
                     currentCaliberData = data;
                     displayCaliberData(data);
+                    
+                    // Populate the type filter dropdown with actual types from the data
+                    const typeFilter = document.getElementById('caliberTypeFilter');
+                    const uniqueTypes = [...new Set(data.map(caliber => caliber.bullet_type || caliber.firearm_type))].sort();
+                    
+                    typeFilter.innerHTML = '<option value="">All Types</option>' + 
+                        uniqueTypes.map(type => `<option value="${type}">${type}</option>`).join('');
                     
                 } catch (error) {
                     console.error('Error in loadCaliberData:', error);
