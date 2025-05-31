@@ -3511,7 +3511,7 @@ window.resetPassword = async function() {
                                 self.postMessage({ log: 'Iteration ' + i + ': Angle=' + angle.toFixed(12) + ', y at ' + inputs.zero_distance + 'yd=' + y.toFixed(12) });
                             }
 
-                            if (Math.abs(y) < 0.00001) {
+                            if (Math.abs(y) < 0.01) {
                                 converged = true;
                                 break;
                             }
@@ -3558,7 +3558,7 @@ window.resetPassword = async function() {
                                     self.postMessage({ log: 'Fallback Iteration ' + i + ': Angle=' + angle.toFixed(12) + ', y at ' + inputs.zero_distance + 'yd=' + y.toFixed(12) });
                                 }
 
-                                if (Math.abs(y) < 0.00001) {
+                                if (Math.abs(y) < 0.01) {
                                     converged = true;
                                     break;
                                 }
