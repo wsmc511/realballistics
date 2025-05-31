@@ -6403,8 +6403,13 @@ window.resetPassword = async function() {
                     `;
 
                     console.log('Setting innerHTML with firearm table');
-                    document.getElementById('firearmResults').innerHTML = firearmHTML;
+                    const resultsElement = document.getElementById('firearmResults');
+                    console.log('firearmResults element:', resultsElement);
+                    console.log('firearmResults parent:', resultsElement?.parentElement);
+                    resultsElement.innerHTML = firearmHTML;
                     console.log('Firearm table rendered successfully');
+                    console.log('Element content length:', resultsElement?.innerHTML?.length);
+                    console.log('Element display style:', getComputedStyle(resultsElement)?.display);
                 } catch (error) {
                     console.error('Error loading firearms:', error);
                     document.getElementById('firearmResults').innerHTML = '<p>Error loading firearm profiles.</p>';
