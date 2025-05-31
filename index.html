@@ -1659,11 +1659,20 @@
         // Check if user is admin and show admin panel button
         function checkAdminAccess() {
             const adminButton = document.getElementById('adminPanelButton');
-            if (currentUser && currentUser.id === '5df728ad-7154-4744-994a-d89bd3040946') {
+            console.log('checkAdminAccess called - adminButton found:', !!adminButton);
+            console.log('currentUser:', currentUser);
+            console.log('currentUser.id:', currentUser?.id);
+            
+            if (adminButton && currentUser && currentUser.id === '5df728ad-7154-4744-994a-d89bd3040946') {
                 adminButton.style.display = 'block';
+                adminButton.style.visibility = 'visible';
                 console.log('Admin access granted - showing admin panel button');
+                console.log('Admin button display style:', adminButton.style.display);
             } else {
-                adminButton.style.display = 'none';
+                if (adminButton) {
+                    adminButton.style.display = 'none';
+                }
+                console.log('Admin access denied or button not found');
             }
         }
 
@@ -2970,7 +2979,11 @@ User Data Summary:
                     window.currentUser = session.user; // Ensure global access
                     document.getElementById('loginForm').style.display = 'none';
                     document.getElementById('appContent').style.display = 'block';
-                    checkAdminAccess(); // Show admin panel button if user is admin
+                    
+                    // Wait for DOM to be ready before checking admin access
+                    setTimeout(() => {
+                        checkAdminAccess(); // Show admin panel button if user is admin
+                    }, 500);
                 } else {
                     document.getElementById('loginForm').style.display = 'block';
                     document.getElementById('appContent').style.display = 'none';
