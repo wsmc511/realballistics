@@ -9303,7 +9303,7 @@ window.resetPassword = async function() {
             const buttons = Array.from(buttonContainer.querySelectorAll('.home-nav-button'));
             
             // Find buttons by their onclick functions
-            let firearmBtn, bulletBtn, zeroBtn, dopeBtn, setupBtn;
+            let firearmBtn, bulletBtn, zeroBtn, dopeBtn, setupBtn, adminBtn;
             
             buttons.forEach(btn => {
                 const onclick = btn.getAttribute('onclick');
@@ -9312,17 +9312,19 @@ window.resetPassword = async function() {
                 else if (onclick && onclick.includes('showZeroProfile')) zeroBtn = btn;
                 else if (onclick && onclick.includes('showDOPE')) dopeBtn = btn;
                 else if (onclick && onclick.includes('showSetup')) setupBtn = btn;
+                else if (onclick && onclick.includes('showAdminPanel')) adminBtn = btn;
             });
             
             // Remove all buttons
             buttons.forEach(btn => btn.remove());
             
-            // Add them back in the correct order: Firearm, Bullet, Zero, DOPE, Setup
+            // Add them back in the correct order: Firearm, Bullet, Zero, DOPE, Setup, Admin
             if (firearmBtn) buttonContainer.appendChild(firearmBtn);
             if (bulletBtn) buttonContainer.appendChild(bulletBtn);
             if (zeroBtn) buttonContainer.appendChild(zeroBtn);
             if (dopeBtn) buttonContainer.appendChild(dopeBtn);
             if (setupBtn) buttonContainer.appendChild(setupBtn);
+            if (adminBtn) buttonContainer.appendChild(adminBtn);
         }
         
         // Run fixes on page load
