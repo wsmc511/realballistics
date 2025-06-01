@@ -1663,12 +1663,15 @@
             console.log('currentUser.id:', currentUser?.id);
             
             const adminButton = document.getElementById('adminPanelButton');
+            console.log('Admin button element found:', adminButton);
             
             if (currentUser && currentUser.id === '5df728ad-7154-4744-994a-d89bd3040946') {
                 console.log('Admin access granted - showing admin button');
                 if (adminButton) {
                     adminButton.style.display = 'block';
                     console.log('Admin button is now visible');
+                } else {
+                    console.log('ERROR: Admin button element not found in DOM');
                 }
             } else {
                 console.log('Admin access denied - hiding admin button');
