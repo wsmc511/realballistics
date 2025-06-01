@@ -6857,6 +6857,12 @@ window.resetPassword = async function() {
                         return;
                     }
 
+                    // Check user access before loading any data
+                    const hasAccess = await checkUserAccess();
+                    if (!hasAccess) {
+                        return;
+                    }
+
                     console.log('Current user:', currentUser.id);
 
                     // Load firearm library data
@@ -6980,7 +6986,13 @@ window.resetPassword = async function() {
             // Old duplicate functions have been removed
 
             // Zero Profile Functions
-            window.showZeroProfile = function() {
+            window.showZeroProfile = async function() {
+                // Check user access before showing the page
+                const hasAccess = await checkUserAccess();
+                if (!hasAccess) {
+                    return;
+                }
+
                 document.getElementById('homePage').style.display = 'none';
                 document.getElementById('shootingProfileSection').style.display = 'block';
                 
