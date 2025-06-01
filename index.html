@@ -1665,31 +1665,34 @@
             if (currentUser && currentUser.id === '5df728ad-7154-4744-994a-d89bd3040946') {
                 console.log('Admin access granted - creating admin panel button');
                 
-                // Find the home navigation buttons container
-                const navContainer = document.querySelector('.home-nav-button').parentElement;
-                console.log('Navigation container found:', !!navContainer);
-                
-                // Check if admin button already exists
-                let adminButton = document.getElementById('adminPanelButton');
-                
-                if (!adminButton && navContainer) {
-                    // Create admin button dynamically
-                    adminButton = document.createElement('button');
-                    adminButton.id = 'adminPanelButton';
-                    adminButton.className = 'home-nav-button';
-                    adminButton.onclick = showAdminPanel;
-                    adminButton.style.cssText = 'background-color: #dc3545; color: white; padding: 20px 30px; font-size: 1.1em; border: none; border-radius: 8px; cursor: pointer; min-width: 200px; margin-top: 15px;';
-                    adminButton.innerHTML = `
-                        🛡️ Admin Panel
-                        <div style="font-size: 0.9em; margin-top: 5px; opacity: 0.9;">User management and approval</div>
-                    `;
+                // Use setTimeout to ensure DOM is ready
+                setTimeout(() => {
+                    // Find the home navigation buttons container
+                    const navContainer = document.querySelector('.home-nav-button')?.parentElement;
+                    console.log('Navigation container found:', !!navContainer);
                     
-                    navContainer.appendChild(adminButton);
-                    console.log('Admin button created and added to page');
-                } else if (adminButton) {
-                    adminButton.style.display = 'block';
-                    console.log('Admin button already exists - showing it');
-                }
+                    // Check if admin button already exists
+                    let adminButton = document.getElementById('adminPanelButton');
+                    
+                    if (!adminButton && navContainer) {
+                        // Create admin button dynamically
+                        adminButton = document.createElement('button');
+                        adminButton.id = 'adminPanelButton';
+                        adminButton.className = 'home-nav-button';
+                        adminButton.onclick = showAdminPanel;
+                        adminButton.style.cssText = 'background-color: #dc3545; color: white; padding: 20px 30px; font-size: 1.1em; border: none; border-radius: 8px; cursor: pointer; min-width: 200px; margin-top: 15px;';
+                        adminButton.innerHTML = `
+                            🛡️ Admin Panel
+                            <div style="font-size: 0.9em; margin-top: 5px; opacity: 0.9;">User management and approval</div>
+                        `;
+                        
+                        navContainer.appendChild(adminButton);
+                        console.log('Admin button created and added to page');
+                    } else if (adminButton) {
+                        adminButton.style.display = 'block';
+                        console.log('Admin button already exists - showing it');
+                    }
+                }, 100);
             } else {
                 console.log('Admin access denied - user is not admin');
                 // Hide admin button if it exists
