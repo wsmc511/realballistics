@@ -4391,8 +4391,8 @@ window.resetPassword = async function() {
 
                     function zeroTrajectory(inputs) {
                         const zeroDistance = inputs.zero_distance * 3;
-                        let angleLow = -0.01;
-                        let angleHigh = 0.01;
+                        let angleLow = -0.02;
+                        let angleHigh = 0.02;
                         let yLow = simulateTrajectory(angleLow).trajectory.reduce((closest, point) => {
                             const dist = Math.abs(point.x - zeroDistance);
                             return dist < Math.abs(closest.x - zeroDistance) ? point : closest;
@@ -4440,8 +4440,8 @@ window.resetPassword = async function() {
 
                         if (!converged) {
                             self.postMessage({ log: 'Zeroing failed to converge within tolerance' });
-                            angleLow = 0.01;
-                            angleHigh = 0.02;
+                            angleLow = 0.02;
+                            angleHigh = 0.05;
                             yLow = simulateTrajectory(angleLow).trajectory.reduce((closest, point) => {
                                 const dist = Math.abs(point.x - zeroDistance);
                                 return dist < Math.abs(closest.x - zeroDistance) ? point : closest;
@@ -4451,7 +4451,7 @@ window.resetPassword = async function() {
                                 return dist < Math.abs(closest.x - zeroDistance) ? point : closest;
                             }, { x: 0, y: 0 }).y;
 
-                            for (let i = 0; i < 1000; i++) {
+                            for (let i = 0; i < 2000; i++) {
                                 const angle = (angleLow + angleHigh) / 2;
                                 const result = simulateTrajectory(angle);
                                 trajectory = result.trajectory;
@@ -4466,7 +4466,7 @@ window.resetPassword = async function() {
                                     self.postMessage({ log: 'Fallback Iteration ' + i + ': Angle=' + angle.toFixed(12) + ', y at ' + inputs.zero_distance + 'yd=' + y.toFixed(12) });
                                 }
 
-                                if (Math.abs(y) < 0.01) {
+                                if (Math.abs(y) < 0.1) {
                                     converged = true;
                                     break;
                                 }
