@@ -4391,16 +4391,30 @@ window.resetPassword = async function() {
 
                     function zeroTrajectory(inputs) {
                         const zeroDistance = inputs.zero_distance * 3; // Convert yards to feet
+                        self.postMessage({ log: 'Starting zeroing for distance: ' + inputs.zero_distance + ' yards (' + zeroDistance + ' feet)' });
+                        
                         let angleLow = -0.15;
                         let angleHigh = 0.15;
-                        let yLow = simulateTrajectory(angleLow).trajectory.reduce((closest, point) => {
+                        
+                        self.postMessage({ log: 'Calculating initial bounds...' });
+                        let trajectoryLow = simulateTrajectory(angleLow);
+                        let yLow = trajectoryLow.trajectory.reduce((closest, point) => {
                             const dist = Math.abs(point.x - zeroDistance);
                             return dist < Math.abs(closest.x - zeroDistance) ? point : closest;
                         }, { x: 0, y: 0 }).y;
-                        let yHigh = simulateTrajectory(angleHigh).trajectory.reduce((closest, point) => {
+                        
+                        let trajectoryHigh = simulateTrajectory(angleHigh);
+                        let yHigh = trajectoryHigh.trajectory.reduce((closest, point) => {
                             const dist = Math.abs(point.x - zeroDistance);
                             return dist < Math.abs(closest.x - zeroDistance) ? point : closest;
                         }, { x: 0, y: 0 }).y;
+                        
+                        self.postMessage({ log: 'Initial bounds: angleLow=' + angleLow + ' (y=' + yLow.toFixed(3) + '), angleHigh=' + angleHigh + ' (y=' + yHigh.toFixed(3) + ')' });
+                        
+                        // Check if we have a valid bracket (opposite signs)
+                        if (yLow * yHigh > 0) {
+                            self.postMessage({ log: 'Warning: Initial bounds do not bracket zero! Both y values have same sign.' });
+                        }
 
                         let trajectory, closestPoints;
                         let converged = false;
