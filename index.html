@@ -3797,6 +3797,9 @@ User Data Summary:
                 document.getElementById('loginForm').style.display = 'none';
                 document.getElementById('appContent').style.display = 'block';
                 authMessage.innerHTML = '';
+                
+                // Check if user is admin and show admin button
+                checkAdminAccess();
             };
 
             // Handle sign-up
