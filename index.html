@@ -4419,7 +4419,7 @@ window.resetPassword = async function() {
                                 self.postMessage({ log: 'Iteration ' + i + ': Angle=' + angle.toFixed(12) + ', y at ' + inputs.zero_distance + 'yd=' + y.toFixed(12) });
                             }
 
-                            if (Math.abs(y) < 0.01) {
+                            if (Math.abs(y) < 0.001) {
                                 converged = true;
                                 break;
                             }
@@ -4466,7 +4466,7 @@ window.resetPassword = async function() {
                                     self.postMessage({ log: 'Fallback Iteration ' + i + ': Angle=' + angle.toFixed(12) + ', y at ' + inputs.zero_distance + 'yd=' + y.toFixed(12) });
                                 }
 
-                                if (Math.abs(y) < 0.1) {
+                                if (Math.abs(y) < 0.001) {
                                     converged = true;
                                     break;
                                 }
@@ -4487,51 +4487,60 @@ window.resetPassword = async function() {
                         }
 
                         if (!converged) {
-                            // Try one more time with even wider angle range and looser tolerance
-                            self.postMessage({ log: 'Attempting final fallback with wider range' });
-                            angleLow = -0.1;
-                            angleHigh = 0.1;
-                            yLow = simulateTrajectory(angleLow).trajectory.reduce((closest, point) => {
-                                const dist = Math.abs(point.x - zeroDistance);
-                                return dist < Math.abs(closest.x - zeroDistance) ? point : closest;
-                            }, { x: 0, y: 0 }).y;
-                            yHigh = simulateTrajectory(angleHigh).trajectory.reduce((closest, point) => {
-                                const dist = Math.abs(point.x - zeroDistance);
-                                return dist < Math.abs(closest.x - zeroDistance) ? point : closest;
-                            }, { x: 0, y: 0 }).y;
-
-                            for (let i = 0; i < 500; i++) {
-                                const angle = (angleLow + angleHigh) / 2;
-                                const result = simulateTrajectory(angle);
-                                trajectory = result.trajectory;
-                                closestPoints = result.closestPoints;
-                                const zeroPoint = trajectory.reduce((closest, point) => {
+                            // Try Newton's method for more robust convergence
+                            self.postMessage({ log: 'Attempting Newton method for precise zeroing' });
+                            let angle = 0.01; // Start with a reasonable guess
+                            const h = 1e-8; // Small step for numerical derivative
+                            
+                            for (let i = 0; i < 100; i++) {
+                                // Calculate function value at current angle
+                                const result1 = simulateTrajectory(angle);
+                                const y1 = result1.trajectory.reduce((closest, point) => {
                                     const dist = Math.abs(point.x - zeroDistance);
                                     return dist < Math.abs(closest.x - zeroDistance) ? point : closest;
-                                }, trajectory[0]);
-                                const y = zeroPoint.y;
-
-                                if (i % 100 === 0) {
-                                    self.postMessage({ log: 'Final Iteration ' + i + ': Angle=' + angle.toFixed(12) + ', y at ' + inputs.zero_distance + 'yd=' + y.toFixed(12) });
+                                }, result1.trajectory[0]).y;
+                                
+                                // Calculate function value at angle + h for derivative
+                                const result2 = simulateTrajectory(angle + h);
+                                const y2 = result2.trajectory.reduce((closest, point) => {
+                                    const dist = Math.abs(point.x - zeroDistance);
+                                    return dist < Math.abs(closest.x - zeroDistance) ? point : closest;
+                                }, result2.trajectory[0]).y;
+                                
+                                // Calculate numerical derivative
+                                const derivative = (y2 - y1) / h;
+                                
+                                if (i % 20 === 0) {
+                                    self.postMessage({ log: 'Newton Iteration ' + i + ': Angle=' + angle.toFixed(12) + ', y=' + y1.toFixed(12) + ', dy/da=' + derivative.toFixed(6) });
                                 }
-
-                                if (Math.abs(y) < 0.5) {
+                                
+                                // Check for convergence with high precision
+                                if (Math.abs(y1) < 0.001) { // 0.001 feet = 0.012 inches
+                                    trajectory = result1.trajectory;
+                                    closestPoints = result1.closestPoints;
                                     converged = true;
+                                    self.postMessage({ log: 'Newton method converged to high precision' });
                                     break;
                                 }
-
-                                if (y > 0) {
-                                    angleHigh = angle;
-                                    yHigh = y;
+                                
+                                // Check for zero derivative (problematic)
+                                if (Math.abs(derivative) < 1e-10) {
+                                    self.postMessage({ log: 'Newton method: derivative too small, switching to final binary search' });
+                                    break;
+                                }
+                                
+                                // Newton's method update
+                                const newAngle = angle - y1 / derivative;
+                                
+                                // Prevent wild jumps
+                                if (Math.abs(newAngle - angle) > 0.01) {
+                                    angle = angle + (newAngle > angle ? 0.01 : -0.01);
                                 } else {
-                                    angleLow = angle;
-                                    yLow = y;
+                                    angle = newAngle;
                                 }
-
-                                if (Math.abs(yHigh - yLow) < 1e-4) {
-                                    self.postMessage({ log: 'Final fallback stagnating' });
-                                    break;
-                                }
+                                
+                                // Keep angle within reasonable bounds
+                                angle = Math.max(-0.1, Math.min(0.1, angle));
                             }
                         }
 
