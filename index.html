@@ -4487,7 +4487,56 @@ window.resetPassword = async function() {
                         }
 
                         if (!converged) {
-                            self.postMessage({ error: 'Zeroing failed after fallback' });
+                            // Try one more time with even wider angle range and looser tolerance
+                            self.postMessage({ log: 'Attempting final fallback with wider range' });
+                            angleLow = -0.1;
+                            angleHigh = 0.1;
+                            yLow = simulateTrajectory(angleLow).trajectory.reduce((closest, point) => {
+                                const dist = Math.abs(point.x - zeroDistance);
+                                return dist < Math.abs(closest.x - zeroDistance) ? point : closest;
+                            }, { x: 0, y: 0 }).y;
+                            yHigh = simulateTrajectory(angleHigh).trajectory.reduce((closest, point) => {
+                                const dist = Math.abs(point.x - zeroDistance);
+                                return dist < Math.abs(closest.x - zeroDistance) ? point : closest;
+                            }, { x: 0, y: 0 }).y;
+
+                            for (let i = 0; i < 500; i++) {
+                                const angle = (angleLow + angleHigh) / 2;
+                                const result = simulateTrajectory(angle);
+                                trajectory = result.trajectory;
+                                closestPoints = result.closestPoints;
+                                const zeroPoint = trajectory.reduce((closest, point) => {
+                                    const dist = Math.abs(point.x - zeroDistance);
+                                    return dist < Math.abs(closest.x - zeroDistance) ? point : closest;
+                                }, trajectory[0]);
+                                const y = zeroPoint.y;
+
+                                if (i % 100 === 0) {
+                                    self.postMessage({ log: 'Final Iteration ' + i + ': Angle=' + angle.toFixed(12) + ', y at ' + inputs.zero_distance + 'yd=' + y.toFixed(12) });
+                                }
+
+                                if (Math.abs(y) < 0.5) {
+                                    converged = true;
+                                    break;
+                                }
+
+                                if (y > 0) {
+                                    angleHigh = angle;
+                                    yHigh = y;
+                                } else {
+                                    angleLow = angle;
+                                    yLow = y;
+                                }
+
+                                if (Math.abs(yHigh - yLow) < 1e-4) {
+                                    self.postMessage({ log: 'Final fallback stagnating' });
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (!converged) {
+                            self.postMessage({ error: 'Zeroing failed after all attempts' });
                             return;
                         }
 
