@@ -565,6 +565,10 @@
                 <input type="text" name="caliber">
             </div>
             <div class="form-group">
+                <label>Bullet Caliber:</label>
+                <input type="text" name="bullet_caliber">
+            </div>
+            <div class="form-group">
                 <label>Barrel Length (inches):</label>
                 <input type="number" step="0.1" name="barrel_length">
             </div>
@@ -4552,6 +4556,7 @@ window.resetPassword = async function() {
                             firearm_name: form.firearm_name.value,
                             optic_name: form.optic_name.value,
                             caliber: form.caliber.value,
+                            bullet_caliber: form.bullet_caliber.value,
                             barrel_length: parseFloat(form.barrel_length.value) || null,
                             barrel_twist_rate: form.barrel_twist_rate.value || null,
                             bullet_grain: parseInt(form.bullet_grain.value),
@@ -4573,6 +4578,7 @@ window.resetPassword = async function() {
                             firearm_name: inputs.firearm_name,
                             optic_name: inputs.optic_name,
                             caliber: inputs.caliber,
+                            bullet_caliber: inputs.bullet_caliber,
                             barrel_length: inputs.barrel_length,
                             barrel_twist_rate: inputs.barrel_twist_rate,
                             bullet_grain: inputs.bullet_grain,
@@ -4678,6 +4684,7 @@ window.resetPassword = async function() {
                     firearm_name: form.firearm_name.value,
                     optic_name: form.optic_name.value,
                     caliber: form.caliber.value,
+                    bullet_caliber: form.bullet_caliber.value,
                     barrel_length: parseFloat(form.barrel_length.value) || null,
                     barrel_twist_rate: form.barrel_twist_rate.value || null,
                     bullet_grain: parseInt(form.bullet_grain.value),
@@ -4692,7 +4699,7 @@ window.resetPassword = async function() {
                     wind_angle: parseFloat(form.wind_angle.value) || 0
                 };
 
-                if (!inputs.shooter_name || !inputs.firearm_name || !inputs.caliber ||
+                if (!inputs.shooter_name || !inputs.firearm_name || !inputs.caliber || !inputs.bullet_caliber ||
                     isNaN(inputs.bullet_grain) || isNaN(inputs.muzzle_velocity) || isNaN(inputs.ballistic_coefficient) ||
                     isNaN(inputs.zero_distance) || isNaN(inputs.height_over_bore) || isNaN(inputs.step_interval_yards) ||
                     isNaN(inputs.max_distance_yards) || inputs.step_interval_yards <= 0 || inputs.max_distance_yards <= 0) {
