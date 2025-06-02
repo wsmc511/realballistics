@@ -6958,9 +6958,17 @@ window.resetPassword = async function() {
 
                     if (error) throw error;
 
+                    console.log('Bullet data loaded:', bullet);
+
                     // Populate bullet fields
                     const form = document.getElementById('ballisticForm');
-                    if (bullet.bullet_caliber) form.querySelector('[name="bullet_caliber"]').value = bullet.bullet_caliber;
+                    
+                    // Set bullet caliber from the caliber field in the database
+                    if (bullet.caliber) {
+                        form.querySelector('[name="bullet_caliber"]').value = bullet.caliber;
+                        console.log('Set bullet_caliber to:', bullet.caliber);
+                    }
+                    
                     if (bullet.grain) form.querySelector('[name="bullet_grain"]').value = bullet.grain;
                     if (bullet.ballistic_coefficient) form.querySelector('[name="ballistic_coefficient"]').value = bullet.ballistic_coefficient;
                     if (bullet.drag_model) form.querySelector('[name="drag_model"]').value = bullet.drag_model;
