@@ -4432,7 +4432,7 @@ window.resetPassword = async function() {
                                 yLow = y;
                             }
 
-                            if (Math.abs(yHigh - yLow) < 1e-12) {
+                            if (Math.abs(yHigh - yLow) < 1e-6) {
                                 self.postMessage({ log: 'Zeroing stagnating' });
                                 break;
                             }
@@ -4479,7 +4479,7 @@ window.resetPassword = async function() {
                                     yLow = y;
                                 }
 
-                                if (Math.abs(yHigh - yLow) < 1e-12) {
+                                if (Math.abs(yHigh - yLow) < 1e-6) {
                                     self.postMessage({ log: 'Fallback zeroing stagnating' });
                                     break;
                                 }
