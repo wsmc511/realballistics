@@ -6960,6 +6960,7 @@ window.resetPassword = async function() {
 
                     // Populate bullet fields
                     const form = document.getElementById('ballisticForm');
+                    if (bullet.bullet_caliber) form.querySelector('[name="bullet_caliber"]').value = bullet.bullet_caliber;
                     if (bullet.grain) form.querySelector('[name="bullet_grain"]').value = bullet.grain;
                     if (bullet.ballistic_coefficient) form.querySelector('[name="ballistic_coefficient"]').value = bullet.ballistic_coefficient;
                     if (bullet.drag_model) form.querySelector('[name="drag_model"]').value = bullet.drag_model;
