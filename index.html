@@ -4390,7 +4390,7 @@ window.resetPassword = async function() {
                     }
 
                     function zeroTrajectory(inputs) {
-                        const zeroDistance = inputs.zero_distance * 3;
+                        const zeroDistance = inputs.zero_distance * 3; // Convert yards to feet
                         let angleLow = -0.15;
                         let angleHigh = 0.15;
                         let yLow = simulateTrajectory(angleLow).trajectory.reduce((closest, point) => {
@@ -4417,6 +4417,11 @@ window.resetPassword = async function() {
 
                             if (i % 500 === 0) {
                                 self.postMessage({ log: 'Iteration ' + i + ': Angle=' + angle.toFixed(12) + ', y at ' + inputs.zero_distance + 'yd=' + y.toFixed(12) });
+                                self.postMessage({ log: 'Debug: zeroDistance=' + zeroDistance + 'ft, zeroPoint.x=' + zeroPoint.x.toFixed(2) + 'ft, closest trajectory points around target:' });
+                                const nearbyPoints = trajectory.filter(p => Math.abs(p.x - zeroDistance) < 10).slice(0, 5);
+                                nearbyPoints.forEach(p => {
+                                    self.postMessage({ log: '  x=' + p.x.toFixed(2) + 'ft, y=' + p.y.toFixed(2) + 'ft' });
+                                });
                             }
 
                             if (Math.abs(y) < 0.001) {
