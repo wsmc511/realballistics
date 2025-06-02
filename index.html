@@ -4391,8 +4391,8 @@ window.resetPassword = async function() {
 
                     function zeroTrajectory(inputs) {
                         const zeroDistance = inputs.zero_distance * 3;
-                        let angleLow = -0.02;
-                        let angleHigh = 0.02;
+                        let angleLow = -0.15;
+                        let angleHigh = 0.15;
                         let yLow = simulateTrajectory(angleLow).trajectory.reduce((closest, point) => {
                             const dist = Math.abs(point.x - zeroDistance);
                             return dist < Math.abs(closest.x - zeroDistance) ? point : closest;
@@ -4440,8 +4440,8 @@ window.resetPassword = async function() {
 
                         if (!converged) {
                             self.postMessage({ log: 'Zeroing failed to converge within tolerance' });
-                            angleLow = 0.02;
-                            angleHigh = 0.05;
+                            angleLow = -0.2;
+                            angleHigh = 0.2;
                             yLow = simulateTrajectory(angleLow).trajectory.reduce((closest, point) => {
                                 const dist = Math.abs(point.x - zeroDistance);
                                 return dist < Math.abs(closest.x - zeroDistance) ? point : closest;
@@ -4540,7 +4540,7 @@ window.resetPassword = async function() {
                                 }
                                 
                                 // Keep angle within reasonable bounds
-                                angle = Math.max(-0.1, Math.min(0.1, angle));
+                                angle = Math.max(-0.2, Math.min(0.2, angle));
                             }
                         }
 
