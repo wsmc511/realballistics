@@ -2928,7 +2928,7 @@ User Data Summary:
                 // Load user profile data from user_profile table
                 const { data: userProfile, error } = await window.supabaseClient
                     .from('user_profile')
-                    .select('first_name, last_name, email, subscription_status, notes, user_role')
+                    .select('first_name, last_name, email, subscription_status, notes, role')
                     .eq('user_id', window.currentUser.id)
                     .single();
 
@@ -2964,7 +2964,7 @@ User Data Summary:
                     }
                     
                     // Show admin notes section if user is admin
-                    const isAdmin = userProfile.user_role === 'Admin';
+                    const isAdmin = userProfile.role === 'Admin';
                     const adminNotesSection = document.getElementById('adminNotesSection');
                     const adminNotesField = document.getElementById('profileAdminNotes');
                     
