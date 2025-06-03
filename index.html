@@ -7359,7 +7359,8 @@ window.resetPassword = async function() {
                     </div>
                     
                     <div style="margin-bottom: 20px;">
-                        <button onclick="showAddFirearmForm()" style="background-color: #28a745; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">Add New Firearm</button>
+                        <button onclick="showAddFirearmForm()" style="background-color: #28a745; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; margin-right: 10px;">Add New Firearm</button>
+                        <button onclick="showSharedFirearmLibrarySelector()" style="background-color: #17a2b8; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">Load Shared Library</button>
                     </div>
 
                     <div id="addFirearmForm" style="display: none; background-color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #ddd;">
@@ -8015,6 +8016,193 @@ window.resetPassword = async function() {
                 } catch (error) {
                     console.error('Error deleting firearm:', error);
                     alert('Error deleting firearm profile');
+                }
+            };
+
+            // Shared Firearm Library Functions
+            window.showSharedFirearmLibrarySelector = async function() {
+                try {
+                    console.log('Loading shared firearm libraries for user:', currentUser.email);
+                    
+                    // Get all accepted shares for this user
+                    const { data: shares, error } = await supabase
+                        .from('library_shares')
+                        .select('*')
+                        .eq('shared_with_email', currentUser.email)
+                        .eq('status', 'accepted')
+                        .not('shared_with_user_id', 'is', null);
+
+                    if (error) {
+                        console.error('Error fetching shared firearm libraries:', error);
+                        alert('Error fetching shared libraries: ' + error.message);
+                        return;
+                    }
+
+                    if (!shares || shares.length === 0) {
+                        alert('No shared firearm libraries available. Ask other users to share their libraries with you first.');
+                        return;
+                    }
+
+                    // Create modal for selecting shared library
+                    const modalHTML = `
+                        <div id="sharedFirearmLibraryModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 10000; display: flex; justify-content: center; align-items: center;">
+                            <div style="background: white; padding: 20px; border-radius: 8px; max-width: 600px; width: 90%; max-height: 80%; overflow-y: auto;">
+                                <h3 style="margin-top: 0;">Select Shared Firearm Library</h3>
+                                <div id="sharedFirearmLibraryList">
+                                    ${shares.map(share => `
+                                        <div style="border: 1px solid #ddd; padding: 15px; margin-bottom: 10px; border-radius: 4px;">
+                                            <h4 style="margin: 0 0 10px 0;">Shared by: ${share.shared_from_email}</h4>
+                                            <p style="margin: 0 0 10px 0; color: #666;">Share type: ${share.share_type} | Permissions: ${share.permissions}</p>
+                                            <button onclick="loadSharedFirearms('${share.owner_id}', '${share.shared_from_email}')" style="background: #007bff; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer;">Load Firearm Library</button>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                                
+                                <div style="margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;">
+                                    <button onclick="closeSharedFirearmLibraryModal()" style="background: #6c757d; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer;">Close</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                    document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+                } catch (error) {
+                    console.error('Error showing shared firearm library selector:', error);
+                    alert('Error showing shared libraries: ' + error.message);
+                }
+            };
+
+            window.loadSharedFirearms = async function(ownerUserId, ownerEmail) {
+                try {
+                    console.log('Loading shared firearms from user:', ownerUserId);
+                    
+                    // Load shared firearms
+                    const { data: firearms, error } = await supabase
+                        .from('firearm_profile')
+                        .select('*')
+                        .eq('user_id', ownerUserId)
+                        .order('profile_name');
+
+                    if (error) {
+                        console.error('Error loading shared firearms:', error);
+                        alert('Error loading shared firearms: ' + error.message);
+                        return;
+                    }
+
+                    if (!firearms || firearms.length === 0) {
+                        alert('No firearms found in this shared library.');
+                        return;
+                    }
+
+                    // Close the shared library modal
+                    closeSharedFirearmLibraryModal();
+
+                    // Display shared firearms in the main firearm library area
+                    const firearmLibraryContent = document.getElementById('firearmLibraryContent');
+                    
+                    let tableHTML = `
+                        <div style="margin-bottom: 20px; padding: 15px; background-color: #e7f3ff; border-radius: 5px; border: 1px solid #007bff;">
+                            <h4 style="margin: 0 0 10px 0; color: #007bff;">Viewing Shared Firearm Library</h4>
+                            <p style="margin: 0; color: #0056b3;">Shared by: ${ownerEmail} | ${firearms.length} firearm profile(s)</p>
+                            <button onclick="loadFirearmLibraryDirect()" style="background: #28a745; color: white; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; margin-top: 10px;">Back to My Library</button>
+                        </div>
+                        <table style="width: 100%; border-collapse: collapse; border: 1px solid #dee2e6;">
+                            <thead style="background-color: #f8f9fa;">
+                                <tr>
+                                    <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left;">Profile Name</th>
+                                    <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left;">Firearm</th>
+                                    <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left;">Caliber</th>
+                                    <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left;">Barrel Length</th>
+                                    <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left;">Zero Distance</th>
+                                    <th style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                    `;
+
+                    firearms.forEach(firearm => {
+                        tableHTML += `
+                            <tr style="border-bottom: 1px solid #dee2e6;">
+                                <td style="border: 1px solid #dee2e6; padding: 10px;">${firearm.profile_name || 'N/A'}</td>
+                                <td style="border: 1px solid #dee2e6; padding: 10px;">${firearm.firearm_name || 'N/A'}</td>
+                                <td style="border: 1px solid #dee2e6; padding: 10px;">${firearm.caliber || 'N/A'}</td>
+                                <td style="border: 1px solid #dee2e6; padding: 10px;">${firearm.barrel_length ? firearm.barrel_length + '"' : 'N/A'}</td>
+                                <td style="border: 1px solid #dee2e6; padding: 10px;">${firearm.zero_distance ? firearm.zero_distance + ' yds' : 'N/A'}</td>
+                                <td style="border: 1px solid #dee2e6; padding: 10px; text-align: center;">
+                                    <button onclick="copySharedFirearm('${firearm.id}', '${ownerUserId}')" style="background-color: #28a745; color: white; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer;">Copy to My Library</button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+
+                    tableHTML += '</tbody></table>';
+                    firearmLibraryContent.innerHTML = tableHTML;
+
+                } catch (error) {
+                    console.error('Error loading shared firearms:', error);
+                    alert('Error loading shared firearms: ' + error.message);
+                }
+            };
+
+            window.copySharedFirearm = async function(firearmId, ownerUserId) {
+                try {
+                    if (!currentUser) {
+                        alert('Please log in to copy firearms.');
+                        return;
+                    }
+
+                    // Get the original firearm data
+                    const { data: originalFirearm, error: fetchError } = await supabase
+                        .from('firearm_profile')
+                        .select('*')
+                        .eq('id', firearmId)
+                        .eq('user_id', ownerUserId)
+                        .single();
+
+                    if (fetchError || !originalFirearm) {
+                        console.error('Error fetching original firearm:', fetchError);
+                        alert('Error accessing shared firearm: ' + (fetchError?.message || 'Firearm not found'));
+                        return;
+                    }
+
+                    // Create a copy for the current user
+                    const firearmCopy = {
+                        user_id: currentUser.id,
+                        profile_name: originalFirearm.profile_name + ' (Copy)',
+                        shooter_name: originalFirearm.shooter_name,
+                        firearm_type: originalFirearm.firearm_type,
+                        firearm_name: originalFirearm.firearm_name,
+                        caliber: originalFirearm.caliber,
+                        barrel_length: originalFirearm.barrel_length,
+                        barrel_twist_rate: originalFirearm.barrel_twist_rate,
+                        optic_name: originalFirearm.optic_name,
+                        zero_distance: originalFirearm.zero_distance,
+                        height_over_bore: originalFirearm.height_over_bore
+                    };
+
+                    const { error: insertError } = await supabase
+                        .from('firearm_profile')
+                        .insert(firearmCopy);
+
+                    if (insertError) {
+                        console.error('Error copying firearm:', insertError);
+                        alert('Error copying firearm: ' + insertError.message);
+                        return;
+                    }
+
+                    alert('Firearm profile copied to your library successfully!');
+
+                } catch (error) {
+                    console.error('Error copying shared firearm:', error);
+                    alert('Error copying firearm: ' + error.message);
+                }
+            };
+
+            window.closeSharedFirearmLibraryModal = function() {
+                const modal = document.getElementById('sharedFirearmLibraryModal');
+                if (modal) {
+                    modal.remove();
                 }
             };
 
