@@ -5168,6 +5168,8 @@ window.resetPassword = async function() {
                         .single();
                     
                     console.log('Session details fetched:', sessionDetails);
+                    console.log('Ballistic coefficient:', sessionDetails?.ballistic_coefficient);
+                    console.log('Muzzle velocity:', sessionDetails?.muzzle_velocity);
                     
                     currentTrajectoryData = sessionData.map(point => ({
                         ...point,
