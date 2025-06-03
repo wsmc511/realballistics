@@ -2515,17 +2515,23 @@
         };
 
         window.revokeUserAccess = async function(userId) {
-            if (!confirm('Are you sure you want to revoke access for this user? This will prevent them from logging in.')) {
+            if (!confirm('Are you sure you want to revoke access for this user? This will set their status to revoked.')) {
                 return;
             }
             
             try {
-                // Delete user from Supabase auth
-                const { error } = await supabase.auth.admin.deleteUser(userId);
-                
+                const { error } = await window.supabaseClient
+                    .from('user_profile')
+                    .update({
+                        status: 'revoked',
+                        revoked_at: new Date().toISOString(),
+                        revoked_by: window.currentUser.id
+                    })
+                    .eq('user_id', userId);
+
                 if (error) {
                     console.error('Error revoking user access:', error);
-                    alert('Error revoking user access. Admin API permissions may be required.');
+                    alert('Error revoking user access. Please try again.');
                     return;
                 }
                 
