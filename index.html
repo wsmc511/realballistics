@@ -3965,6 +3965,75 @@ User Data Summary:
 
                 currentUser = data.user;
                 window.currentUser = data.user; // Ensure global access
+                
+                // Check user approval status before granting access
+                try {
+                    const { data: profile, error: profileError } = await supabase
+                        .from('user_profile')
+                        .select('status, subscription_status, subscription_expires_at')
+                        .eq('user_id', currentUser.id)
+                        .single();
+                    
+                    if (profileError || !profile) {
+                        authMessage.innerHTML = `<div class="error">Login failed: database error granting user access. Please contact support.</div>`;
+                        await supabase.auth.signOut();
+                        return;
+                    }
+                    
+                    // Block access for pending accounts
+                    if (profile.status === 'pending') {
+                        authMessage.innerHTML = `<div class="error">Your account is pending approval. Please wait for administrator approval.</div>`;
+                        await supabase.auth.signOut();
+                        return;
+                    }
+                    
+                    // Block access for revoked accounts
+                    if (profile.status === 'revoked') {
+                        authMessage.innerHTML = `<div class="error">Your account access has been revoked. Please contact support.</div>`;
+                        await supabase.auth.signOut();
+                        return;
+                    }
+                    
+                    // Block access for deleted accounts
+                    if (profile.status === 'deletion_requested') {
+                        authMessage.innerHTML = `<div class="error">Your account deletion is pending. You cannot access the application.</div>`;
+                        await supabase.auth.signOut();
+                        return;
+                    }
+                    
+                    // Only allow approved accounts to continue
+                    if (profile.status !== 'approved') {
+                        authMessage.innerHTML = `<div class="error">Your account is not approved for access.</div>`;
+                        await supabase.auth.signOut();
+                        return;
+                    }
+                    
+                    // Check subscription status
+                    if (profile.subscription_status === 'expired') {
+                        authMessage.innerHTML = `<div class="error">Your subscription has expired. Please renew to continue using the application.</div>`;
+                        await supabase.auth.signOut();
+                        return;
+                    }
+                    
+                    if (profile.subscription_status === 'cancelled') {
+                        authMessage.innerHTML = `<div class="error">Your subscription has been cancelled. Please contact support to reactivate.</div>`;
+                        await supabase.auth.signOut();
+                        return;
+                    }
+                    
+                    if (profile.subscription_status === 'suspended') {
+                        authMessage.innerHTML = `<div class="error">Your account has been suspended. Please contact support.</div>`;
+                        await supabase.auth.signOut();
+                        return;
+                    }
+                    
+                } catch (e) {
+                    console.error('Error checking user profile:', e);
+                    authMessage.innerHTML = `<div class="error">Login failed: database error granting user access. Please contact support.</div>`;
+                    await supabase.auth.signOut();
+                    return;
+                }
+
                 document.getElementById('loginForm').style.display = 'none';
                 document.getElementById('appContent').style.display = 'block';
                 authMessage.innerHTML = '';
