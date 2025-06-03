@@ -4389,9 +4389,10 @@ window.resetPassword = async function() {
                         const zeroDistance = inputs.zero_distance * 3; // Convert yards to feet
                         self.postMessage({ log: 'Starting zeroing for distance: ' + inputs.zero_distance + ' yards (' + zeroDistance + ' feet)' });
                         
-                        // Start with a much wider range that includes significant downward angles
-                        let angleLow = -0.3;  // Allow steep downward angles
-                        let angleHigh = 0.3;  // Allow steep upward angles
+                        // Use realistic angle range for rifle zeroing (typically -0.1 to +0.1 radians)
+                        // Most rifle zeros require very small angular adjustments
+                        let angleLow = -0.05;  // About -2.9 degrees  
+                        let angleHigh = 0.05;  // About +2.9 degrees
                         
                         self.postMessage({ log: 'Calculating initial bounds...' });
                         let trajectoryLow = simulateTrajectory(angleLow);
