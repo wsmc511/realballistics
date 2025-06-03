@@ -4388,76 +4388,152 @@ window.resetPassword = async function() {
                     }
 
                     function zeroTrajectory(inputs) {
-                        self.postMessage({ log: 'Starting simplified zeroing calculation...' });
+                        const zeroDistance = inputs.zero_distance * 3; // Convert yards to feet
+                        self.postMessage({ log: 'Starting professional zeroing for distance: ' + inputs.zero_distance + ' yards (' + zeroDistance + ' feet)' });
                         
-                        // Create a realistic trajectory based on your working zero profile parameters
-                        // This matches the ballistic behavior of your existing working profiles
-                        const trajectory = generateRealisticTrajectory(inputs);
+                        // Use proper angle range for rifle zeroing but start with smaller bounds
+                        let angleLow = -0.01;   // About -0.57 degrees  
+                        let angleHigh = 0.01;   // About +0.57 degrees
                         
-                        if (!trajectory) {
-                            self.postMessage({ error: 'Failed to generate realistic trajectory' });
-                            return;
-                        }
+                        // Test if we need to expand the search range
+                        self.postMessage({ log: 'Testing initial angle bounds...' });
+                        let trajectoryLow = simulateTrajectory(angleLow);
+                        let yLow = trajectoryLow.trajectory.reduce((closest, point) => {
+                            return Math.abs(point.x - zeroDistance) < Math.abs(closest.x - zeroDistance) ? point : closest;
+                        }, trajectoryLow.trajectory[0]).y;
                         
-                        self.postMessage({ log: 'Generated realistic trajectory with ' + trajectory.length + ' points' });
+                        let trajectoryHigh = simulateTrajectory(angleHigh);
+                        let yHigh = trajectoryHigh.trajectory.reduce((closest, point) => {
+                            return Math.abs(point.x - zeroDistance) < Math.abs(closest.x - zeroDistance) ? point : closest;
+                        }, trajectoryHigh.trajectory[0]).y;
                         
-                        // Create results grid matching your working profile format
-                        const targetDistances = [];
-                        for (let i = 0; i <= inputs.max_distance_yards; i += inputs.step_interval_yards) {
-                            targetDistances.push(i * 3); // Convert to feet
-                        }
+                        self.postMessage({ log: `Initial bounds: angle ${angleLow.toFixed(6)} gives y=${yLow.toFixed(3)}, angle ${angleHigh.toFixed(6)} gives y=${yHigh.toFixed(3)}` });
                         
-                        const results_grid = trajectory.filter(point => {
-                            return targetDistances.some(dist => Math.abs(point.x - dist) < 1.5);
-                        }).map(point => ({
-                            distance_yd: (point.x / 3).toFixed(0),
-                            drop_in: (point.y * 12).toFixed(2),
-                            hold_in: (-point.y * 12).toFixed(2),
-                            velocity_fps: point.v.toFixed(0),
-                            energy_ftlbs: (0.5 * (inputs.bullet_grain / 7000) * point.v * point.v / 32.174).toFixed(1)
-                        }));
-                        
-                        self.postMessage({ results_grid, converged: true });
-                        return;
-                    }
-                    
-                    function generateRealisticTrajectory(inputs) {
-                        // Generate trajectory that matches your working zero profile behavior
-                        // Based on realistic ballistic parameters for 5.56mm with your specifications
-                        const trajectory = [];
-                        const heightOverBore = inputs.height_over_bore / 12; // Convert to feet
-                        const zeroDistance = inputs.zero_distance * 3; // Convert to feet
-                        
-                        // Use a simple but accurate ballistic model that matches your working profiles
-                        for (let x = 0; x <= 1200; x += 3) { // Every yard
-                            const yards = x / 3;
-                            
-                            // Realistic trajectory calculation based on your working profile
-                            let drop;
-                            if (yards <= inputs.zero_distance) {
-                                // Rise to zero point
-                                const progress = yards / inputs.zero_distance;
-                                drop = -heightOverBore * (1 - progress);
-                            } else {
-                                // Drop after zero point using realistic ballistic curve
-                                const beyondZero = yards - inputs.zero_distance;
-                                const dropRate = 0.00034; // Realistic drop rate for 5.56mm
-                                drop = beyondZero * beyondZero * dropRate;
+                        // Check if zero is bracketed, if not expand the search
+                        let iterations = 0;
+                        while ((yLow > 0 && yHigh > 0) || (yLow < 0 && yHigh < 0)) {
+                            iterations++;
+                            if (iterations > 10) {
+                                self.postMessage({ error: 'Cannot bracket zero after expanding search range' });
+                                return;
                             }
                             
-                            // Velocity calculation with realistic drag
-                            const initialVelocity = inputs.muzzle_velocity;
-                            const velocityDecay = 0.00012; // Realistic velocity decay
-                            const velocity = initialVelocity * Math.exp(-velocityDecay * yards);
+                            if (yLow > 0 && yHigh > 0) {
+                                // Both positive, need more negative angle
+                                angleLow -= 0.005;
+                                angleHigh -= 0.005;
+                            } else {
+                                // Both negative, need more positive angle  
+                                angleLow += 0.005;
+                                angleHigh += 0.005;
+                            }
                             
-                            trajectory.push({
-                                x: x,
-                                y: drop,
-                                v: velocity
-                            });
+                            trajectoryLow = simulateTrajectory(angleLow);
+                            yLow = trajectoryLow.trajectory.reduce((closest, point) => {
+                                return Math.abs(point.x - zeroDistance) < Math.abs(closest.x - zeroDistance) ? point : closest;
+                            }, trajectoryLow.trajectory[0]).y;
+                            
+                            trajectoryHigh = simulateTrajectory(angleHigh);
+                            yHigh = trajectoryHigh.trajectory.reduce((closest, point) => {
+                                return Math.abs(point.x - zeroDistance) < Math.abs(closest.x - zeroDistance) ? point : closest;
+                            }, trajectoryHigh.trajectory[0]).y;
+                            
+                            self.postMessage({ log: `Expanded bounds iteration ${iterations}: angle ${angleLow.toFixed(6)} gives y=${yLow.toFixed(3)}, angle ${angleHigh.toFixed(6)} gives y=${yHigh.toFixed(3)}` });
                         }
                         
-                        return trajectory;
+                        self.postMessage({ log: 'Zero successfully bracketed, starting Newton-Raphson...' });
+                        
+                        // Improved Newton-Raphson method with better convergence
+                        let angle = (angleLow + angleHigh) / 2; // Start with midpoint
+                        const tolerance = 0.01; // 0.01 feet = 0.12 inches tolerance
+                        const maxIterations = 25;
+                        
+                        for (let i = 0; i < maxIterations; i++) {
+                            // Calculate function value at current angle
+                            let trajectory = simulateTrajectory(angle);
+                            let targetPoint = trajectory.trajectory.reduce((closest, point) => {
+                                return Math.abs(point.x - zeroDistance) < Math.abs(closest.x - zeroDistance) ? point : closest;
+                            }, trajectory.trajectory[0]);
+                            let f = targetPoint.y;
+                            
+                            self.postMessage({ log: `Newton iteration ${i + 1}: angle=${angle.toFixed(6)}, y=${f.toFixed(3)}` });
+                            
+                            if (Math.abs(f) < tolerance) {
+                                self.postMessage({ log: `Converged in ${i + 1} iterations with angle ${angle.toFixed(6)} radians` });
+                                
+                                // Generate final trajectory with converged angle
+                                let finalTrajectory = simulateTrajectory(angle);
+                                
+                                // Create results grid
+                                const targetDistances = [];
+                                for (let dist = 0; dist <= inputs.max_distance_yards; dist += inputs.step_interval_yards) {
+                                    targetDistances.push(dist * 3); // Convert to feet
+                                }
+                                
+                                const results_grid = [];
+                                for (let targetDist of targetDistances) {
+                                    let closestPoint = finalTrajectory.trajectory.reduce((closest, point) => {
+                                        return Math.abs(point.x - targetDist) < Math.abs(closest.x - targetDist) ? point : closest;
+                                    }, finalTrajectory.trajectory[0]);
+                                    
+                                    const distanceYards = targetDist / 3;
+                                    const dropInches = closestPoint.y * 12;
+                                    const holdInches = -dropInches;
+                                    const velocity = closestPoint.vx;
+                                    const energy = 0.5 * (inputs.bullet_grain / 7000) * velocity * velocity / 32.174;
+                                    
+                                    results_grid.push({
+                                        distance_yd: distanceYards.toFixed(0),
+                                        drop_in: dropInches.toFixed(2),
+                                        hold_in: holdInches.toFixed(2),
+                                        velocity_fps: velocity.toFixed(0),
+                                        energy_ftlbs: energy.toFixed(1)
+                                    });
+                                }
+                                
+                                self.postMessage({ results_grid, converged: true });
+                                return;
+                            }
+                            
+                            // Calculate numerical derivative
+                            const h = 0.0001; // Small perturbation
+                            let trajectoryPlus = simulateTrajectory(angle + h);
+                            let targetPointPlus = trajectoryPlus.trajectory.reduce((closest, point) => {
+                                return Math.abs(point.x - zeroDistance) < Math.abs(closest.x - zeroDistance) ? point : closest;
+                            }, trajectoryPlus.trajectory[0]);
+                            let fPlus = targetPointPlus.y;
+                            
+                            let derivative = (fPlus - f) / h;
+                            
+                            if (Math.abs(derivative) < 1e-10) {
+                                self.postMessage({ log: `Derivative too small at iteration ${i + 1}, switching to bisection` });
+                                // Fall back to bisection method
+                                if (f > 0) {
+                                    angleHigh = angle;
+                                } else {
+                                    angleLow = angle;
+                                }
+                                angle = (angleLow + angleHigh) / 2;
+                            } else {
+                                // Newton-Raphson step
+                                let newAngle = angle - f / derivative;
+                                
+                                // Keep within reasonable bounds
+                                if (newAngle < -0.1 || newAngle > 0.1) {
+                                    self.postMessage({ log: `Newton step out of bounds, using bisection` });
+                                    if (f > 0) {
+                                        angleHigh = angle;
+                                    } else {
+                                        angleLow = angle;
+                                    }
+                                    angle = (angleLow + angleHigh) / 2;
+                                } else {
+                                    angle = newAngle;
+                                }
+                            }
+                        }
+                        
+                        self.postMessage({ error: 'Zeroing failed to converge after ' + maxIterations + ' iterations' });
                     }
                     
                     function originalZeroTrajectory(inputs) {
