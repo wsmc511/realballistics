@@ -1794,11 +1794,11 @@
                     console.log('Subscription status updated successfully for user:', userId);
                     // Update the select element color based on new status
                     const selectElement = event.target;
-                    let newColor = '#ffc107'; // Trial - yellow
-                    if (subscriptionStatus === 'Subscribed') {
-                        newColor = '#28a745'; // Subscribed - green
-                    } else if (subscriptionStatus === 'Expired') {
-                        newColor = '#dc3545'; // Expired - red
+                    let newColor = '#ffc107'; // trial - yellow
+                    if (subscriptionStatus === 'active') {
+                        newColor = '#28a745'; // active - green
+                    } else if (subscriptionStatus === 'expired' || subscriptionStatus === 'cancelled' || subscriptionStatus === 'suspended') {
+                        newColor = '#dc3545'; // expired/cancelled/suspended - red
                     }
                     selectElement.style.backgroundColor = newColor;
                 }
@@ -2195,14 +2195,14 @@
                     }
                     
                     const notesValue = profile.notes || '';
-                    const subscriptionStatus = profile.subscription_status || 'Trial';
+                    const subscriptionStatus = profile.subscription_status || 'trial';
                     
                     // Color code subscription status
-                    let subscriptionColor = '#ffc107'; // Trial - yellow
-                    if (subscriptionStatus === 'Subscribed') {
-                        subscriptionColor = '#28a745'; // Subscribed - green
-                    } else if (subscriptionStatus === 'Expired') {
-                        subscriptionColor = '#dc3545'; // Expired - red
+                    let subscriptionColor = '#ffc107'; // trial - yellow
+                    if (subscriptionStatus === 'active') {
+                        subscriptionColor = '#28a745'; // active - green
+                    } else if (subscriptionStatus === 'expired' || subscriptionStatus === 'cancelled' || subscriptionStatus === 'suspended') {
+                        subscriptionColor = '#dc3545'; // expired/cancelled/suspended - red
                     }
                     
                     tableHTML += `
@@ -2218,9 +2218,11 @@
                             <td style="border: 1px solid #dee2e6; padding: 10px;">
                                 <select onchange="updateUserSubscription('${userId}', this.value)" 
                                         style="width: 100%; border: 1px solid #ddd; border-radius: 4px; padding: 4px; font-size: 12px; background-color: ${subscriptionColor}; color: white;">
-                                    <option value="Trial" ${subscriptionStatus === 'Trial' ? 'selected' : ''}>Trial</option>
-                                    <option value="Subscribed" ${subscriptionStatus === 'Subscribed' ? 'selected' : ''}>Subscribed</option>
-                                    <option value="Expired" ${subscriptionStatus === 'Expired' ? 'selected' : ''}>Expired</option>
+                                    <option value="trial" ${subscriptionStatus === 'trial' ? 'selected' : ''}>Trial</option>
+                                    <option value="active" ${subscriptionStatus === 'active' ? 'selected' : ''}>Active</option>
+                                    <option value="expired" ${subscriptionStatus === 'expired' ? 'selected' : ''}>Expired</option>
+                                    <option value="cancelled" ${subscriptionStatus === 'cancelled' ? 'selected' : ''}>Cancelled</option>
+                                    <option value="suspended" ${subscriptionStatus === 'suspended' ? 'selected' : ''}>Suspended</option>
                                 </select>
                             </td>
                             <td style="border: 1px solid #dee2e6; padding: 10px;">
@@ -2997,13 +2999,15 @@ User Data Summary:
                     // Load subscription status
                     const subscriptionStatusField = document.getElementById('profileSubscriptionStatus');
                     if (subscriptionStatusField) {
-                        const status = userProfile.subscription_status || 'Trial';
-                        subscriptionStatusField.value = status;
+                        const status = userProfile.subscription_status || 'trial';
+                        // Display user-friendly text
+                        const displayStatus = status.charAt(0).toUpperCase() + status.slice(1);
+                        subscriptionStatusField.value = displayStatus;
                         
                         // Color code the status
-                        if (status === 'Subscribed') {
+                        if (status === 'active') {
                             subscriptionStatusField.style.color = '#28a745';
-                        } else if (status === 'Trial') {
+                        } else if (status === 'trial') {
                             subscriptionStatusField.style.color = '#ffc107';
                         } else {
                             subscriptionStatusField.style.color = '#dc3545';
