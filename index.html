@@ -9889,9 +9889,14 @@ window.resetPassword = async function() {
             sessions.forEach((session, index) => {
                 const color = colors[index % colors.length];
                 html += `
-                    <div style="display: flex; align-items: center;">
-                        <span style="display: inline-block; width: 20px; height: 3px; background-color: ${color}; margin-right: 5px;"></span>
-                        <span style="font-size: 12px;">${session.firearm_name || 'Session ' + (index + 1)} - ${session.caliber || ''} ${session.bullet_grain || ''}gr</span>
+                    <div style="display: flex; flex-direction: column; align-items: center;">
+                        <div style="display: flex; align-items: center;">
+                            <span style="display: inline-block; width: 20px; height: 3px; background-color: ${color}; margin-right: 5px;"></span>
+                            <span style="font-size: 12px;">${session.firearm_name || 'Session ' + (index + 1)} - ${session.caliber || ''} ${session.bullet_grain || ''}gr</span>
+                        </div>
+                        <div style="font-size: 10px; color: #666; margin-top: 2px;">
+                            Zero: ${session.zero_distance || 'N/A'} yards | BC: ${session.ballistic_coefficient || 'N/A'} | MV: ${session.muzzle_velocity || 'N/A'} fps
+                        </div>
                     </div>
                 `;
             });
