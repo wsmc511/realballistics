@@ -3988,15 +3988,15 @@ window.resetPassword = async function() {
                     return muzzleVelocity;
                 }
                 let standardLength, fpsPerInch;
-                if (caliber && caliber.toLowerCase().includes('5.56')) {
+                if (caliber && (caliber.toLowerCase().includes('5.56') || caliber.toLowerCase().includes('.223'))) {
                     standardLength = 20;
-                    fpsPerInch = 25;
+                    fpsPerInch = 27.5; // Average of 25-30 fps per inch
                 } else if (caliber && caliber.toLowerCase().includes('9mm')) {
                     standardLength = 4;
                     fpsPerInch = 30;
                 } else {
-                    standardLength = 16;
-                    fpsPerInch = 25;
+                    standardLength = 20; // Default to 20" baseline for rifle cartridges
+                    fpsPerInch = 27.5; // Use same average for other rifle cartridges
                 }
                 const lengthDifference = barrelLength - standardLength;
                 const velocityAdjustment = lengthDifference * fpsPerInch;
@@ -4174,16 +4174,9 @@ window.resetPassword = async function() {
 
                     const bulletMass = inputs.bullet_grain / 7000; // Convert grains to pounds
                     
-                    // Adjust muzzle velocity based on barrel length (most calculators ignore this)
+                    // Use pre-adjusted muzzle velocity (main function already applied barrel length adjustment)
                     let muzzleVelocity = inputs.muzzle_velocity;
-                    if (inputs.barrel_length && inputs.barrel_length !== 20) {
-                        // Standard velocity is typically measured at 20" barrel
-                        // Realistic velocity change: 18-22 fps per inch for most cartridges
-                        const velocityPerInch = inputs.caliber.includes('5.56') || inputs.caliber.includes('.223') ? 20 : 19;
-                        const barrelLengthAdjustment = (inputs.barrel_length - 20) * velocityPerInch;
-                        muzzleVelocity += barrelLengthAdjustment;
-                        self.postMessage({ log: 'Barrel length adjustment: ' + barrelLengthAdjustment + ' fps for ' + inputs.barrel_length + '" barrel' });
-                    }
+                    self.postMessage({ log: 'Using muzzle velocity: ' + muzzleVelocity + ' fps (already adjusted for ' + inputs.barrel_length + '" barrel)' });
                     const zeroDistance = inputs.zero_distance * 3; // Convert yards to feet
                     const heightOverBore = inputs.height_over_bore / 12; // Convert inches to feet
                     const stepIntervalFeet = inputs.step_interval_yards * 3;
@@ -7015,6 +7008,8 @@ window.resetPassword = async function() {
                     if (firearm.caliber) form.querySelector('[name="caliber"]').value = firearm.caliber;
                     if (firearm.barrel_length) form.querySelector('[name="barrel_length"]').value = firearm.barrel_length;
                     if (firearm.barrel_twist_rate) form.querySelector('[name="barrel_twist_rate"]').value = firearm.barrel_twist_rate;
+                    if (firearm.muzzle_velocity) form.querySelector('[name="muzzle_velocity"]').value = firearm.muzzle_velocity;
+                    if (firearm.muzzle_energy) form.querySelector('[name="muzzle_energy"]').value = firearm.muzzle_energy;
                     if (firearm.zero_distance) form.querySelector('[name="zero_distance"]').value = firearm.zero_distance;
                     if (firearm.height_over_bore) form.querySelector('[name="height_over_bore"]').value = firearm.height_over_bore;
 
