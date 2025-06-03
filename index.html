@@ -1763,7 +1763,7 @@
 
         window.updateUserNotes = async function(userId, notes) {
             try {
-                const { error } = await window.supabase
+                const { error } = await window.supabaseClient
                     .from('user_profile')
                     .update({ notes: notes })
                     .eq('user_id', userId);
@@ -1782,7 +1782,7 @@
 
         window.updateUserSubscription = async function(userId, subscriptionStatus) {
             try {
-                const { error } = await window.supabase
+                const { error } = await window.supabaseClient
                     .from('user_profile')
                     .update({ subscription_status: subscriptionStatus })
                     .eq('user_id', userId);
