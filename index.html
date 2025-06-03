@@ -7977,8 +7977,7 @@ window.resetPassword = async function() {
                         alert('Error updating firearm profile. Please try again.');
                     } else {
                         alert('Firearm profile updated successfully!');
-                        cancelFirearmEdit();
-                        await loadFirearmProfiles();
+                        loadFirearmLibraryDirect();
                     }
                 } catch (e) {
                     console.error('Error:', e);
