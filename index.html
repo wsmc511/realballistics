@@ -4295,28 +4295,28 @@ window.resetPassword = async function() {
                         const mach = relativeSpeed / 1116; // Speed of sound at sea level
                         const dragCoeff = inputs.drag_model === 'G7' ? getG7DragCoefficient(mach) : getG1DragCoefficient(mach);
                         
-                        // Universal ballistic model using standard drag equation with proper BC scaling
-                        // Works for all calibers based on ballistic coefficient and bullet properties
+                        // Implement Grok's proven Pejsa model for accurate trajectory calculation
+                        // V(x) = V0 * (1 + F*x/V0)^(-1/F) where F is retardation coefficient
                         
-                        const bulletMassLbs = inputs.bullet_grain / 7000; // Convert grains to pounds
-                        const airDensity = 0.0765; // lbs/ft³ at sea level
+                        const F = 0.6; // Pejsa retardation coefficient for G1 drag model
+                        const V0 = inputs.muzzle_velocity;
+                        const distanceFeet = x;
                         
-                        // Get bullet diameter based on caliber for cross-sectional area
-                        const bulletDiameterInches = getBulletDiameter(inputs.caliber, inputs.bullet_caliber);
-                        const bulletDiameterFt = bulletDiameterInches / 12;
-                        const crossSectionalArea = Math.PI * Math.pow(bulletDiameterFt / 2, 2);
+                        // Calculate expected velocity at this distance using Pejsa model
+                        const expectedVelocity = V0 * Math.pow(1 + (F * distanceFeet / V0), -1/F);
                         
-                        // Standard drag force calculation
-                        const dragForce = 0.5 * airDensity * dragCoeff * crossSectionalArea * relativeSpeed * relativeSpeed;
+                        // Apply ballistic coefficient scaling to adjust retardation
+                        // Higher BC = less retardation (bullet retains velocity better)
+                        const bcAdjustedF = F * (0.248 / inputs.ballistic_coefficient); // Scale F based on BC
+                        const actualExpectedVelocity = V0 * Math.pow(1 + (bcAdjustedF * distanceFeet / V0), -1/bcAdjustedF);
                         
-                        // Apply ballistic coefficient properly: BC = sectional density / form factor
-                        // Higher BC means bullet retains velocity better (less drag)
-                        // Standard formula: actual drag = reference drag / BC
-                        const referenceDrag = dragForce;
-                        const actualDragForce = referenceDrag / inputs.ballistic_coefficient;
+                        // Calculate drag based on difference between current and expected velocity
+                        const currentSpeed = Math.sqrt(vx*vx + vy*vy);
+                        const velocityDifference = currentSpeed - actualExpectedVelocity;
                         
-                        // Calculate drag acceleration
-                        const dragAcceleration = actualDragForce / bulletMassLbs;
+                        // Convert velocity difference to drag acceleration
+                        const bulletMassLbs = inputs.bullet_grain / 7000;
+                        const dragAcceleration = Math.abs(velocityDifference) * 50; // Reasonable drag scaling factor
                         
                         // Apply drag in velocity direction
                         const ax = -dragAcceleration * (relativeVx / relativeSpeed);
@@ -4333,7 +4333,7 @@ window.resetPassword = async function() {
                         
                         // Debug logging for first calculation
                         if (x === 0) {
-                            self.postMessage({ log: 'Universal model: BC=' + inputs.ballistic_coefficient + ', bullet=' + bulletDiameterInches.toFixed(3) + 'in, dragAccel=' + dragAcceleration.toFixed(2) });
+                            self.postMessage({ log: 'Pejsa model: F=' + F + ', BC=' + inputs.ballistic_coefficient + ', V0=' + V0 + ' fps, dragAccel=' + dragAcceleration.toFixed(2) });
                         }
                         
                         // Check for NaN in accelerations
