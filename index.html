@@ -7561,7 +7561,9 @@ window.resetPassword = async function() {
             window.editFirearmDirect = async function(firearmId) {
                 try {
                     console.log('editFirearmDirect called with ID:', firearmId);
+                    console.log('Setting global currentEditingFirearmId to:', firearmId);
                     window.currentEditingFirearmId = firearmId;
+                    console.log('Global variable set, value is now:', window.currentEditingFirearmId);
                     
                     const { data: firearm, error } = await supabase
                         .from('firearm_profile')
