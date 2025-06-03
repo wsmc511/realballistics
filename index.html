@@ -4535,7 +4535,12 @@ window.resetPassword = async function() {
                                     const distanceYards = targetDist / 3;
                                     const dropInches = closestPoint.y * 12;
                                     const holdInches = -dropInches;
-                                    const velocity = closestPoint.vx;
+                                    // Debug log to check available properties
+                                    if (distanceYards === 0) {
+                                        self.postMessage({ log: 'Debug trajectory point properties: ' + Object.keys(closestPoint).join(', ') });
+                                    }
+                                    
+                                    const velocity = closestPoint.vx || closestPoint.v || Math.sqrt((closestPoint.vx || 0) * (closestPoint.vx || 0) + (closestPoint.vy || 0) * (closestPoint.vy || 0)) || inputs.muzzle_velocity;
                                     const energy = 0.5 * (inputs.bullet_grain / 7000) * velocity * velocity / 32.174;
                                     
                                     results_grid.push({
