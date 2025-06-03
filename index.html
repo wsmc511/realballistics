@@ -4174,6 +4174,48 @@ window.resetPassword = async function() {
 
                     const bulletMass = inputs.bullet_grain / 7000; // Convert grains to pounds
                     
+                    function getBulletDiameter(caliber, bulletCaliber) {
+                        // Return bullet diameter in inches based on caliber
+                        const caliberStr = (caliber || bulletCaliber || '').toLowerCase();
+                        
+                        // Common caliber diameters in inches
+                        if (caliberStr.includes('5.56') || caliberStr.includes('223')) return 0.224;
+                        if (caliberStr.includes('7.62') || caliberStr.includes('308')) return 0.308;
+                        if (caliberStr.includes('6.5') && caliberStr.includes('creedmoor')) return 0.264;
+                        if (caliberStr.includes('270')) return 0.277;
+                        if (caliberStr.includes('30-06') || caliberStr.includes('3006')) return 0.308;
+                        if (caliberStr.includes('300') && caliberStr.includes('win')) return 0.308;
+                        if (caliberStr.includes('243')) return 0.243;
+                        if (caliberStr.includes('6mm')) return 0.243;
+                        if (caliberStr.includes('22-250')) return 0.224;
+                        if (caliberStr.includes('204')) return 0.204;
+                        if (caliberStr.includes('17')) return 0.172;
+                        if (caliberStr.includes('50') && caliberStr.includes('bmg')) return 0.510;
+                        if (caliberStr.includes('338')) return 0.338;
+                        if (caliberStr.includes('375')) return 0.375;
+                        if (caliberStr.includes('458')) return 0.458;
+                        if (caliberStr.includes('416')) return 0.416;
+                        if (caliberStr.includes('45-70')) return 0.458;
+                        if (caliberStr.includes('30-30')) return 0.308;
+                        if (caliberStr.includes('357')) return 0.357;
+                        if (caliberStr.includes('44')) return 0.429;
+                        if (caliberStr.includes('40')) return 0.400;
+                        if (caliberStr.includes('38')) return 0.357;
+                        if (caliberStr.includes('9mm')) return 0.355;
+                        if (caliberStr.includes('45') && caliberStr.includes('acp')) return 0.451;
+                        if (caliberStr.includes('380')) return 0.355;
+                        
+                        // Default fallback - estimate from caliber number
+                        const numMatch = caliberStr.match(/(\\d+(?:\\.\\d+)?)/);
+                        if (numMatch) {
+                            const num = parseFloat(numMatch[1]);
+                            if (num > 50) return num / 1000; // Assume caliber in thousandths (e.g., 223 = 0.223)
+                            return num / 25.4; // Assume metric mm, convert to inches
+                        }
+                        
+                        return 0.308; // Default to .30 caliber if unknown
+                    }
+                    
                     // Use pre-adjusted muzzle velocity (main function already applied barrel length adjustment)
                     let muzzleVelocity = inputs.muzzle_velocity;
                     self.postMessage({ log: 'Using muzzle velocity: ' + muzzleVelocity + ' fps (already adjusted for ' + inputs.barrel_length + '" barrel)' });
@@ -4253,14 +4295,28 @@ window.resetPassword = async function() {
                         const mach = relativeSpeed / 1116; // Speed of sound at sea level
                         const dragCoeff = inputs.drag_model === 'G7' ? getG7DragCoefficient(mach) : getG1DragCoefficient(mach);
                         
-                        // Standard ballistic equation: F = -0.5 * rho * Cd * A * v^2
+                        // Universal ballistic model using standard drag equation with proper BC scaling
+                        // Works for all calibers based on ballistic coefficient and bullet properties
+                        
+                        const bulletMassLbs = inputs.bullet_grain / 7000; // Convert grains to pounds
                         const airDensity = 0.0765; // lbs/ft³ at sea level
-                        const bulletDiameter = 0.224 / 12; // Approximate for 5.56, convert inches to feet
-                        const crossSectionalArea = Math.PI * Math.pow(bulletDiameter / 2, 2);
+                        
+                        // Get bullet diameter based on caliber for cross-sectional area
+                        const bulletDiameterInches = getBulletDiameter(inputs.caliber, inputs.bullet_caliber);
+                        const bulletDiameterFt = bulletDiameterInches / 12;
+                        const crossSectionalArea = Math.PI * Math.pow(bulletDiameterFt / 2, 2);
+                        
+                        // Standard drag force calculation
                         const dragForce = 0.5 * airDensity * dragCoeff * crossSectionalArea * relativeSpeed * relativeSpeed;
-                        // Adjust BC interpretation to match working zero profiles
-                        const bcFactor = inputs.ballistic_coefficient * 0.0001429 * 1.5; // Increase BC effectiveness
-                        const dragAcceleration = dragForce / bcFactor;
+                        
+                        // Apply ballistic coefficient properly: BC = sectional density / form factor
+                        // Higher BC means bullet retains velocity better (less drag)
+                        // Standard formula: actual drag = reference drag / BC
+                        const referenceDrag = dragForce;
+                        const actualDragForce = referenceDrag / inputs.ballistic_coefficient;
+                        
+                        // Calculate drag acceleration
+                        const dragAcceleration = actualDragForce / bulletMassLbs;
                         
                         // Apply drag in velocity direction
                         const ax = -dragAcceleration * (relativeVx / relativeSpeed);
@@ -4277,7 +4333,7 @@ window.resetPassword = async function() {
                         
                         // Debug logging for first calculation
                         if (x === 0) {
-                            self.postMessage({ log: 'Professional model: Mach=' + mach.toFixed(3) + ', Cd=' + dragCoeff.toFixed(4) + ', dragAccel=' + dragAcceleration.toFixed(2) });
+                            self.postMessage({ log: 'Universal model: BC=' + inputs.ballistic_coefficient + ', bullet=' + bulletDiameterInches.toFixed(3) + 'in, dragAccel=' + dragAcceleration.toFixed(2) });
                         }
                         
                         // Check for NaN in accelerations
@@ -4391,9 +4447,9 @@ window.resetPassword = async function() {
                         const zeroDistance = inputs.zero_distance * 3; // Convert yards to feet
                         self.postMessage({ log: 'Starting professional zeroing for distance: ' + inputs.zero_distance + ' yards (' + zeroDistance + ' feet)' });
                         
-                        // Use proper angle range for rifle zeroing but start with smaller bounds
-                        let angleLow = -0.01;   // About -0.57 degrees  
-                        let angleHigh = 0.01;   // About +0.57 degrees
+                        // Use wider angle range to accommodate high drag scenarios
+                        let angleLow = -0.02;   // About -1.15 degrees  
+                        let angleHigh = 0.08;   // About +4.6 degrees (much more positive for high drag)
                         
                         // Test if we need to expand the search range
                         self.postMessage({ log: 'Testing initial angle bounds...' });
@@ -4413,7 +4469,7 @@ window.resetPassword = async function() {
                         let iterations = 0;
                         while ((yLow > 0 && yHigh > 0) || (yLow < 0 && yHigh < 0)) {
                             iterations++;
-                            if (iterations > 10) {
+                            if (iterations > 20) {
                                 self.postMessage({ error: 'Cannot bracket zero after expanding search range' });
                                 return;
                             }
