@@ -4258,7 +4258,9 @@ window.resetPassword = async function() {
                         const bulletDiameter = 0.224 / 12; // Approximate for 5.56, convert inches to feet
                         const crossSectionalArea = Math.PI * Math.pow(bulletDiameter / 2, 2);
                         const dragForce = 0.5 * airDensity * dragCoeff * crossSectionalArea * relativeSpeed * relativeSpeed;
-                        const dragAcceleration = dragForce / (inputs.ballistic_coefficient * 0.0001429); // BC conversion factor
+                        // Adjust BC interpretation to match working zero profiles
+                        const bcFactor = inputs.ballistic_coefficient * 0.0001429 * 1.5; // Increase BC effectiveness
+                        const dragAcceleration = dragForce / bcFactor;
                         
                         // Apply drag in velocity direction
                         const ax = -dragAcceleration * (relativeVx / relativeSpeed);
@@ -4556,8 +4558,8 @@ window.resetPassword = async function() {
                                     angle = newAngle;
                                 }
                                 
-                                // Keep angle within reasonable bounds
-                                angle = Math.max(-0.3, Math.min(0.3, angle));
+                                // Keep angle within realistic rifle zeroing bounds
+                                angle = Math.max(-0.05, Math.min(0.05, angle));
                             }
                         }
 
