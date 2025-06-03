@@ -5120,7 +5120,7 @@ window.resetPassword = async function() {
                 window.viewTrajectory(session.id);
             };
 
-            window.viewTrajectory = function(sessionId) {
+            window.viewTrajectory = async function(sessionId) {
                 console.log(`Viewing trajectory for session ID: ${sessionId}`);
                 const row = document.querySelector(`.select-session[data-id="${sessionId}"]`).closest('tr');
                 let results_grid;
@@ -5160,24 +5160,41 @@ window.resetPassword = async function() {
                 // Store data for graphing and show graph button
                 const sessionData = JSON.parse(row.dataset.resultsGrid);
                 
-                // Fetch complete session data to get BC and muzzle velocity
-                window.supabase.from('ballistic_sessions')
-                    .select('ballistic_coefficient, muzzle_velocity')
-                    .eq('id', sessionId)
-                    .single()
-                    .then(({ data: sessionDetails }) => {
-                        currentTrajectoryData = sessionData.map(point => ({
-                            ...point,
-                            sessionInfo: {
-                                firearm_name: row.cells[3].textContent,
-                                caliber: row.cells[5].textContent,
-                                bullet_grain: row.cells[8].textContent,
-                                zero_distance: row.cells[9].textContent,
-                                ballistic_coefficient: sessionDetails?.ballistic_coefficient || 'N/A',
-                                muzzle_velocity: sessionDetails?.muzzle_velocity || 'N/A'
-                            }
-                        }));
-                    });
+                try {
+                    // Fetch complete session data to get BC and muzzle velocity
+                    const { data: sessionDetails } = await window.supabase.from('ballistic_sessions')
+                        .select('ballistic_coefficient, muzzle_velocity')
+                        .eq('id', sessionId)
+                        .single();
+                    
+                    console.log('Session details fetched:', sessionDetails);
+                    
+                    currentTrajectoryData = sessionData.map(point => ({
+                        ...point,
+                        sessionInfo: {
+                            firearm_name: row.cells[3].textContent,
+                            caliber: row.cells[5].textContent,
+                            bullet_grain: row.cells[8].textContent,
+                            zero_distance: row.cells[9].textContent,
+                            ballistic_coefficient: sessionDetails?.ballistic_coefficient || 'N/A',
+                            muzzle_velocity: sessionDetails?.muzzle_velocity || 'N/A'
+                        }
+                    }));
+                } catch (error) {
+                    console.error('Error fetching session details:', error);
+                    currentTrajectoryData = sessionData.map(point => ({
+                        ...point,
+                        sessionInfo: {
+                            firearm_name: row.cells[3].textContent,
+                            caliber: row.cells[5].textContent,
+                            bullet_grain: row.cells[8].textContent,
+                            zero_distance: row.cells[9].textContent,
+                            ballistic_coefficient: 'N/A',
+                            muzzle_velocity: 'N/A'
+                        }
+                    }));
+                }
+                
                 currentComparisonData = null;
                 document.getElementById('showGraphButton').style.display = 'inline-block';
 
