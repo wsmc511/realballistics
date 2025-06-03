@@ -7636,7 +7636,7 @@ window.resetPassword = async function() {
                                 </div>
                             </div>
                             <div style="display: flex; gap: 10px; margin-top: 20px;">
-                                <button onclick="updateFirearmDirect('${firearmId}')" style="background-color: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">Update Firearm</button>
+                                <button onclick="updateFirearmDirect('${firearmId}')" data-firearm-id="${firearmId}" style="background-color: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">Update Firearm</button>
                                 <button onclick="loadFirearmLibraryDirect()" style="background-color: #6c757d; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">Cancel</button>
                             </div>
                         </div>
@@ -7649,6 +7649,15 @@ window.resetPassword = async function() {
             window.updateFirearmDirect = async function(firearmId) {
                 try {
                     console.log('updateFirearmDirect called with ID:', firearmId);
+                    
+                    // If firearmId is undefined, try to get it from the button's data attribute
+                    if (!firearmId || firearmId === 'undefined') {
+                        const updateButton = document.querySelector('[data-firearm-id]');
+                        if (updateButton) {
+                            firearmId = updateButton.getAttribute('data-firearm-id');
+                            console.log('Retrieved firearm ID from button data attribute:', firearmId);
+                        }
+                    }
                     
                     if (!firearmId || firearmId === 'undefined') {
                         console.error('Invalid firearm ID received:', firearmId);
