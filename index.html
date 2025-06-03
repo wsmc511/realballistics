@@ -4187,7 +4187,10 @@ window.resetPassword = async function() {
                     const zeroDistance = inputs.zero_distance * 3; // Convert yards to feet
                     const heightOverBore = inputs.height_over_bore / 12; // Convert inches to feet
                     const stepIntervalFeet = inputs.step_interval_yards * 3;
-                    const maxDistanceFeet = inputs.max_distance_yards * 3;
+                    // Ensure trajectory runs far enough for zeroing calculation
+                    const requiredDistance = Math.max(inputs.zero_distance * 3, inputs.max_distance_yards * 3, 1200);
+                    const maxDistanceFeet = requiredDistance;
+                    self.postMessage({ log: 'Trajectory will simulate to: ' + maxDistanceFeet + ' feet (required for ' + inputs.zero_distance + ' yard zero)' });
                     
                     // Extract twist rate for spin drift calculations
                     let twistRateValue = 7; // Default for 5.56/.223
@@ -4393,8 +4396,9 @@ window.resetPassword = async function() {
                         const zeroDistance = inputs.zero_distance * 3; // Convert yards to feet
                         self.postMessage({ log: 'Starting zeroing for distance: ' + inputs.zero_distance + ' yards (' + zeroDistance + ' feet)' });
                         
-                        let angleLow = -0.15;
-                        let angleHigh = 0.15;
+                        // Start with a much wider range that includes significant downward angles
+                        let angleLow = -0.3;  // Allow steep downward angles
+                        let angleHigh = 0.3;  // Allow steep upward angles
                         
                         self.postMessage({ log: 'Calculating initial bounds...' });
                         let trajectoryLow = simulateTrajectory(angleLow);
@@ -4459,8 +4463,8 @@ window.resetPassword = async function() {
 
                         if (!converged) {
                             self.postMessage({ log: 'Zeroing failed to converge within tolerance' });
-                            angleLow = -0.2;
-                            angleHigh = 0.2;
+                            angleLow = -0.3;
+                            angleHigh = 0.3;
                             yLow = simulateTrajectory(angleLow).trajectory.reduce((closest, point) => {
                                 const dist = Math.abs(point.x - zeroDistance);
                                 return dist < Math.abs(closest.x - zeroDistance) ? point : closest;
@@ -4559,7 +4563,7 @@ window.resetPassword = async function() {
                                 }
                                 
                                 // Keep angle within reasonable bounds
-                                angle = Math.max(-0.2, Math.min(0.2, angle));
+                                angle = Math.max(-0.3, Math.min(0.3, angle));
                             }
                         }
 
