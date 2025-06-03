@@ -1780,7 +1780,7 @@
             }
         };
 
-        window.updateUserSubscription = async function(userId, subscriptionStatus) {
+        window.updateUserSubscription = async function(userId, subscriptionStatus, selectElement) {
             try {
                 const { error } = await window.supabaseClient
                     .from('user_profile')
@@ -1793,14 +1793,15 @@
                 } else {
                     console.log('Subscription status updated successfully for user:', userId);
                     // Update the select element color based on new status
-                    const selectElement = event.target;
-                    let newColor = '#ffc107'; // trial - yellow
-                    if (subscriptionStatus === 'active') {
-                        newColor = '#28a745'; // active - green
-                    } else if (subscriptionStatus === 'expired' || subscriptionStatus === 'cancelled' || subscriptionStatus === 'suspended') {
-                        newColor = '#dc3545'; // expired/cancelled/suspended - red
+                    if (selectElement) {
+                        let newColor = '#ffc107'; // trial - yellow
+                        if (subscriptionStatus === 'active') {
+                            newColor = '#28a745'; // active - green
+                        } else if (subscriptionStatus === 'expired' || subscriptionStatus === 'cancelled' || subscriptionStatus === 'suspended') {
+                            newColor = '#dc3545'; // expired/cancelled/suspended - red
+                        }
+                        selectElement.style.backgroundColor = newColor;
                     }
-                    selectElement.style.backgroundColor = newColor;
                 }
             } catch (error) {
                 console.error('Error updating subscription status:', error);
@@ -2216,7 +2217,7 @@
                                 <span style="padding: 4px 8px; border-radius: 4px; font-size: 12px; background-color: ${statusColor}; color: white;">${profile.status}</span>
                             </td>
                             <td style="border: 1px solid #dee2e6; padding: 10px;">
-                                <select onchange="updateUserSubscription('${userId}', this.value)" 
+                                <select onchange="updateUserSubscription('${userId}', this.value, this)" 
                                         style="width: 100%; border: 1px solid #ddd; border-radius: 4px; padding: 4px; font-size: 12px; background-color: ${subscriptionColor}; color: white;">
                                     <option value="trial" ${subscriptionStatus === 'trial' ? 'selected' : ''}>Trial</option>
                                     <option value="active" ${subscriptionStatus === 'active' ? 'selected' : ''}>Active</option>
