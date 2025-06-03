@@ -1287,6 +1287,7 @@
     <script>
         // Navigation Functions
         window.showHomePage = function() {
+            saveCurrentPage('home');
             document.getElementById('homePage').style.display = 'block';
             document.getElementById('shootingProfileSection').style.display = 'none';
             document.getElementById('bulletLibrarySection').style.display = 'none';
@@ -1294,6 +1295,13 @@
             document.getElementById('addBulletForm').style.display = 'none';
             const filterSection = document.getElementById('filterSection');
             if (filterSection) filterSection.style.display = 'none';
+            
+            // Hide other sections
+            const hideElements = ['firearmLibrary', 'dopeSection', 'setupSection', 'activeBulletLibrary', 'activeFirearmLibrary', 'activeDopeSection', 'activeSetupSection'];
+            hideElements.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) element.style.display = 'none';
+            });
             
             // Remove the active bullet library content to fix display issue
             const activeBulletLibrary = document.getElementById('activeBulletLibrary');
@@ -1303,11 +1311,19 @@
         };
 
         window.showShootingProfile = function() {
+            saveCurrentPage('shootingProfile');
             document.getElementById('homePage').style.display = 'none';
             document.getElementById('shootingProfileSection').style.display = 'block';
             document.getElementById('bulletLibrarySection').style.display = 'none';
             document.getElementById('ballisticForm').style.display = 'none';
             document.getElementById('addBulletForm').style.display = 'none';
+            
+            // Hide other sections
+            const hideElements = ['firearmLibrary', 'dopeSection', 'setupSection', 'activeBulletLibrary', 'activeFirearmLibrary', 'activeDopeSection', 'activeSetupSection'];
+            hideElements.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) element.style.display = 'none';
+            });
             
             // Remove any active bullet library content to prevent interference
             const activeBulletLibrary = document.getElementById('activeBulletLibrary');
@@ -3840,6 +3856,12 @@ User Data Summary:
                     document.getElementById('loginForm').style.display = 'none';
                     document.getElementById('appContent').style.display = 'block';
                     
+                    // Delay navigation wrapper initialization to ensure all functions exist
+                    setTimeout(() => {
+                        initializeNavigationWrappers();
+                        restoreLastVisitedPage();
+                    }, 100);
+                    
                     // Check admin access immediately and also after a delay
                     checkAdminAccess(); // Show admin panel button if user is admin
                     setTimeout(() => {
@@ -3852,6 +3874,116 @@ User Data Summary:
                 
                 // Check if user came from password reset email
                 checkPasswordResetURL();
+            }
+
+            // Function to save current page state
+            function saveCurrentPage(pageName) {
+                localStorage.setItem('ballistic_current_page', pageName);
+            }
+
+            // Create navigation wrapper functions to save page state
+            const originalNavFunctions = {};
+
+            // Wrap navigation functions to save page state
+            function wrapNavigationFunction(functionName, pageKey) {
+                if (typeof window[functionName] === 'function') {
+                    console.log('Wrapping function:', functionName, 'with page key:', pageKey);
+                    originalNavFunctions[functionName] = window[functionName];
+                    window[functionName] = function(...args) {
+                        console.log('Navigation function called:', functionName, 'saving page:', pageKey);
+                        saveCurrentPage(pageKey);
+                        return originalNavFunctions[functionName].apply(this, args);
+                    };
+                } else {
+                    console.log('Function not found for wrapping:', functionName);
+                }
+            }
+
+            // Initialize navigation function wrappers when page loads
+            function initializeNavigationWrappers() {
+                console.log('Initializing navigation wrappers...');
+                wrapNavigationFunction('showZeroProfile', 'shootingProfile');
+                wrapNavigationFunction('showBulletLibrary', 'bulletLibrary');
+                wrapNavigationFunction('showFirearmLibrary', 'firearmLibrary');
+                wrapNavigationFunction('showDOPE', 'dope');
+                wrapNavigationFunction('showSetup', 'setup');
+                wrapNavigationFunction('showAdminPanel', 'admin');
+                console.log('Navigation wrappers initialized');
+            }
+
+            // Function to restore last visited page
+            function restoreLastVisitedPage() {
+                const lastPage = localStorage.getItem('ballistic_current_page');
+                console.log('Restoring last visited page:', lastPage);
+                
+                if (lastPage) {
+                    console.log('Attempting to restore page:', lastPage);
+                    switch(lastPage) {
+                        case 'shootingProfile':
+                            console.log('Restoring shooting profile page');
+                            if (typeof showZeroProfile === 'function') {
+                                showZeroProfile();
+                            } else if (typeof showShootingProfile === 'function') {
+                                showShootingProfile();
+                            } else {
+                                console.log('No shooting profile function found, going to home');
+                                showHomePage();
+                            }
+                            break;
+                        case 'bulletLibrary':
+                            console.log('Restoring bullet library page');
+                            if (typeof showBulletLibrary === 'function') {
+                                showBulletLibrary();
+                            } else {
+                                console.log('No bullet library function found, going to home');
+                                showHomePage();
+                            }
+                            break;
+                        case 'firearmLibrary':
+                            console.log('Restoring firearm library page');
+                            if (typeof showFirearmLibrary === 'function') {
+                                showFirearmLibrary();
+                            } else {
+                                console.log('No firearm library function found, going to home');
+                                showHomePage();
+                            }
+                            break;
+                        case 'dope':
+                            console.log('Restoring DOPE page');
+                            if (typeof showDOPE === 'function') {
+                                showDOPE();
+                            } else {
+                                console.log('No DOPE function found, going to home');
+                                showHomePage();
+                            }
+                            break;
+                        case 'setup':
+                            console.log('Restoring setup page');
+                            if (typeof showSetup === 'function') {
+                                showSetup();
+                            } else {
+                                console.log('No setup function found, going to home');
+                                showHomePage();
+                            }
+                            break;
+                        case 'admin':
+                            console.log('Restoring admin page');
+                            if (typeof showAdminPanel === 'function') {
+                                showAdminPanel();
+                            } else {
+                                console.log('No admin panel function found, going to home');
+                                showHomePage();
+                            }
+                            break;
+                        default:
+                            console.log('Unknown page type, going to home');
+                            showHomePage();
+                            break;
+                    }
+                } else {
+                    console.log('No saved page found, going to home');
+                    showHomePage();
+                }
             }
 
             // Check if URL contains password reset parameters
