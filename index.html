@@ -4407,7 +4407,7 @@ window.resetPassword = async function() {
                             return Math.abs(point.x - zeroDistance) < Math.abs(closest.x - zeroDistance) ? point : closest;
                         }, trajectoryHigh.trajectory[0]).y;
                         
-                        self.postMessage({ log: `Initial bounds: angle ${angleLow.toFixed(6)} gives y=${yLow.toFixed(3)}, angle ${angleHigh.toFixed(6)} gives y=${yHigh.toFixed(3)}` });
+                        self.postMessage({ log: 'Initial bounds: angle ' + angleLow.toFixed(6) + ' gives y=' + yLow.toFixed(3) + ', angle ' + angleHigh.toFixed(6) + ' gives y=' + yHigh.toFixed(3) });
                         
                         // Check if zero is bracketed, if not expand the search
                         let iterations = 0;
@@ -4438,7 +4438,7 @@ window.resetPassword = async function() {
                                 return Math.abs(point.x - zeroDistance) < Math.abs(closest.x - zeroDistance) ? point : closest;
                             }, trajectoryHigh.trajectory[0]).y;
                             
-                            self.postMessage({ log: `Expanded bounds iteration ${iterations}: angle ${angleLow.toFixed(6)} gives y=${yLow.toFixed(3)}, angle ${angleHigh.toFixed(6)} gives y=${yHigh.toFixed(3)}` });
+                            self.postMessage({ log: 'Expanded bounds iteration ' + iterations + ': angle ' + angleLow.toFixed(6) + ' gives y=' + yLow.toFixed(3) + ', angle ' + angleHigh.toFixed(6) + ' gives y=' + yHigh.toFixed(3) });
                         }
                         
                         self.postMessage({ log: 'Zero successfully bracketed, starting Newton-Raphson...' });
@@ -4456,10 +4456,10 @@ window.resetPassword = async function() {
                             }, trajectory.trajectory[0]);
                             let f = targetPoint.y;
                             
-                            self.postMessage({ log: `Newton iteration ${i + 1}: angle=${angle.toFixed(6)}, y=${f.toFixed(3)}` });
+                            self.postMessage({ log: 'Newton iteration ' + (i + 1) + ': angle=' + angle.toFixed(6) + ', y=' + f.toFixed(3) });
                             
                             if (Math.abs(f) < tolerance) {
-                                self.postMessage({ log: `Converged in ${i + 1} iterations with angle ${angle.toFixed(6)} radians` });
+                                self.postMessage({ log: 'Converged in ' + (i + 1) + ' iterations with angle ' + angle.toFixed(6) + ' radians' });
                                 
                                 // Generate final trajectory with converged angle
                                 let finalTrajectory = simulateTrajectory(angle);
@@ -4506,7 +4506,7 @@ window.resetPassword = async function() {
                             let derivative = (fPlus - f) / h;
                             
                             if (Math.abs(derivative) < 1e-10) {
-                                self.postMessage({ log: `Derivative too small at iteration ${i + 1}, switching to bisection` });
+                                self.postMessage({ log: 'Derivative too small at iteration ' + (i + 1) + ', switching to bisection' });
                                 // Fall back to bisection method
                                 if (f > 0) {
                                     angleHigh = angle;
@@ -4520,7 +4520,7 @@ window.resetPassword = async function() {
                                 
                                 // Keep within reasonable bounds
                                 if (newAngle < -0.1 || newAngle > 0.1) {
-                                    self.postMessage({ log: `Newton step out of bounds, using bisection` });
+                                    self.postMessage({ log: 'Newton step out of bounds, using bisection' });
                                     if (f > 0) {
                                         angleHigh = angle;
                                     } else {
