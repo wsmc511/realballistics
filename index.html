@@ -8095,49 +8095,44 @@ window.resetPassword = async function() {
                         return;
                     }
 
-                    // Close the shared library modal
-                    closeSharedFirearmLibraryModal();
-
-                    // Display shared firearms in the main firearm library area
-                    const firearmLibraryContent = document.getElementById('firearmLibraryContent');
-                    
-                    let tableHTML = `
-                        <div style="margin-bottom: 20px; padding: 15px; background-color: #e7f3ff; border-radius: 5px; border: 1px solid #007bff;">
-                            <h4 style="margin: 0 0 10px 0; color: #007bff;">Viewing Shared Firearm Library</h4>
-                            <p style="margin: 0; color: #0056b3;">Shared by: ${ownerEmail} | ${firearms.length} firearm profile(s)</p>
-                            <button onclick="loadFirearmLibraryDirect()" style="background: #28a745; color: white; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; margin-top: 10px;">Back to My Library</button>
+                    // Update the modal to show firearms with multi-select like bullet library
+                    const firearmListHTML = firearms.map(firearm => `
+                        <div style="margin: 10px 0; padding: 10px; border: 1px solid #ddd; border-radius: 4px; display: flex; align-items: center; gap: 10px;">
+                            <input type="checkbox" id="firearm_${firearm.id}" value="${firearm.id}" style="margin-right: 10px;">
+                            <div style="flex: 1;">
+                                <strong>${firearm.profile_name || 'N/A'}</strong> - ${firearm.firearm_name || 'N/A'}
+                                <br><small>${firearm.caliber || 'N/A'} | ${firearm.barrel_length ? firearm.barrel_length + '"' : 'N/A'} barrel | ${firearm.zero_distance ? firearm.zero_distance + ' yds' : 'N/A'} zero</small>
+                            </div>
                         </div>
-                        <table style="width: 100%; border-collapse: collapse; border: 1px solid #dee2e6;">
-                            <thead style="background-color: #f8f9fa;">
-                                <tr>
-                                    <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left;">Profile Name</th>
-                                    <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left;">Firearm</th>
-                                    <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left;">Caliber</th>
-                                    <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left;">Barrel Length</th>
-                                    <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left;">Zero Distance</th>
-                                    <th style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                    `;
+                    `).join('');
 
-                    firearms.forEach(firearm => {
-                        tableHTML += `
-                            <tr style="border-bottom: 1px solid #dee2e6;">
-                                <td style="border: 1px solid #dee2e6; padding: 10px;">${firearm.profile_name || 'N/A'}</td>
-                                <td style="border: 1px solid #dee2e6; padding: 10px;">${firearm.firearm_name || 'N/A'}</td>
-                                <td style="border: 1px solid #dee2e6; padding: 10px;">${firearm.caliber || 'N/A'}</td>
-                                <td style="border: 1px solid #dee2e6; padding: 10px;">${firearm.barrel_length ? firearm.barrel_length + '"' : 'N/A'}</td>
-                                <td style="border: 1px solid #dee2e6; padding: 10px;">${firearm.zero_distance ? firearm.zero_distance + ' yds' : 'N/A'}</td>
-                                <td style="border: 1px solid #dee2e6; padding: 10px; text-align: center;">
-                                    <button onclick="copySharedFirearm('${firearm.id}', '${ownerUserId}')" style="background-color: #28a745; color: white; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer;">Copy to My Library</button>
-                                </td>
-                            </tr>
+                    // Update the existing modal content
+                    const modal = document.getElementById('sharedFirearmLibraryModal');
+                    if (modal) {
+                        modal.innerHTML = `
+                            <div style="background: white; padding: 20px; border-radius: 8px; max-width: 600px; width: 90%; max-height: 80%; overflow-y: auto;">
+                                <h3 style="margin-top: 0;">Available Shared Firearm Library</h3>
+                                <p style="margin-bottom: 15px; color: #666;">Select firearms from shared library to copy to your own library.</p>
+                                
+                                <div style="margin-bottom: 15px; padding: 10px; background-color: #f8f9fa; border-radius: 4px;">
+                                    <strong>Library shared by: ${ownerEmail}</strong>
+                                    <br><span style="color: #666;">${firearms.length} firearm profile(s) available</span>
+                                </div>
+                                
+                                <div id="sharedFirearmsList" style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; border-radius: 4px;">
+                                    ${firearmListHTML}
+                                </div>
+                                
+                                <div style="margin-top: 15px; display: flex; justify-content: space-between; align-items: center;">
+                                    <button onclick="selectAllSharedFirearms()" style="background: #17a2b8; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer;">Select All</button>
+                                    <div style="display: flex; gap: 10px;">
+                                        <button onclick="copySelectedSharedFirearms('${ownerUserId}')" style="background: #28a745; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer;">Copy Selected</button>
+                                        <button onclick="closeSharedFirearmLibraryModal()" style="background: #6c757d; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer;">Close</button>
+                                    </div>
+                                </div>
+                            </div>
                         `;
-                    });
-
-                    tableHTML += '</tbody></table>';
-                    firearmLibraryContent.innerHTML = tableHTML;
+                    }
 
                 } catch (error) {
                     console.error('Error loading shared firearms:', error);
@@ -8196,6 +8191,97 @@ window.resetPassword = async function() {
                 } catch (error) {
                     console.error('Error copying shared firearm:', error);
                     alert('Error copying firearm: ' + error.message);
+                }
+            };
+
+            window.selectAllSharedFirearms = function() {
+                const checkboxes = document.querySelectorAll('#sharedFirearmsList input[type="checkbox"]');
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = true;
+                });
+            };
+
+            window.copySelectedSharedFirearms = async function(ownerUserId) {
+                try {
+                    if (!currentUser) {
+                        alert('Please log in to copy firearms.');
+                        return;
+                    }
+
+                    const checkboxes = document.querySelectorAll('#sharedFirearmsList input[type="checkbox"]:checked');
+                    if (checkboxes.length === 0) {
+                        alert('Please select at least one firearm to copy.');
+                        return;
+                    }
+
+                    const selectedFirearmIds = Array.from(checkboxes).map(cb => cb.value);
+                    let copiedCount = 0;
+                    let errorCount = 0;
+
+                    for (const firearmId of selectedFirearmIds) {
+                        try {
+                            // Get the original firearm data
+                            const { data: originalFirearm, error: fetchError } = await supabase
+                                .from('firearm_profile')
+                                .select('*')
+                                .eq('id', firearmId)
+                                .eq('user_id', ownerUserId)
+                                .single();
+
+                            if (fetchError || !originalFirearm) {
+                                console.error('Error fetching original firearm:', fetchError);
+                                errorCount++;
+                                continue;
+                            }
+
+                            // Create a copy for the current user
+                            const firearmCopy = {
+                                user_id: currentUser.id,
+                                profile_name: originalFirearm.profile_name + ' (Copy)',
+                                shooter_name: originalFirearm.shooter_name,
+                                firearm_type: originalFirearm.firearm_type,
+                                firearm_name: originalFirearm.firearm_name,
+                                caliber: originalFirearm.caliber,
+                                barrel_length: originalFirearm.barrel_length,
+                                barrel_twist_rate: originalFirearm.barrel_twist_rate,
+                                optic_name: originalFirearm.optic_name,
+                                zero_distance: originalFirearm.zero_distance,
+                                height_over_bore: originalFirearm.height_over_bore
+                            };
+
+                            const { error: insertError } = await supabase
+                                .from('firearm_profile')
+                                .insert(firearmCopy);
+
+                            if (insertError) {
+                                console.error('Error copying firearm:', insertError);
+                                errorCount++;
+                            } else {
+                                copiedCount++;
+                            }
+
+                        } catch (error) {
+                            console.error('Error processing firearm:', error);
+                            errorCount++;
+                        }
+                    }
+
+                    // Show results
+                    let message = `Successfully copied ${copiedCount} firearm profile(s) to your library.`;
+                    if (errorCount > 0) {
+                        message += ` ${errorCount} firearm(s) failed to copy.`;
+                    }
+                    alert(message);
+
+                    // Close modal and refresh library
+                    closeSharedFirearmLibraryModal();
+                    if (copiedCount > 0) {
+                        loadFirearmLibraryDirect();
+                    }
+
+                } catch (error) {
+                    console.error('Error copying selected firearms:', error);
+                    alert('Error copying firearms: ' + error.message);
                 }
             };
 
