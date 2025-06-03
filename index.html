@@ -1780,6 +1780,34 @@
             }
         };
 
+        window.updateUserSubscription = async function(userId, subscriptionStatus) {
+            try {
+                const { error } = await window.supabase
+                    .from('user_profile')
+                    .update({ subscription_status: subscriptionStatus })
+                    .eq('user_id', userId);
+
+                if (error) {
+                    console.error('Error updating subscription status:', error);
+                    alert('Failed to update subscription status. Please try again.');
+                } else {
+                    console.log('Subscription status updated successfully for user:', userId);
+                    // Update the select element color based on new status
+                    const selectElement = event.target;
+                    let newColor = '#ffc107'; // Trial - yellow
+                    if (subscriptionStatus === 'Subscribed') {
+                        newColor = '#28a745'; // Subscribed - green
+                    } else if (subscriptionStatus === 'Expired') {
+                        newColor = '#dc3545'; // Expired - red
+                    }
+                    selectElement.style.backgroundColor = newColor;
+                }
+            } catch (error) {
+                console.error('Error updating subscription status:', error);
+                alert('Failed to update subscription status. Please try again.');
+            }
+        };
+
         // Helper function to check access and run a function
         window.checkAccessAndRun = async function(fn) {
             if (await checkUserAccess()) {
@@ -2120,6 +2148,7 @@
                                 <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left; font-weight: bold;">Email</th>
                                 <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left; font-weight: bold;">Role</th>
                                 <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left; font-weight: bold;">Status</th>
+                                <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left; font-weight: bold;">Subscription</th>
                                 <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left; font-weight: bold;">Notes</th>
                                 <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left; font-weight: bold;">Activity</th>
                                 <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left; font-weight: bold;">Registered</th>
@@ -2166,6 +2195,16 @@
                     }
                     
                     const notesValue = profile.notes || '';
+                    const subscriptionStatus = profile.subscription_status || 'Trial';
+                    
+                    // Color code subscription status
+                    let subscriptionColor = '#ffc107'; // Trial - yellow
+                    if (subscriptionStatus === 'Subscribed') {
+                        subscriptionColor = '#28a745'; // Subscribed - green
+                    } else if (subscriptionStatus === 'Expired') {
+                        subscriptionColor = '#dc3545'; // Expired - red
+                    }
+                    
                     tableHTML += `
                         <tr style="border-bottom: 1px solid #dee2e6;">
                             <td style="border: 1px solid #dee2e6; padding: 10px;">${fullName}</td>
@@ -2175,6 +2214,14 @@
                             </td>
                             <td style="border: 1px solid #dee2e6; padding: 10px;">
                                 <span style="padding: 4px 8px; border-radius: 4px; font-size: 12px; background-color: ${statusColor}; color: white;">${profile.status}</span>
+                            </td>
+                            <td style="border: 1px solid #dee2e6; padding: 10px;">
+                                <select onchange="updateUserSubscription('${userId}', this.value)" 
+                                        style="width: 100%; border: 1px solid #ddd; border-radius: 4px; padding: 4px; font-size: 12px; background-color: ${subscriptionColor}; color: white;">
+                                    <option value="Trial" ${subscriptionStatus === 'Trial' ? 'selected' : ''}>Trial</option>
+                                    <option value="Subscribed" ${subscriptionStatus === 'Subscribed' ? 'selected' : ''}>Subscribed</option>
+                                    <option value="Expired" ${subscriptionStatus === 'Expired' ? 'selected' : ''}>Expired</option>
+                                </select>
                             </td>
                             <td style="border: 1px solid #dee2e6; padding: 10px;">
                                 <input type="text" value="${notesValue}" 
