@@ -2662,6 +2662,16 @@ User Data Summary:
                         </div>
                         
                         <div style="margin-bottom: 20px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Subscription Status:</label>
+                            <input type="text" id="profileSubscriptionStatus" readonly style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: #f8f9fa; box-sizing: border-box;" placeholder="Loading...">
+                        </div>
+                        
+                        <div id="adminNotesSection" style="margin-bottom: 20px; display: none;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #dc3545;">Admin Notes:</label>
+                            <textarea id="profileAdminNotes" placeholder="Admin notes for this user account" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; min-height: 80px; resize: vertical;"></textarea>
+                        </div>
+                        
+                        <div style="margin-bottom: 20px;">
                             <button onclick="updateProfile()" style="background-color: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; margin-right: 10px;">Update Profile</button>
                             <button onclick="showChangePassword()" style="background-color: #ffc107; color: black; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; margin-right: 10px;">Change Password</button>
                             <button onclick="confirmDeleteAccount()" style="background-color: #dc3545; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer;">Delete Account</button>
@@ -2918,7 +2928,7 @@ User Data Summary:
                 // Load user profile data from user_profile table
                 const { data: userProfile, error } = await window.supabaseClient
                     .from('user_profile')
-                    .select('first_name, last_name, email')
+                    .select('first_name, last_name, email, subscription_status, notes, user_role')
                     .eq('user_id', window.currentUser.id)
                     .single();
 
@@ -2935,6 +2945,34 @@ User Data Summary:
                     }
                     if (lastNameField) {
                         lastNameField.value = userProfile.last_name || '';
+                    }
+                    
+                    // Load subscription status
+                    const subscriptionStatusField = document.getElementById('profileSubscriptionStatus');
+                    if (subscriptionStatusField) {
+                        const status = userProfile.subscription_status || 'Trial';
+                        subscriptionStatusField.value = status;
+                        
+                        // Color code the status
+                        if (status === 'Subscribed') {
+                            subscriptionStatusField.style.color = '#28a745';
+                        } else if (status === 'Trial') {
+                            subscriptionStatusField.style.color = '#ffc107';
+                        } else {
+                            subscriptionStatusField.style.color = '#dc3545';
+                        }
+                    }
+                    
+                    // Show admin notes section if user is admin
+                    const isAdmin = userProfile.user_role === 'Admin';
+                    const adminNotesSection = document.getElementById('adminNotesSection');
+                    const adminNotesField = document.getElementById('profileAdminNotes');
+                    
+                    if (isAdmin && adminNotesSection) {
+                        adminNotesSection.style.display = 'block';
+                        if (adminNotesField) {
+                            adminNotesField.value = userProfile.notes || '';
+                        }
                     }
                 }
 
@@ -2954,13 +2992,25 @@ User Data Summary:
                 const firstName = document.getElementById('profileFirstName').value.trim();
                 const lastName = document.getElementById('profileLastName').value.trim();
                 
-                // Update first name and last name in user_profile table
+                // Check if admin notes field is visible (admin only)
+                const adminNotesSection = document.getElementById('adminNotesSection');
+                const isAdminNotesVisible = adminNotesSection && adminNotesSection.style.display !== 'none';
+                
+                let updateData = {
+                    first_name: firstName,
+                    last_name: lastName
+                };
+                
+                // Include admin notes if user is admin
+                if (isAdminNotesVisible) {
+                    const adminNotes = document.getElementById('profileAdminNotes').value.trim();
+                    updateData.notes = adminNotes;
+                }
+                
+                // Update user profile in database
                 const { error: profileError } = await window.supabaseClient
                     .from('user_profile')
-                    .update({
-                        first_name: firstName,
-                        last_name: lastName
-                    })
+                    .update(updateData)
                     .eq('user_id', window.currentUser.id);
 
                 if (profileError) {
