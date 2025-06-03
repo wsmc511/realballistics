@@ -2651,6 +2651,17 @@ User Data Summary:
                             <input type="email" id="profileEmail" readonly style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: #f8f9fa;">
                         </div>
                         
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">First Name:</label>
+                                <input type="text" id="profileFirstName" placeholder="Enter your first name" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Last Name:</label>
+                                <input type="text" id="profileLastName" placeholder="Enter your last name" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            </div>
+                        </div>
+                        
                         <div style="margin-bottom: 20px;">
                             <label style="display: block; margin-bottom: 5px; font-weight: bold;">Display Name:</label>
                             <input type="text" id="profileDisplayName" placeholder="Enter your display name" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
@@ -2896,17 +2907,92 @@ User Data Summary:
             }
         };
 
-        // Missing functions for setup page functionality
+        // Load user profile data
+        window.loadUserProfile = async function() {
+            try {
+                if (!window.currentUser) {
+                    console.log('No current user available for profile loading');
+                    return;
+                }
+
+                // Set email field
+                const emailField = document.getElementById('profileEmail');
+                if (emailField) {
+                    emailField.value = window.currentUser.email || '';
+                }
+
+                // Load user profile data from user_profile table
+                const { data: userProfile, error } = await window.supabaseClient
+                    .from('user_profile')
+                    .select('first_name, last_name, email')
+                    .eq('user_id', window.currentUser.id)
+                    .single();
+
+                if (error) {
+                    console.error('Error loading user profile from database:', error);
+                    // Don't show error to user, just log it
+                } else if (userProfile) {
+                    // Load first name and last name from database
+                    const firstNameField = document.getElementById('profileFirstName');
+                    const lastNameField = document.getElementById('profileLastName');
+                    
+                    if (firstNameField) {
+                        firstNameField.value = userProfile.first_name || '';
+                    }
+                    if (lastNameField) {
+                        lastNameField.value = userProfile.last_name || '';
+                    }
+                }
+
+                // Load display name from auth metadata
+                const displayName = window.currentUser?.user_metadata?.display_name || 
+                                  window.currentUser?.user_metadata?.full_name || '';
+                const displayNameField = document.getElementById('profileDisplayName');
+                if (displayNameField) {
+                    displayNameField.value = displayName;
+                }
+
+            } catch (error) {
+                console.error('Error loading user profile:', error);
+            }
+        };
+
+        // Update user profile including first name and last name
         window.updateProfile = async function() {
             try {
+                if (!window.currentUser) {
+                    alert('Please log in to update your profile.');
+                    return;
+                }
+
+                const firstName = document.getElementById('profileFirstName').value.trim();
+                const lastName = document.getElementById('profileLastName').value.trim();
                 const displayName = document.getElementById('profileDisplayName').value.trim();
                 
-                const { error } = await window.supabaseClient.auth.updateUser({
+                // Update first name and last name in user_profile table
+                const { error: profileError } = await window.supabaseClient
+                    .from('user_profile')
+                    .update({
+                        first_name: firstName,
+                        last_name: lastName,
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('user_id', window.currentUser.id);
+
+                if (profileError) {
+                    console.error('Error updating user profile:', profileError);
+                    alert('Error updating profile: ' + profileError.message);
+                    return;
+                }
+
+                // Update display name in auth metadata
+                const { error: authError } = await window.supabaseClient.auth.updateUser({
                     data: { display_name: displayName }
                 });
                 
-                if (error) {
-                    alert('Error updating profile: ' + error.message);
+                if (authError) {
+                    console.error('Error updating auth metadata:', authError);
+                    alert('Error updating display name: ' + authError.message);
                     return;
                 }
                 
