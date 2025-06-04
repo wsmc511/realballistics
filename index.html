@@ -1239,6 +1239,46 @@
                 <thead id="comparisonTableHead"></thead>
                 <tbody id="comparisonTableBody"></tbody>
             </table>
+            
+            <!-- Advanced Analysis Tools -->
+            <div id="advancedAnalysisSection" style="display: none; background: white; padding: 20px; border-radius: 8px; margin-top: 20px; border: 1px solid #ddd;">
+                <h3>Advanced Trajectory Analysis</h3>
+                
+                <!-- Wind Sensitivity Analysis -->
+                <div style="margin-bottom: 20px;">
+                    <h4>Wind Sensitivity Analysis</h4>
+                    <p style="color: #666; margin-bottom: 10px;">Compare how each load performs across different wind conditions</p>
+                    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                        <input type="number" id="windAnalysisRange" placeholder="Range (yards)" value="600" style="width: 120px; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                        <button onclick="runWindSensitivityAnalysis()" style="background: #17a2b8; color: white; padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer;">Analyze Wind Sensitivity</button>
+                    </div>
+                    <div id="windSensitivityResults" style="margin-top: 15px;"></div>
+                </div>
+                
+                <!-- Energy Comparison -->
+                <div style="margin-bottom: 20px;">
+                    <h4>Kinetic Energy Comparison</h4>
+                    <p style="color: #666; margin-bottom: 10px;">Compare retained energy at various distances</p>
+                    <button onclick="runEnergyComparison()" style="background: #fd7e14; color: white; padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer;">Compare Energy Retention</button>
+                    <div id="energyComparisonResults" style="margin-top: 15px;"></div>
+                </div>
+                
+                <!-- Drop Comparison Chart -->
+                <div style="margin-bottom: 20px;">
+                    <h4>Trajectory Drop Visualization</h4>
+                    <p style="color: #666; margin-bottom: 10px;">Visual comparison of bullet drop across distances</p>
+                    <button onclick="generateDropChart()" style="background: #6f42c1; color: white; padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer;">Generate Drop Chart</button>
+                    <div id="dropChartResults" style="margin-top: 15px;"></div>
+                </div>
+                
+                <!-- Flight Time Analysis -->
+                <div>
+                    <h4>Time of Flight Comparison</h4>
+                    <p style="color: #666; margin-bottom: 10px;">Compare flight times for moving target calculations</p>
+                    <button onclick="runFlightTimeAnalysis()" style="background: #20c997; color: white; padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer;">Analyze Flight Times</button>
+                    <div id="flightTimeResults" style="margin-top: 15px;"></div>
+                </div>
+            </div>
         </div>
         <!-- End Shooting Profile Section -->
     </div>
@@ -4322,6 +4362,346 @@ window.resetPassword = async function() {
                 return Math.max(muzzleVelocity + velocityAdjustment, 0);
             }
 
+            // Advanced Ballistic Analysis Functions
+            window.runWindSensitivityAnalysis = async function() {
+                const range = parseFloat(document.getElementById('windAnalysisRange').value) || 600;
+                const resultsDiv = document.getElementById('windSensitivityResults');
+                
+                if (!window.lastComparisonData || window.lastComparisonData.length === 0) {
+                    resultsDiv.innerHTML = '<p style="color: #dc3545;">Please run a comparison first to analyze wind sensitivity.</p>';
+                    return;
+                }
+                
+                resultsDiv.innerHTML = '<p>Analyzing wind sensitivity...</p>';
+                
+                try {
+                    const windSpeeds = [0, 5, 10, 15, 20, 25]; // mph
+                    const windAngle = 90; // Full value crosswind
+                    
+                    let analysisHTML = `
+                        <h5>Wind Sensitivity at ${range} Yards</h5>
+                        <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+                            <thead>
+                                <tr style="background-color: #f8f9fa;">
+                                    <th style="border: 1px solid #ddd; padding: 8px;">Load</th>
+                                    <th style="border: 1px solid #ddd; padding: 8px;">0 mph</th>
+                                    <th style="border: 1px solid #ddd; padding: 8px;">5 mph</th>
+                                    <th style="border: 1px solid #ddd; padding: 8px;">10 mph</th>
+                                    <th style="border: 1px solid #ddd; padding: 8px;">15 mph</th>
+                                    <th style="border: 1px solid #ddd; padding: 8px;">20 mph</th>
+                                    <th style="border: 1px solid #ddd; padding: 8px;">25 mph</th>
+                                </tr>
+                            </thead>
+                            <tbody>`;
+                    
+                    for (const load of window.lastComparisonData) {
+                        analysisHTML += '<tr>';
+                        analysisHTML += `<td style="border: 1px solid #ddd; padding: 8px;"><strong>${load.name}</strong></td>`;
+                        
+                        for (const windSpeed of windSpeeds) {
+                            const windInputs = {
+                                ...load.inputs,
+                                wind_speed: windSpeed,
+                                wind_angle: windAngle
+                            };
+                            
+                            try {
+                                const trajectory = await simulateTrajectory(windInputs);
+                                const targetPoint = trajectory.find(point => 
+                                    Math.abs(point.distance - range) <= 5
+                                );
+                                
+                                if (targetPoint) {
+                                    const windage = targetPoint.windageInches;
+                                    const windageMOA = (windage / (range * 1.047 / 100));
+                                    analysisHTML += `<td style="border: 1px solid #ddd; padding: 8px; text-align: center;">
+                                        ${windage.toFixed(1)}"<br>
+                                        <small>${windageMOA.toFixed(2)} MOA</small>
+                                    </td>`;
+                                } else {
+                                    analysisHTML += '<td style="border: 1px solid #ddd; padding: 8px; text-align: center;">N/A</td>';
+                                }
+                            } catch (error) {
+                                console.error('Wind analysis error:', error);
+                                analysisHTML += '<td style="border: 1px solid #ddd; padding: 8px; text-align: center;">Error</td>';
+                            }
+                        }
+                        analysisHTML += '</tr>';
+                    }
+                    
+                    analysisHTML += '</tbody></table>';
+                    analysisHTML += '<p style="color: #666; font-size: 0.9em; margin-top: 10px;">Values show windage drift in inches and MOA at the specified range.</p>';
+                    
+                    resultsDiv.innerHTML = analysisHTML;
+                    
+                } catch (error) {
+                    console.error('Wind sensitivity analysis error:', error);
+                    resultsDiv.innerHTML = '<p style="color: #dc3545;">Error performing wind analysis. Please try again.</p>';
+                }
+            };
+
+            window.runEnergyComparison = async function() {
+                const resultsDiv = document.getElementById('energyComparisonResults');
+                
+                if (!window.lastComparisonData || window.lastComparisonData.length === 0) {
+                    resultsDiv.innerHTML = '<p style="color: #dc3545;">Please run a comparison first to analyze energy retention.</p>';
+                    return;
+                }
+                
+                resultsDiv.innerHTML = '<p>Calculating energy retention...</p>';
+                
+                try {
+                    const distances = [100, 200, 300, 400, 500, 600, 800, 1000];
+                    
+                    let energyHTML = `
+                        <h5>Kinetic Energy Retention Comparison</h5>
+                        <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+                            <thead>
+                                <tr style="background-color: #f8f9fa;">
+                                    <th style="border: 1px solid #ddd; padding: 8px;">Load</th>
+                                    <th style="border: 1px solid #ddd; padding: 8px;">Muzzle</th>`;
+                    
+                    distances.forEach(dist => {
+                        energyHTML += `<th style="border: 1px solid #ddd; padding: 8px;">${dist}y</th>`;
+                    });
+                    energyHTML += '</tr></thead><tbody>';
+                    
+                    for (const load of window.lastComparisonData) {
+                        energyHTML += '<tr>';
+                        energyHTML += `<td style="border: 1px solid #ddd; padding: 8px;"><strong>${load.name}</strong></td>`;
+                        
+                        // Calculate muzzle energy
+                        const bulletMass = load.inputs.bullet_grain / 7000; // Convert grains to pounds
+                        const muzzleEnergy = 0.5 * bulletMass * Math.pow(load.inputs.muzzle_velocity, 2) / 32.174;
+                        energyHTML += `<td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${Math.round(muzzleEnergy)} ft-lbs</td>`;
+                        
+                        try {
+                            const trajectory = await simulateTrajectory(load.inputs);
+                            
+                            distances.forEach(targetDist => {
+                                const targetPoint = trajectory.find(point => 
+                                    Math.abs(point.distance - targetDist) <= 5
+                                );
+                                
+                                if (targetPoint && targetPoint.velocity) {
+                                    const energy = 0.5 * bulletMass * Math.pow(targetPoint.velocity, 2) / 32.174;
+                                    const retention = (energy / muzzleEnergy * 100);
+                                    energyHTML += `<td style="border: 1px solid #ddd; padding: 8px; text-align: center;">
+                                        ${Math.round(energy)} ft-lbs<br>
+                                        <small>(${retention.toFixed(0)}%)</small>
+                                    </td>`;
+                                } else {
+                                    energyHTML += '<td style="border: 1px solid #ddd; padding: 8px; text-align: center;">N/A</td>';
+                                }
+                            });
+                        } catch (error) {
+                            console.error('Energy calculation error:', error);
+                            distances.forEach(() => {
+                                energyHTML += '<td style="border: 1px solid #ddd; padding: 8px; text-align: center;">Error</td>';
+                            });
+                        }
+                        
+                        energyHTML += '</tr>';
+                    }
+                    
+                    energyHTML += '</tbody></table>';
+                    energyHTML += '<p style="color: #666; font-size: 0.9em; margin-top: 10px;">Energy values in ft-lbs with percentage of muzzle energy retained.</p>';
+                    
+                    resultsDiv.innerHTML = energyHTML;
+                    
+                } catch (error) {
+                    console.error('Energy comparison error:', error);
+                    resultsDiv.innerHTML = '<p style="color: #dc3545;">Error calculating energy retention. Please try again.</p>';
+                }
+            };
+
+            window.generateDropChart = function() {
+                const resultsDiv = document.getElementById('dropChartResults');
+                
+                if (!window.lastComparisonData || window.lastComparisonData.length === 0) {
+                    resultsDiv.innerHTML = '<p style="color: #dc3545;">Please run a comparison first to generate drop chart.</p>';
+                    return;
+                }
+                
+                resultsDiv.innerHTML = '<p>Generating trajectory visualization...</p>';
+                
+                try {
+                    const distances = [0, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000];
+                    const colors = ['#007bff', '#28a745', '#dc3545', '#ffc107', '#17a2b8', '#6f42c1'];
+                    
+                    let chartHTML = `
+                        <h5>Bullet Drop Visualization</h5>
+                        <div style="position: relative; width: 100%; height: 400px; border: 1px solid #ddd; background: white; margin: 10px 0;">
+                            <svg width="100%" height="100%" viewBox="0 0 800 300" style="position: absolute;">`;
+                    
+                    // Grid lines
+                    for (let i = 0; i <= 10; i++) {
+                        const x = 80 + (i * 70);
+                        chartHTML += `<line x1="${x}" y1="250" x2="${x}" y2="260" stroke="#ddd" stroke-width="1"/>`;
+                        chartHTML += `<text x="${x}" y="275" text-anchor="middle" font-size="10" fill="#666">${i * 100}</text>`;
+                    }
+                    
+                    for (let i = 0; i <= 10; i++) {
+                        const y = 50 + (i * 20);
+                        chartHTML += `<line x1="75" y1="${y}" x2="780" y2="${y}" stroke="#eee" stroke-width="0.5"/>`;
+                        if (i % 2 === 0) {
+                            const dropValue = (10 - i) * 10;
+                            chartHTML += `<text x="70" y="${y + 3}" text-anchor="end" font-size="10" fill="#666">${dropValue > 0 ? '+' : ''}${dropValue}"</text>`;
+                        }
+                    }
+                    
+                    // Zero line
+                    chartHTML += `<line x1="80" y1="150" x2="780" y2="150" stroke="#333" stroke-width="2"/>`;
+                    chartHTML += `<text x="10" y="155" font-size="12" fill="#333">Drop (inches)</text>`;
+                    chartHTML += `<text x="430" y="295" text-anchor="middle" font-size="12" fill="#333">Distance (yards)</text>`;
+                    
+                    // Plot trajectories
+                    window.lastComparisonData.forEach((load, index) => {
+                        const color = colors[index % colors.length];
+                        let pathData = 'M 80 150'; // Start at zero point
+                        
+                        if (load.trajectory && load.trajectory.length > 0) {
+                            distances.forEach(dist => {
+                                if (dist === 0) return;
+                                
+                                const point = load.trajectory.find(p => Math.abs(p.distance - dist) <= 5);
+                                if (point) {
+                                    const x = 80 + (dist / 1000 * 700);
+                                    const y = 150 - (point.drop * 2); // Scale drop for visibility
+                                    pathData += ` L ${x} ${y}`;
+                                }
+                            });
+                        }
+                        
+                        chartHTML += `<path d="${pathData}" fill="none" stroke="${color}" stroke-width="2"/>`;
+                        chartHTML += `<circle cx="760" cy="${65 + index * 20}" r="4" fill="${color}"/>`;
+                        chartHTML += `<text x="770" y="${70 + index * 20}" font-size="11" fill="#333">${load.name}</text>`;
+                    });
+                    
+                    chartHTML += '</svg></div>';
+                    chartHTML += '<p style="color: #666; font-size: 0.9em;">Visual representation of bullet drop across distance. Zero line represents point of aim.</p>';
+                    
+                    resultsDiv.innerHTML = chartHTML;
+                    
+                } catch (error) {
+                    console.error('Drop chart error:', error);
+                    resultsDiv.innerHTML = '<p style="color: #dc3545;">Error generating drop chart. Please try again.</p>';
+                }
+            };
+
+            window.runFlightTimeAnalysis = async function() {
+                const resultsDiv = document.getElementById('flightTimeResults');
+                
+                if (!window.lastComparisonData || window.lastComparisonData.length === 0) {
+                    resultsDiv.innerHTML = '<p style="color: #dc3545;">Please run a comparison first to analyze flight times.</p>';
+                    return;
+                }
+                
+                resultsDiv.innerHTML = '<p>Calculating flight times...</p>';
+                
+                try {
+                    const distances = [100, 200, 300, 400, 500, 600, 800, 1000];
+                    
+                    let timeHTML = `
+                        <h5>Time of Flight Comparison</h5>
+                        <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+                            <thead>
+                                <tr style="background-color: #f8f9fa;">
+                                    <th style="border: 1px solid #ddd; padding: 8px;">Load</th>`;
+                    
+                    distances.forEach(dist => {
+                        timeHTML += `<th style="border: 1px solid #ddd; padding: 8px;">${dist}y</th>`;
+                    });
+                    timeHTML += '</tr></thead><tbody>';
+                    
+                    for (const load of window.lastComparisonData) {
+                        timeHTML += '<tr>';
+                        timeHTML += `<td style="border: 1px solid #ddd; padding: 8px;"><strong>${load.name}</strong></td>`;
+                        
+                        try {
+                            if (load.trajectory && load.trajectory.length > 0) {
+                                distances.forEach(targetDist => {
+                                    const targetPoint = load.trajectory.find(point => 
+                                        Math.abs(point.distance - targetDist) <= 5
+                                    );
+                                    
+                                    if (targetPoint && targetPoint.time) {
+                                        timeHTML += `<td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${targetPoint.time.toFixed(3)}s</td>`;
+                                    } else {
+                                        timeHTML += '<td style="border: 1px solid #ddd; padding: 8px; text-align: center;">N/A</td>';
+                                    }
+                                });
+                            } else {
+                                distances.forEach(() => {
+                                    timeHTML += '<td style="border: 1px solid #ddd; padding: 8px; text-align: center;">N/A</td>';
+                                });
+                            }
+                        } catch (error) {
+                            console.error('Flight time calculation error:', error);
+                            distances.forEach(() => {
+                                timeHTML += '<td style="border: 1px solid #ddd; padding: 8px; text-align: center;">Error</td>';
+                            });
+                        }
+                        
+                        timeHTML += '</tr>';
+                    }
+                    
+                    timeHTML += '</tbody></table>';
+                    
+                    // Add moving target calculations
+                    timeHTML += `
+                        <h6 style="margin-top: 20px;">Moving Target Lead Calculations</h6>
+                        <p style="color: #666; font-size: 0.9em;">Based on flight times above, here are lead requirements for targets moving at different speeds:</p>
+                        <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+                            <thead>
+                                <tr style="background-color: #f8f9fa;">
+                                    <th style="border: 1px solid #ddd; padding: 8px;">Target Speed</th>
+                                    <th style="border: 1px solid #ddd; padding: 8px;">300y Lead</th>
+                                    <th style="border: 1px solid #ddd; padding: 8px;">500y Lead</th>
+                                    <th style="border: 1px solid #ddd; padding: 8px;">800y Lead</th>
+                                </tr>
+                            </thead>
+                            <tbody>`;
+                    
+                    const targetSpeeds = [10, 15, 20, 25]; // mph
+                    const leadDistances = [300, 500, 800];
+                    
+                    targetSpeeds.forEach(speed => {
+                        timeHTML += '<tr>';
+                        timeHTML += `<td style="border: 1px solid #ddd; padding: 8px;"><strong>${speed} mph</strong></td>`;
+                        
+                        leadDistances.forEach(dist => {
+                            // Use the fastest load as reference
+                            const fastestLoad = window.lastComparisonData[0];
+                            if (fastestLoad.trajectory) {
+                                const point = fastestLoad.trajectory.find(p => Math.abs(p.distance - dist) <= 5);
+                                if (point && point.time) {
+                                    const speedFeetPerSec = speed * 1.467; // Convert mph to ft/s
+                                    const leadDistance = speedFeetPerSec * point.time;
+                                    const leadInches = leadDistance * 12;
+                                    timeHTML += `<td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${leadInches.toFixed(1)}"</td>`;
+                                } else {
+                                    timeHTML += '<td style="border: 1px solid #ddd; padding: 8px; text-align: center;">N/A</td>';
+                                }
+                            } else {
+                                timeHTML += '<td style="border: 1px solid #ddd; padding: 8px; text-align: center;">N/A</td>';
+                            }
+                        });
+                        
+                        timeHTML += '</tr>';
+                    });
+                    
+                    timeHTML += '</tbody></table>';
+                    timeHTML += '<p style="color: #666; font-size: 0.9em; margin-top: 10px;">Lead values are in inches for perpendicular target movement. Flight times in seconds.</p>';
+                    
+                    resultsDiv.innerHTML = timeHTML;
+                    
+                } catch (error) {
+                    console.error('Flight time analysis error:', error);
+                    resultsDiv.innerHTML = '<p style="color: #dc3545;">Error calculating flight times. Please try again.</p>';
+                }
+            };
+
             window.toggleForm = function() {
                 const form = document.getElementById('ballisticForm');
                 const addButton = document.querySelector('.add-session');
@@ -5691,8 +6071,32 @@ window.resetPassword = async function() {
                 currentTrajectoryData = null;
                 document.getElementById('showGraphButton').style.display = 'inline-block';
 
+                // Store enhanced comparison data for advanced analysis
+                window.lastComparisonData = selectedRows.map(row => {
+                    const sessionData = JSON.parse(row.dataset.sessionData || '{}');
+                    return {
+                        name: `${row.cells[3].textContent} - ${row.cells[8].textContent}gr`,
+                        inputs: {
+                            bullet_grain: parseFloat(row.cells[8].textContent),
+                            muzzle_velocity: sessionData.muzzle_velocity || 2800,
+                            ballistic_coefficient: sessionData.ballistic_coefficient || 0.5,
+                            drag_model: sessionData.drag_model || 'G1',
+                            zero_distance: parseFloat(row.cells[9].textContent),
+                            height_over_bore: sessionData.height_over_bore || 1.5,
+                            wind_speed: 0,
+                            wind_angle: 0,
+                            temperature: 59,
+                            pressure: 29.92,
+                            humidity: 50,
+                            altitude: 0
+                        },
+                        trajectory: JSON.parse(row.dataset.resultsGrid)
+                    };
+                });
+
                 document.getElementById('comparisonTitle').style.display = 'block';
                 document.getElementById('comparisonTable').style.display = 'table';
+                document.getElementById('advancedAnalysisSection').style.display = 'block';
                 hideCompareForm();
             };
 
