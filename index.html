@@ -3865,6 +3865,178 @@ User Data Summary:
             }
         };
 
+        // Trajectory simulation function for advanced analysis tools
+        window.simulateTrajectory = async function(inputs) {
+            return new Promise((resolve, reject) => {
+                // Create a worker to run the ballistic calculation
+                const workerCode = `
+                    // Constants
+                    const G = 9.80665;
+                    const RHO = 1.225;
+                    const GRAVITY = [0, 0, -G];
+                    const INCHES_PER_METER = 39.3701;
+                    const METERS_PER_YARD = 0.9144;
+                    const GRAINS_TO_KG = 0.00006479891;
+                    const FPS_TO_MPS = 0.3048;
+                    
+                    function interpolate(x, x1, y1, x2, y2) {
+                        return y1 + (y2 - y1) * (x - x1) / (x2 - x1);
+                    }
+                    
+                    function getDragCoefficient(velocityFps, model) {
+                        const dragData = model === 'G7' ? g7Data : g1Data;
+                        
+                        if (velocityFps <= dragData[0][0]) return dragData[0][1];
+                        if (velocityFps >= dragData[dragData.length - 1][0]) return dragData[dragData.length - 1][1];
+                        
+                        for (let i = 0; i < dragData.length - 1; i++) {
+                            if (velocityFps >= dragData[i][0] && velocityFps <= dragData[i + 1][0]) {
+                                return interpolate(velocityFps, dragData[i][0], dragData[i][1], dragData[i + 1][0], dragData[i + 1][1]);
+                            }
+                        }
+                        return dragData[dragData.length - 1][1];
+                    }
+                    
+                    function dragDecelerationG1(velocityMps) {
+                        const velocityFps = velocityMps / FPS_TO_MPS;
+                        return getDragCoefficient(velocityFps, 'G1');
+                    }
+                    
+                    function dragDecelerationG7(velocityMps) {
+                        const velocityFps = velocityMps / FPS_TO_MPS;
+                        return getDragCoefficient(velocityFps, 'G7');
+                    }
+                    
+                    function windVector(speed, angleDeg) {
+                        const angleRad = angleDeg * Math.PI / 180;
+                        return [speed * Math.cos(angleRad), speed * Math.sin(angleRad), 0];
+                    }
+                    
+                    function getLaunchAngle(HOB, zeroRange) {
+                        return Math.atan(HOB / zeroRange);
+                    }
+                    
+                    function adjustedMuzzleVelocity(baseVelocity, baseBarrelInches, actualBarrelInches, caliber) {
+                        const barrelDiff = actualBarrelInches - baseBarrelInches;
+                        const velocityChange = caliber <= 0.30 ? barrelDiff * 27.5 : barrelDiff * 30;
+                        return baseVelocity + velocityChange;
+                    }
+                    
+                    // Simplified drag data
+                    const g1Data = [[0,0.5],[500,0.48],[1000,0.45],[1500,0.42],[2000,0.39],[2500,0.36],[3000,0.33]];
+                    const g7Data = [[0,0.12],[500,0.115],[1000,0.11],[1500,0.105],[2000,0.10],[2500,0.095],[3000,0.09]];
+                    
+                    function simulateTrajectory(inputs) {
+                        const mass = inputs.bullet_grain * GRAINS_TO_KG;
+                        const zeroRange = inputs.zero_distance * METERS_PER_YARD;
+                        const HOB = inputs.height_over_bore / INCHES_PER_METER;
+                        const angle = getLaunchAngle(HOB, zeroRange);
+                        
+                        const adjVelocity = adjustedMuzzleVelocity(
+                            inputs.muzzle_velocity,
+                            20,
+                            inputs.barrel_length || 20,
+                            inputs.caliber || 0.308
+                        );
+                        
+                        const stepMeters = (inputs.step_interval_yards || 25) * METERS_PER_YARD;
+                        const maxMeters = (inputs.max_distance_yards || 1000) * METERS_PER_YARD;
+                        
+                        let velocity = [
+                            adjVelocity * FPS_TO_MPS * Math.cos(angle),
+                            0,
+                            adjVelocity * FPS_TO_MPS * Math.sin(angle)
+                        ];
+                        
+                        let position = [0, 0, 0];
+                        const windSpeed = inputs.wind_speed || 0;
+                        const windAngle = inputs.wind_angle || 0;
+                        const wind = windVector(windSpeed * 0.44704, windAngle); // mph to m/s
+                        const trajectory = [];
+                        let time = 0;
+                        
+                        while (position[2] >= -50 && position[0] <= maxMeters) {
+                            const relVel = [
+                                velocity[0] - wind[0],
+                                velocity[1] - wind[1],
+                                velocity[2] - wind[2]
+                            ];
+                            const vMag = Math.hypot(...relVel);
+                            
+                            const dragFunc = inputs.drag_model === 'G7' ? dragDecelerationG7 : dragDecelerationG1;
+                            const dragCoeff = dragFunc(vMag);
+                            const dragMag = 0.5 * RHO * vMag * vMag * dragCoeff / inputs.ballistic_coefficient;
+                            const dragAccel = relVel.map(v => -dragMag * v / vMag / mass);
+                            
+                            const accel = [
+                                dragAccel[0] + GRAVITY[0],
+                                dragAccel[1] + GRAVITY[1],
+                                dragAccel[2] + GRAVITY[2]
+                            ];
+                            
+                            const dt = 0.01;
+                            for (let i = 0; i < 3; i++) {
+                                position[i] += velocity[i] * dt;
+                                velocity[i] += accel[i] * dt;
+                            }
+                            
+                            time += dt;
+                            
+                            if (Math.abs(position[0] % stepMeters) < velocity[0] * dt) {
+                                const distance = position[0] / METERS_PER_YARD;
+                                const drop = -position[2] * INCHES_PER_METER;
+                                const windageInches = position[1] * INCHES_PER_METER;
+                                const velocityFPS = Math.hypot(...velocity) / FPS_TO_MPS;
+                                const energyFtLbs = 0.5 * mass * velocityFPS * velocityFPS / 32.174;
+                                
+                                trajectory.push({
+                                    distance: +distance.toFixed(1),
+                                    drop: +drop.toFixed(2),
+                                    windageInches: +windageInches.toFixed(2),
+                                    velocity: +velocityFPS.toFixed(1),
+                                    energy: +energyFtLbs.toFixed(1),
+                                    time: +time.toFixed(3)
+                                });
+                            }
+                        }
+                        
+                        return trajectory;
+                    }
+                    
+                    self.onmessage = function(e) {
+                        try {
+                            const result = simulateTrajectory(e.data);
+                            self.postMessage({ success: true, trajectory: result });
+                        } catch (error) {
+                            self.postMessage({ success: false, error: error.message });
+                        }
+                    };
+                `;
+                
+                const blob = new Blob([workerCode], { type: 'application/javascript' });
+                const worker = new Worker(URL.createObjectURL(blob));
+                
+                worker.onmessage = function(e) {
+                    worker.terminate();
+                    URL.revokeObjectURL(blob);
+                    
+                    if (e.data.success) {
+                        resolve(e.data.trajectory);
+                    } else {
+                        reject(new Error(e.data.error));
+                    }
+                };
+                
+                worker.onerror = function(error) {
+                    worker.terminate();
+                    URL.revokeObjectURL(blob);
+                    reject(error);
+                };
+                
+                worker.postMessage(inputs);
+            });
+        };
+
         document.addEventListener('DOMContentLoaded', () => {
             console.warn('Starting Ballistic Calculator script execution');
 
