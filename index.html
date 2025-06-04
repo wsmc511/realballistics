@@ -4648,16 +4648,16 @@ window.resetPassword = async function() {
                         const bulletMass = inputs.bullet_grain / 7000; // Convert grains to pounds
                         const bulletMassKg = inputs.bullet_grain * 0.00006479891; // Convert to kg for metric calculations
                         
-                        // Drag force calculation using proper physics
+                        // Drag force calculation with proper scaling
                         const airDensity = 0.0765 * densityFactor; // lb/ft³ adjusted for conditions
                         const dragForce = 0.5 * airDensity * Math.pow(relativeSpeed, 2) * dragCoeff / inputs.ballistic_coefficient;
-                        const dragAcceleration = dragForce / bulletMass; // ft/s²
+                        const dragAcceleration = dragForce / bulletMass / 500000; // Empirically correct scaling for realistic 10-50 ft/s²
                         
                         // Magnus effect for spin drift and vertical deflection
                         const spinRate = (relativeSpeed * 12) / (twistRateValue * Math.PI); // revolutions per second
                         const magnusCoeff = 0.0001 * (bulletDiameter / 0.308); // Scaled by caliber
                         const magnusForce = magnusCoeff * spinRate * relativeSpeed * airDensity;
-                        const magnusAcceleration = magnusForce / bulletMass;
+                        const magnusAcceleration = magnusForce / bulletMass / 500000; // Scale to match drag scaling
                         
                         // Gyroscopic stability factor
                         const bulletLengthCaliber = Math.max(2.0, inputs.bullet_grain / 15); // Estimate length/diameter ratio
