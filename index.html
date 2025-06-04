@@ -4538,10 +4538,69 @@ window.resetPassword = async function() {
                 return Math.max(muzzleVelocity + velocityAdjustment, 0);
             }
 
+            // Helper function to create comparison data from visible sessions
+            async function createComparisonDataFromRows(rows) {
+                try {
+                    window.lastComparisonData = await Promise.all(rows.map(async (row) => {
+                        const sessionId = row.dataset.sessionId;
+                        let sessionData = {};
+                        
+                        // Fetch complete session data from database
+                        try {
+                            const { data: completeSession } = await window.supabase
+                                .from('ballistic_sessions')
+                                .select('*')
+                                .eq('id', sessionId)
+                                .single();
+                            
+                            if (completeSession) {
+                                sessionData = completeSession;
+                            }
+                        } catch (error) {
+                            console.error('Error fetching session data for analysis:', error);
+                            sessionData = JSON.parse(row.dataset.sessionData || '{}');
+                        }
+                        
+                        return {
+                            name: `${row.cells[3].textContent} - ${row.cells[8].textContent}gr`,
+                            inputs: {
+                                bullet_grain: sessionData.bullet_grain || parseFloat(row.cells[8].textContent),
+                                muzzle_velocity: sessionData.muzzle_velocity || 2800,
+                                ballistic_coefficient: sessionData.ballistic_coefficient || 0.5,
+                                drag_model: sessionData.drag_model || 'G1',
+                                zero_distance: sessionData.zero_distance || parseFloat(row.cells[9].textContent),
+                                height_over_bore: sessionData.height_over_bore || 1.5,
+                                barrel_length: sessionData.barrel_length || 20,
+                                caliber: sessionData.firearm_caliber || 0.308,
+                                wind_speed: 0,
+                                wind_angle: 0,
+                                shooting_angle: sessionData.shooting_angle || 0,
+                                temperature: sessionData.temperature || 59,
+                                pressure: sessionData.pressure || 29.92,
+                                humidity: sessionData.humidity || 50,
+                                altitude: sessionData.altitude || 0,
+                                step_interval_yards: sessionData.step_interval_yards || 25,
+                                max_distance_yards: sessionData.max_distance_yards || 1000
+                            },
+                            trajectory: JSON.parse(row.dataset.resultsGrid)
+                        };
+                    }));
+                    console.log('Created comparison data:', window.lastComparisonData);
+                } catch (error) {
+                    console.error('Error creating comparison data:', error);
+                }
+            }
+
             // Advanced Ballistic Analysis Functions
             window.runWindSensitivityAnalysis = async function() {
                 const range = parseFloat(document.getElementById('windAnalysisRange').value) || 600;
                 const resultsDiv = document.getElementById('windSensitivityResults');
+                
+                console.log('Wind analysis debug:', {
+                    lastComparisonData: window.lastComparisonData,
+                    length: window.lastComparisonData?.length,
+                    range: range
+                });
                 
                 if (!window.lastComparisonData || window.lastComparisonData.length === 0) {
                     resultsDiv.innerHTML = '<p style="color: #dc3545;">Please run a comparison first to analyze wind sensitivity.</p>';
@@ -4619,9 +4678,25 @@ window.resetPassword = async function() {
             window.runEnergyComparison = async function() {
                 const resultsDiv = document.getElementById('energyComparisonResults');
                 
+                console.log('Energy analysis debug:', {
+                    lastComparisonData: window.lastComparisonData,
+                    length: window.lastComparisonData?.length
+                });
+                
+                // If no comparison data, try to create it from visible sessions
                 if (!window.lastComparisonData || window.lastComparisonData.length === 0) {
-                    resultsDiv.innerHTML = '<p style="color: #dc3545;">Please run a comparison first to analyze energy retention.</p>';
-                    return;
+                    const visibleSessions = Array.from(document.querySelectorAll('#sessionsBody tr'));
+                    if (visibleSessions.length >= 2) {
+                        console.log('Attempting to create comparison data from visible sessions');
+                        // Auto-select first two sessions for analysis
+                        const firstTwoRows = visibleSessions.slice(0, 2);
+                        await createComparisonDataFromRows(firstTwoRows);
+                    }
+                    
+                    if (!window.lastComparisonData || window.lastComparisonData.length === 0) {
+                        resultsDiv.innerHTML = '<p style="color: #dc3545;">Please run a comparison first to analyze energy retention.</p>';
+                        return;
+                    }
                 }
                 
                 resultsDiv.innerHTML = '<p>Calculating energy retention...</p>';
