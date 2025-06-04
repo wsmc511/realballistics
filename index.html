@@ -6031,6 +6031,8 @@ window.resetPassword = async function() {
                         </td>
                     `;
                     row.dataset.resultsGrid = JSON.stringify(session.results_grid);
+                    row.dataset.sessionId = session.id;
+                    row.dataset.sessionData = JSON.stringify(session);
                     row.dataset.description = `${session.shooter_name || 'Unknown'} ${session.firearm_type || ''} ${session.firearm_name || ''} ${session.optic_name || ''} ${session.barrel_length ? session.barrel_length.toFixed(1) + 'in' : ''} - ${session.zero_distance || '0'}yd Zero`.trim();
                     tbody.appendChild(row);
                 });
