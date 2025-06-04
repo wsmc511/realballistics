@@ -4775,18 +4775,31 @@ window.resetPassword = async function() {
                             
                             try {
                                 const trajectory = await runTrajectorySimulation(windInputs);
-                                const targetPoint = trajectory.find(point => 
-                                    Math.abs(point.x - range * 3) <= 15 // Convert yards to feet and allow 15ft tolerance
-                                );
+                                console.log(`Wind analysis trajectory for ${windSpeed}mph:`, trajectory.slice(0, 5));
                                 
-                                if (targetPoint) {
-                                    const windage = targetPoint.windage * 12; // Convert feet to inches
-                                    const windageMOA = (windage / (range * 1.047 / 100));
+                                // Find closest point to target range
+                                let targetPoint = null;
+                                let minDiff = Infinity;
+                                
+                                for (const point of trajectory) {
+                                    const diff = Math.abs(point.distance - range);
+                                    if (diff < minDiff) {
+                                        minDiff = diff;
+                                        targetPoint = point;
+                                    }
+                                }
+                                
+                                console.log(`Target range: ${range}y, closest point:`, targetPoint, `diff: ${minDiff}y`);
+                                
+                                if (targetPoint && minDiff <= 50) { // Allow 50 yard tolerance
+                                    const windage = targetPoint.windageInches || 0;
+                                    const windageMOA = Math.abs(windage) > 0 ? (windage / (range * 1.047 / 100)) : 0;
                                     analysisHTML += `<td style="border: 1px solid #ddd; padding: 8px; text-align: center;">
                                         ${windage.toFixed(1)}"<br>
                                         <small>${windageMOA.toFixed(2)} MOA</small>
                                     </td>`;
                                 } else {
+                                    console.log(`No suitable point found for ${range}y range`);
                                     analysisHTML += '<td style="border: 1px solid #ddd; padding: 8px; text-align: center;">N/A</td>';
                                 }
                             } catch (error) {
@@ -4861,21 +4874,32 @@ window.resetPassword = async function() {
                         
                         try {
                             const trajectory = await runTrajectorySimulation(load.inputs);
+                            console.log(`Energy analysis trajectory for ${load.name}:`, trajectory.slice(0, 5));
                             
                             distances.forEach(targetDist => {
-                                const targetPoint = trajectory.find(point => 
-                                    Math.abs(point.x / 3 - targetDist) <= 5 // Convert feet to yards
-                                );
+                                // Find closest point to target distance
+                                let targetPoint = null;
+                                let minDiff = Infinity;
                                 
-                                if (targetPoint && targetPoint.v) {
-                                    const velocityFps = targetPoint.v * 3.28084; // Convert m/s to fps
-                                    const energy = 0.5 * bulletMass * Math.pow(velocityFps, 2) / 32.174;
+                                for (const point of trajectory) {
+                                    const diff = Math.abs(point.distance - targetDist);
+                                    if (diff < minDiff) {
+                                        minDiff = diff;
+                                        targetPoint = point;
+                                    }
+                                }
+                                
+                                console.log(`Target distance: ${targetDist}y, closest point:`, targetPoint, `diff: ${minDiff}y`);
+                                
+                                if (targetPoint && minDiff <= 50 && targetPoint.velocity) { // Allow 50 yard tolerance
+                                    const energy = targetPoint.energy || (0.5 * bulletMass * Math.pow(targetPoint.velocity, 2) / 32.174);
                                     const retention = (energy / muzzleEnergy * 100);
                                     energyHTML += `<td style="border: 1px solid #ddd; padding: 8px; text-align: center;">
                                         ${Math.round(energy)} ft-lbs<br>
                                         <small>(${retention.toFixed(0)}%)</small>
                                     </td>`;
                                 } else {
+                                    console.log(`No suitable point found for ${targetDist}y distance`);
                                     energyHTML += '<td style="border: 1px solid #ddd; padding: 8px; text-align: center;">N/A</td>';
                                 }
                             });
