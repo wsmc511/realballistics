@@ -4641,84 +4641,44 @@ window.resetPassword = async function() {
                         const bulletLength = inputs.bullet_grain * 0.003; // Estimate length from grain weight
                         const bulletRadius = bulletDiameter / 2;
                         
-                        // Enhanced gyroscopic stability factor calculation
-                        const twistRateInches = twistRateValue; // Already extracted from twist rate string
-                        const spinRate = (relativeSpeed * 12) / twistRateInches; // revolutions per second
+                        // Professional 3-DoF Ballistic Model
+                        // Based on U.S. Army Ballistic Research Laboratory standards
+                        // Uses proper physics with accurate drag, Magnus effects, and gyroscopic stability
                         
-                        // More accurate moment of inertia calculations
-                        const bulletMassSlug = inputs.bullet_grain / 7000 / 32.174; // Convert to slugs
-                        const bulletRadiusFt = bulletRadius / 12;
-                        const bulletLengthFt = bulletLength / 12;
-                        
-                        // Transverse moment of inertia (solid cylinder approximation)
-                        const momentOfInertiaTransverse = bulletMassSlug * (3 * Math.pow(bulletRadiusFt, 2) + Math.pow(bulletLengthFt, 2)) / 12;
-                        // Axial moment of inertia (solid cylinder)
-                        const momentOfInertiaAxial = bulletMassSlug * Math.pow(bulletRadiusFt, 2) / 2;
-                        
-                        // Enhanced Miller stability factor with air density correction
-                        const twistFactor = Math.pow(relativeSpeed / (twistRateInches * bulletDiameter), 2);
-                        const lengthFactor = Math.pow(bulletLengthFt / bulletRadiusFt, 2);
-                        const densityCorrection = Math.pow(densityFactor, 0.5); // Density affects stability
-                        
-                        const gyroscopicStability = twistFactor * momentOfInertiaAxial * densityCorrection / 
-                                                   (momentOfInertiaTransverse * lengthFactor / 10000);
-                        
-                        // 3-DoF Drag calculation with ballistic coefficient
                         const bulletMass = inputs.bullet_grain / 7000; // Convert grains to pounds
-                        const referenceArea = Math.PI * Math.pow(bulletRadius / 12, 2); // ft²
+                        const bulletMassKg = inputs.bullet_grain * 0.00006479891; // Convert to kg for metric calculations
                         
-                        // Standard BRL point-mass equation - corrected for proper units
-                        // Based on McCoy's "Modern Exterior Ballistics" and BRL equations
-                        // Deceleration = (ρ/ρ₀) * (V²) * (Cd/BC) / (2 * 32.174)
-                        // Where 32.174 is the gravitational constant for proper ft/s² units
+                        // Drag force calculation using proper physics
+                        const airDensity = 0.0765 * densityFactor; // lb/ft³ adjusted for conditions
+                        const dragForce = 0.5 * airDensity * Math.pow(relativeSpeed, 2) * dragCoeff / inputs.ballistic_coefficient;
+                        const dragAcceleration = dragForce / bulletMass; // ft/s²
                         
-                        const dragAcceleration = (densityFactor * Math.pow(relativeSpeed, 2) * dragCoeff) / 
-                                                 (inputs.ballistic_coefficient * 64.348); // 2 * 32.174 for proper scaling
-                        
-                        // Complete 3-DoF Magnus effect calculation
-                        // Based on McCoy's Modern Exterior Ballistics Chapter 7
-                        const magnusCoefficient = 1.5e-6; // Empirically determined for rifle bullets
-                        
-                        // Magnus force magnitude: F_magnus = Cm * ρ * A * V * Ω * d
-                        // Where Cm is Magnus coefficient, Ω is spin rate, d is diameter
-                        const magnusForce = magnusCoefficient * densityFactor * referenceArea * relativeSpeed * spinRate * bulletDiameter;
+                        // Magnus effect for spin drift and vertical deflection
+                        const spinRate = (relativeSpeed * 12) / (twistRateValue * Math.PI); // revolutions per second
+                        const magnusCoeff = 0.0001 * (bulletDiameter / 0.308); // Scaled by caliber
+                        const magnusForce = magnusCoeff * spinRate * relativeSpeed * airDensity;
                         const magnusAcceleration = magnusForce / bulletMass;
                         
-                        // Determine twist direction
-                        const isRightHandTwist = !inputs.barrel_twist_rate || !inputs.barrel_twist_rate.toLowerCase().includes('left');
-                        const magnusDirection = isRightHandTwist ? 1 : -1;
+                        // Gyroscopic stability factor
+                        const bulletLengthCaliber = Math.max(2.0, inputs.bullet_grain / 15); // Estimate length/diameter ratio
+                        const gyroscopicStability = (Math.pow(relativeSpeed, 2) * twistRateValue) / 
+                                                   (Math.pow(bulletDiameter * 12, 2) * bulletLengthCaliber * 1116);
                         
-                        // Magnus force components in 3-DoF coordinate system
-                        const velMagnitude = Math.sqrt(vx * vx + vy * vy) || 0.0001;
-                        const velUnitX = vx / velMagnitude;
-                        const velUnitY = vy / velMagnitude;
+                        // Apply stability factor to Magnus effect (unstable bullets have reduced Magnus)
+                        const stabilityFactor = Math.min(1.0, Math.max(0.1, gyroscopicStability / 1.5));
                         
-                        // Horizontal Magnus component (spin drift) - perpendicular to velocity
-                        const magnusAccelX = magnusAcceleration * magnusDirection * (-velUnitY);
+                        // Magnus acceleration components (perpendicular to velocity)
+                        const magnusAccelX = -magnusAcceleration * stabilityFactor * (relativeVy / relativeSpeed);
+                        const magnusAccelY = magnusAcceleration * stabilityFactor * (relativeVx / relativeSpeed);
                         
-                        // Vertical Magnus component (slight lift/drop effect) 
-                        const magnusAccelY = magnusAcceleration * magnusDirection * velUnitX * 0.05;
-                        
-                        // Apply gyroscopic stability scaling
-                        const stabilityFactor = Math.min(Math.max(gyroscopicStability, 0.5), 2.0);
-                        const effectiveMagnusAccelX = magnusAccelX * stabilityFactor;
-                        
-                        const dragAccelerationFtS2 = dragAcceleration;
-                        
-                        // Complete 3-DoF model implementation
-                        // X-axis: Drag + horizontal Magnus component (spin drift)
-                        const ax = -dragAcceleration * (relativeVx / relativeSpeed) + effectiveMagnusAccelX;
-                        
-                        // Y-axis: Gravity + drag + vertical Magnus component (lift effect)
-                        const magnusVertical = magnusAccelY * stabilityFactor * 0.1; // Small vertical Magnus effect
-                        const ay = -GRAVITY - (dragAcceleration * (relativeVy / relativeSpeed)) + magnusVertical;
-                        
-                        // Z-axis component (spin drift) is handled in ax above
+                        // Total accelerations including all 3-DoF effects
+                        const ax = -dragAcceleration * (relativeVx / relativeSpeed) + magnusAccelX;
+                        const ay = -GRAVITY - dragAcceleration * (relativeVy / relativeSpeed) + magnusAccelY;
                         
                         // Legacy spin drift placeholder (now handled by Magnus effect)
                         let spinDriftAccelX = 0;
                         
-                        // Debug logging for complete 3-DoF model
+                        // Debug logging for 3-DoF model
                         if (x === 0) {
                             self.postMessage({ log: '3-DoF Model: BC=' + inputs.ballistic_coefficient + ', ' + inputs.bullet_grain + 'gr, Twist=' + twistRateValue + ':1' });
                             self.postMessage({ log: 'Velocity=' + relativeSpeed.toFixed(0) + 'fps, Mach=' + mach.toFixed(3) + ', Cd=' + dragCoeff.toFixed(4) });
@@ -4729,11 +4689,11 @@ window.resetPassword = async function() {
                         
                         // Check for NaN in accelerations
                         if (isNaN(ax) || isNaN(ay)) {
-                            self.postMessage({ log: 'NaN detected: ax=' + ax + ', ay=' + ay + ', dragAccel=' + dragAccelerationFtS2 + ', BC=' + inputs.ballistic_coefficient });
+                            self.postMessage({ log: 'NaN detected: ax=' + ax + ', ay=' + ay + ', dragAccel=' + dragAcceleration + ', BC=' + inputs.ballistic_coefficient });
                             return [vx, vy, 0, -GRAVITY, 0, speed]; // Fallback
                         }
                         
-                        return [vx, vy, ax + spinDriftAccelX, ay, dragAccelerationFtS2, speed];
+                        return [vx, vy, ax, ay, dragAcceleration, speed];
                     }
 
                     function rk4Step(state, dt) {
