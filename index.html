@@ -4558,25 +4558,34 @@ window.resetPassword = async function() {
                                 humidity, altitude, step_interval_yards, max_distance_yards
                             } = inputs;
                             
-                            const mass = bullet_grain * GRAINS_TO_LB;
+                            // Validate inputs
+                            if (!bullet_grain || !muzzle_velocity || !ballistic_coefficient) {
+                                throw new Error('Missing required ballistic parameters');
+                            }
+                            
+                            const mass = bullet_grain / 7000; // Convert grains to pounds
                             const zeroRange = zero_distance * 3; // Convert yards to feet
                             const HOB = height_over_bore / 12; // Convert inches to feet
                             
-                            // Simple launch angle estimation
-                            const angle = Math.atan(HOB / zeroRange) + 0.001; // Small positive angle
+                            // Calculate proper launch angle for zeroing
+                            const angle = Math.atan(HOB / zeroRange) + 0.002; // Slightly positive angle
                             
-                            const stepSize = step_interval_yards * 3; // Convert to feet
-                            const maxDistance = max_distance_yards * 3; // Convert to feet
+                            const stepSize = (step_interval_yards || 25) * 3; // Convert to feet
+                            const maxDistance = (max_distance_yards || 1000) * 3; // Convert to feet
                             
-                            let velocity = [
-                                muzzle_velocity * Math.cos(angle),
-                                0,
-                                muzzle_velocity * Math.sin(angle)
-                            ];
+                            // Initial velocity components
+                            let vx = muzzle_velocity * Math.cos(angle);
+                            let vy = 0; // No initial lateral velocity
+                            let vz = muzzle_velocity * Math.sin(angle);
                             
-                            let position = [0, 0, 0];
+                            // Initial position
+                            let x = 0;
+                            let y = 0;
+                            let z = HOB; // Start at height over bore
+                            
                             const trajectory = [];
                             let time = 0;
+                            let nextStepDistance = 0;
                             
                             // Wind components (convert mph to fps)
                             const windSpeedFps = (wind_speed || 0) * 1.467;
@@ -4584,57 +4593,68 @@ window.resetPassword = async function() {
                             const windX = windSpeedFps * Math.cos(windAngleRad);
                             const windY = windSpeedFps * Math.sin(windAngleRad);
                             
-                            while (position[2] >= -50 && position[0] <= maxDistance) {
-                                const relVel = [
-                                    velocity[0] - windX,
-                                    velocity[1] - windY,
-                                    velocity[2]
-                                ];
-                                const vMag = Math.sqrt(relVel[0]*relVel[0] + relVel[1]*relVel[1] + relVel[2]*relVel[2]);
+                            // Integration loop
+                            const dt = 0.001; // Small time step for accuracy
+                            while (z >= -10 && x <= maxDistance && x >= 0) {
+                                // Relative velocity (bullet velocity minus wind)
+                                const vx_rel = vx - windX;
+                                const vy_rel = vy - windY;
+                                const vz_rel = vz;
                                 
-                                // Simple drag calculation
-                                const dragCoeff = drag_model === 'G7' ? 0.15 : 0.25;
-                                const dragMag = 0.5 * RHO * vMag * vMag * dragCoeff / ballistic_coefficient / mass;
+                                const vMag = Math.sqrt(vx_rel*vx_rel + vy_rel*vy_rel + vz_rel*vz_rel);
                                 
-                                const dragAccel = [
-                                    -dragMag * relVel[0] / vMag,
-                                    -dragMag * relVel[1] / vMag,
-                                    -dragMag * relVel[2] / vMag
-                                ];
+                                if (vMag <= 0) break;
                                 
-                                const accel = [
-                                    dragAccel[0],
-                                    dragAccel[1],
-                                    dragAccel[2] - G
-                                ];
+                                // Drag coefficient based on model
+                                const cd = drag_model === 'G7' ? 0.2 : 0.3;
                                 
-                                const dt = 0.01;
-                                for (let i = 0; i < 3; i++) {
-                                    position[i] += velocity[i] * dt;
-                                    velocity[i] += accel[i] * dt;
-                                }
+                                // Drag force magnitude
+                                const dragForce = 0.5 * 0.0765 * vMag * vMag * cd / ballistic_coefficient;
+                                
+                                // Drag acceleration components
+                                const ax_drag = -dragForce * vx_rel / vMag / mass;
+                                const ay_drag = -dragForce * vy_rel / vMag / mass;
+                                const az_drag = -dragForce * vz_rel / vMag / mass;
+                                
+                                // Total acceleration (drag + gravity)
+                                const ax = ax_drag;
+                                const ay = ay_drag;
+                                const az = az_drag - 32.174; // gravity
+                                
+                                // Update velocity
+                                vx += ax * dt;
+                                vy += ay * dt;
+                                vz += az * dt;
+                                
+                                // Update position
+                                x += vx * dt;
+                                y += vy * dt;
+                                z += vz * dt;
                                 
                                 time += dt;
                                 
                                 // Record data at step intervals
-                                if (Math.abs(position[0] % stepSize) < velocity[0] * dt || position[0] === 0) {
-                                    const distanceYards = position[0] / 3;
-                                    const dropInches = -position[2] * 12;
-                                    const windageInches = position[1] * 12;
-                                    const velocityFPS = Math.sqrt(velocity[0]*velocity[0] + velocity[1]*velocity[1] + velocity[2]*velocity[2]);
+                                if (x >= nextStepDistance) {
+                                    const distanceYards = x / 3;
+                                    const dropInches = -(z - HOB) * 12; // Drop from initial height
+                                    const windageInches = y * 12;
+                                    const velocityFPS = Math.sqrt(vx*vx + vy*vy + vz*vz);
+                                    const energy = 0.5 * mass * velocityFPS * velocityFPS / 32.174;
                                     
                                     trajectory.push({
-                                        x: position[0], // feet
-                                        y: position[2], // feet
-                                        windage: position[1], // feet
+                                        x: x, // feet
+                                        y: z, // feet (height)
+                                        windage: y, // feet (lateral displacement)
                                         v: velocityFPS / 3.28084, // m/s for compatibility
                                         t: time,
                                         distance: distanceYards,
                                         drop: dropInches,
                                         windageInches: windageInches,
                                         velocity: velocityFPS,
-                                        energy: 0.5 * mass * velocityFPS * velocityFPS / G
+                                        energy: energy
                                     });
+                                    
+                                    nextStepDistance += stepSize;
                                 }
                             }
                             
