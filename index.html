@@ -4564,7 +4564,7 @@ window.resetPassword = async function() {
 
 
 
-                    // Professional G1 drag coefficient table (Mach vs Cd)
+                    // Standard G1 drag function (normalized to BC=1.0)
                     function getG1DragCoefficient(mach) {
                         if (mach >= 4.0) return 0.1198;
                         if (mach >= 3.0) return 0.1629;
@@ -4576,10 +4576,11 @@ window.resetPassword = async function() {
                         if (mach >= 1.0) return 0.3010;
                         if (mach >= 0.9) return 0.3287;
                         if (mach >= 0.8) return 0.3629;
-                        return 0.4068;
+                        if (mach >= 0.7) return 0.4068;
+                        return 0.4476;
                     }
 
-                    // Professional G7 drag coefficient table (Mach vs Cd)
+                    // Standard G7 drag function (normalized to BC=1.0)  
                     function getG7DragCoefficient(mach) {
                         if (mach >= 4.0) return 0.1198;
                         if (mach >= 3.0) return 0.1270;
@@ -4590,7 +4591,8 @@ window.resetPassword = async function() {
                         if (mach >= 1.0) return 0.2066;
                         if (mach >= 0.9) return 0.2365;
                         if (mach >= 0.8) return 0.2748;
-                        return 0.3238;
+                        if (mach >= 0.7) return 0.3238;
+                        return 0.3618;
                     }
 
                     function computeDerivatives(state) {
@@ -4665,9 +4667,10 @@ window.resetPassword = async function() {
                         const bulletMass = inputs.bullet_grain / 7000; // Convert grains to pounds
                         const referenceArea = Math.PI * Math.pow(bulletRadius / 12, 2); // ft²
                         
-                        // Standard drag force: F_drag = 0.5 * ρ * Cd * A * V² / BC
-                        const dragForce = 0.5 * densityFactor * 0.0765 * dragCoeff * referenceArea * Math.pow(relativeSpeed, 2) / inputs.ballistic_coefficient;
-                        const dragAcceleration = dragForce / bulletMass;
+                        // Pure BRL drag equation - BC already includes all corrections
+                        // a = (ρ/ρ₀) * V² * Cd / (BC * 2g)
+                        const dragAcceleration = (densityFactor * Math.pow(relativeSpeed, 2) * dragCoeff) / 
+                                                 (inputs.ballistic_coefficient * 2 * 32.174);
                         
                         // Enhanced Magnus effect calculation for 3-DoF model
                         // Based on McCoy's Modern Exterior Ballistics and BRL research
@@ -4699,16 +4702,19 @@ window.resetPassword = async function() {
                         
                         const dragAccelerationFtS2 = dragAcceleration;
                         
-                        // Apply combined forces: drag + Magnus effect
-                        const ax = -dragAccelerationFtS2 * (relativeVx / relativeSpeed) + effectiveMagnusAccelX;
-                        const ay = -GRAVITY - (dragAccelerationFtS2 * (relativeVy / relativeSpeed)) + (magnusAccelY * stabilityFactor);
+                        // Apply drag force only (temporarily disable Magnus for debugging)
+                        const ax = -dragAcceleration * (relativeVx / relativeSpeed);
+                        const ay = -GRAVITY - (dragAcceleration * (relativeVy / relativeSpeed));
                         
                         // Legacy spin drift placeholder (now handled by Magnus effect)
                         let spinDriftAccelX = 0;
                         
                         // Debug logging for first calculation
                         if (x === 0) {
-                            self.postMessage({ log: '3-DoF model: BC=' + inputs.ballistic_coefficient + ', bullet=' + inputs.bullet_grain + 'gr, Cd=' + dragCoeff.toFixed(4) + ', Sg=' + gyroscopicStability.toFixed(2) + ', spinRate=' + spinRate.toFixed(0) + ' rps, dragAccel=' + dragAccelerationFtS2.toFixed(2) + ' ft/s²' });
+                            self.postMessage({ log: 'Physics debug: BC=' + inputs.ballistic_coefficient + ', bullet=' + inputs.bullet_grain + 'gr' });
+                            self.postMessage({ log: 'Velocity=' + relativeSpeed.toFixed(0) + 'fps, Mach=' + mach.toFixed(3) + ', Cd=' + dragCoeff.toFixed(4) });
+                            self.postMessage({ log: 'DensityFactor=' + densityFactor.toFixed(3) + ', DragAccel=' + dragAcceleration.toFixed(2) + ' ft/s²' });
+                            self.postMessage({ log: 'Expected at muzzle: ~10-50 ft/s² drag for typical rifle' });
                         }
                         
                         // Check for NaN in accelerations
