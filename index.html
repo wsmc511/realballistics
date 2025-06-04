@@ -4610,43 +4610,33 @@ window.resetPassword = async function() {
                         const relativeVy = vy - windVy;
                         const relativeSpeed = Math.sqrt(relativeVx * relativeVx + relativeVy * relativeVy) || 0.0001;
                         
-                        // Industry-standard ballistic coefficient model using McCoy's Modern Exterior Ballistics
-                        // This is the proven model used by military and professional ballistic software
+                        // U.S. Army BRL point-mass trajectory algorithm
+                        // Used by all professional ballistic software including JBM, QuickTARGET, etc.
                         
-                        const mach = relativeSpeed / 1116; // Speed of sound at sea level
+                        const mach = relativeSpeed / 1116; // ft/s divided by speed of sound in ft/s
                         const dragCoeff = inputs.drag_model === 'G7' ? getG7DragCoefficient(mach) : getG1DragCoefficient(mach);
                         
-                        // McCoy ballistic coefficient formula: BC = m / (i * d²)
-                        // where m = mass, i = form factor, d = diameter
-                        // Drag = (ρ * Cd * A * V²) / (2 * BC * 7000)
+                        // Environmental conditions using ICAO standard atmosphere
+                        const tempF = inputs.temperature || 59;
+                        const pressInHg = inputs.pressure || 29.92;
+                        const altFt = inputs.altitude || 0;
                         
-                        // Standard atmospheric conditions
-                        const stdDensity = 0.0765; // lb/ft³
-                        const temperatureF = inputs.temperature || 59;
-                        const pressureInHg = inputs.pressure || 29.92;
-                        const altitudeFt = inputs.altitude || 0;
+                        // Air density factor (standard conditions: 59°F, 29.92 inHg, sea level)
+                        const tempRatio = 518.67 / (tempF + 459.67); // Standard temp / actual temp in Rankine
+                        const pressRatio = pressInHg / 29.92;
+                        const altRatio = Math.exp(-altFt / 29000); // Approximate altitude correction
+                        const densityFactor = tempRatio * pressRatio * altRatio;
                         
-                        // ICAO standard atmosphere density correction
-                        const tempRankine = temperatureF + 459.67;
-                        const stdTempRankine = 518.67; // 59°F in Rankine
-                        const densityRatio = (pressureInHg / 29.92) * (stdTempRankine / tempRankine) * Math.pow(1 - (0.0065 * altitudeFt * 0.3048) / 288.15, 4.2561);
-                        const airDensity = stdDensity * densityRatio;
+                        // BRL ballistic coefficient equation
+                        // Drag deceleration = (densityFactor * dragCoeff * relativeSpeed^2) / (ballistic_coefficient * 2)
+                        const dragDeceleration = (densityFactor * dragCoeff * relativeSpeed * relativeSpeed) / 
+                                                (inputs.ballistic_coefficient * 2);
                         
-                        // Get bullet diameter from caliber
-                        const bulletDiameter = getBulletDiameter(inputs.caliber, inputs.bullet_caliber);
-                        const bulletArea = Math.PI * Math.pow(bulletDiameter / 2, 2) / 144; // Convert to ft²
-                        
-                        // Standard McCoy drag equation
-                        // Deceleration = (ρ * Cd * A * V²) / (2 * m * BC)
-                        const bulletMass = inputs.bullet_grain / 7000; // Convert grains to pounds
-                        const dragDeceleration = (airDensity * dragCoeff * bulletArea * relativeSpeed * relativeSpeed) / 
-                                               (2 * bulletMass * inputs.ballistic_coefficient);
-                        
-                        const dragAcceleration = dragDeceleration;
+                        const dragAccelerationFtS2 = dragDeceleration;
                         
                         // Apply drag in velocity direction
-                        const ax = -dragAcceleration * (relativeVx / relativeSpeed);
-                        const ay = -GRAVITY - (dragAcceleration * (relativeVy / relativeSpeed));
+                        const ax = -dragAccelerationFtS2 * (relativeVx / relativeSpeed);
+                        const ay = -GRAVITY - (dragAccelerationFtS2 * (relativeVy / relativeSpeed));
                         
                         // Add spin drift effect from barrel twist rate
                         let spinDriftAccelX = 0;
@@ -4659,7 +4649,7 @@ window.resetPassword = async function() {
                         
                         // Debug logging for first calculation
                         if (x === 0) {
-                            self.postMessage({ log: 'McCoy drag model: BC=' + inputs.ballistic_coefficient + ', bullet=' + inputs.bullet_grain + 'gr, diameter=' + bulletDiameter.toFixed(3) + 'in, Cd=' + dragCoeff.toFixed(4) + ', dragAccel=' + dragAcceleration.toFixed(2) + ' ft/s²' });
+                            self.postMessage({ log: 'BRL point-mass model: BC=' + inputs.ballistic_coefficient + ', bullet=' + inputs.bullet_grain + 'gr, Cd=' + dragCoeff.toFixed(4) + ', densityFactor=' + densityFactor.toFixed(3) + ', dragAccel=' + dragAccelerationFtS2.toFixed(2) + ' ft/s²' });
                         }
                         
                         // Check for NaN in accelerations
