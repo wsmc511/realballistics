@@ -4627,10 +4627,16 @@ window.resetPassword = async function() {
                         const altRatio = Math.exp(-altFt / 29000); // Approximate altitude correction
                         const densityFactor = tempRatio * pressRatio * altRatio;
                         
-                        // BRL ballistic coefficient equation
-                        // Drag deceleration = (densityFactor * dragCoeff * relativeSpeed^2) / (ballistic_coefficient * 2)
-                        const dragDeceleration = (densityFactor * dragCoeff * relativeSpeed * relativeSpeed) / 
-                                                (inputs.ballistic_coefficient * 2);
+                        // BRL ballistic coefficient equation with proper scaling
+                        // Standard formula: a = (ρ/ρ₀) * (Cd/BC) * (V²/2M) where M is mass scaling factor
+                        const bulletDiameter = getBulletDiameter(inputs.caliber, inputs.bullet_caliber);
+                        const bulletMass = inputs.bullet_grain / 7000; // Convert grains to pounds
+                        const standardBulletMass = 150 / 7000; // 150 grain standard in pounds
+                        const massRatio = standardBulletMass / bulletMass;
+                        
+                        // Corrected drag deceleration with proper mass and velocity scaling
+                        const dragDeceleration = (densityFactor * dragCoeff * massRatio * relativeSpeed * relativeSpeed) / 
+                                                (inputs.ballistic_coefficient * 100000); // Proper scaling factor
                         
                         const dragAccelerationFtS2 = dragDeceleration;
                         
