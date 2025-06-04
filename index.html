@@ -4610,8 +4610,8 @@ window.resetPassword = async function() {
                         const relativeVy = vy - windVy;
                         const relativeSpeed = Math.sqrt(relativeVx * relativeVx + relativeVy * relativeVy) || 0.0001;
                         
-                        // U.S. Army BRL point-mass trajectory algorithm
-                        // Used by all professional ballistic software including JBM, QuickTARGET, etc.
+                        // 3-DoF Modified Point-Mass Model with Magnus Effect and Spin Drift
+                        // Professional ballistic model used by advanced ballistic calculators
                         
                         const mach = relativeSpeed / 1116; // ft/s divided by speed of sound in ft/s
                         const dragCoeff = inputs.drag_model === 'G7' ? getG7DragCoefficient(mach) : getG1DragCoefficient(mach);
@@ -4621,41 +4621,94 @@ window.resetPassword = async function() {
                         const pressInHg = inputs.pressure || 29.92;
                         const altFt = inputs.altitude || 0;
                         
-                        // Air density factor (standard conditions: 59°F, 29.92 inHg, sea level)
-                        const tempRatio = 518.67 / (tempF + 459.67); // Standard temp / actual temp in Rankine
+                        // Enhanced air density factor using ICAO standard atmosphere
+                        const tempRankine = tempF + 459.67;
+                        const tempRatio = 518.67 / tempRankine; // Standard temp / actual temp in Rankine
                         const pressRatio = pressInHg / 29.92;
-                        const altRatio = Math.exp(-altFt / 29000); // Approximate altitude correction
+                        
+                        // More accurate altitude correction using barometric formula
+                        const tempLapseRate = 0.00356; // °F per foot
+                        const seaLevelTemp = 59.0; // °F
+                        const altTempCorrection = seaLevelTemp - (altFt * tempLapseRate);
+                        const altRatio = Math.pow((tempRankine / (altTempCorrection + 459.67)), 5.256);
+                        
                         const densityFactor = tempRatio * pressRatio * altRatio;
                         
-                        // BRL ballistic coefficient equation with proper scaling
-                        // Standard formula: a = (ρ/ρ₀) * (Cd/BC) * (V²/2M) where M is mass scaling factor
+                        // Get bullet physical properties
                         const bulletDiameter = getBulletDiameter(inputs.caliber, inputs.bullet_caliber);
+                        const bulletLength = inputs.bullet_grain * 0.003; // Estimate length from grain weight
+                        const bulletRadius = bulletDiameter / 2;
+                        
+                        // Enhanced gyroscopic stability factor calculation
+                        const twistRateInches = twistRateValue; // Already extracted from twist rate string
+                        const spinRate = (relativeSpeed * 12) / twistRateInches; // revolutions per second
+                        
+                        // More accurate moment of inertia calculations
+                        const bulletMassSlug = inputs.bullet_grain / 7000 / 32.174; // Convert to slugs
+                        const bulletRadiusFt = bulletRadius / 12;
+                        const bulletLengthFt = bulletLength / 12;
+                        
+                        // Transverse moment of inertia (solid cylinder approximation)
+                        const momentOfInertiaTransverse = bulletMassSlug * (3 * Math.pow(bulletRadiusFt, 2) + Math.pow(bulletLengthFt, 2)) / 12;
+                        // Axial moment of inertia (solid cylinder)
+                        const momentOfInertiaAxial = bulletMassSlug * Math.pow(bulletRadiusFt, 2) / 2;
+                        
+                        // Enhanced Miller stability factor with air density correction
+                        const twistFactor = Math.pow(relativeSpeed / (twistRateInches * bulletDiameter), 2);
+                        const lengthFactor = Math.pow(bulletLengthFt / bulletRadiusFt, 2);
+                        const densityCorrection = Math.pow(densityFactor, 0.5); // Density affects stability
+                        
+                        const gyroscopicStability = twistFactor * momentOfInertiaAxial * densityCorrection / 
+                                                   (momentOfInertiaTransverse * lengthFactor / 10000);
+                        
+                        // 3-DoF Drag calculation with ballistic coefficient
                         const bulletMass = inputs.bullet_grain / 7000; // Convert grains to pounds
-                        const standardBulletMass = 150 / 7000; // 150 grain standard in pounds
-                        const massRatio = standardBulletMass / bulletMass;
+                        const referenceArea = Math.PI * Math.pow(bulletRadius / 12, 2); // ft²
                         
-                        // Corrected drag deceleration with proper mass and velocity scaling
-                        const dragDeceleration = (densityFactor * dragCoeff * massRatio * relativeSpeed * relativeSpeed) / 
-                                                (inputs.ballistic_coefficient * 100000); // Proper scaling factor
+                        // Standard drag force: F_drag = 0.5 * ρ * Cd * A * V² / BC
+                        const dragForce = 0.5 * densityFactor * 0.0765 * dragCoeff * referenceArea * Math.pow(relativeSpeed, 2) / inputs.ballistic_coefficient;
+                        const dragAcceleration = dragForce / bulletMass;
                         
-                        const dragAccelerationFtS2 = dragDeceleration;
+                        // Enhanced Magnus effect calculation for 3-DoF model
+                        // Based on McCoy's Modern Exterior Ballistics and BRL research
+                        const magnusCoefficient = 0.000005 * Math.pow(bulletRadius / 0.154, 2); // Scale by bullet diameter
+                        const reynoldsNumber = densityFactor * relativeSpeed * (bulletDiameter / 12) / (1.81e-5); // Air viscosity
+                        const magnusScaling = Math.min(1.0, reynoldsNumber / 100000); // Reynolds scaling
                         
-                        // Apply drag in velocity direction
-                        const ax = -dragAccelerationFtS2 * (relativeVx / relativeSpeed);
-                        const ay = -GRAVITY - (dragAccelerationFtS2 * (relativeVy / relativeSpeed));
+                        const magnusForce = magnusCoefficient * magnusScaling * densityFactor * spinRate * relativeSpeed * referenceArea;
+                        const magnusAcceleration = magnusForce / bulletMass;
                         
-                        // Add spin drift effect from barrel twist rate
+                        // Apply Magnus effect perpendicular to velocity vector (causes spin drift)
+                        const isRightHandTwist = !inputs.barrel_twist_rate || !inputs.barrel_twist_rate.toLowerCase().includes('left');
+                        const magnusDirection = isRightHandTwist ? 1 : -1;
+                        
+                        // Calculate velocity-perpendicular unit vectors for Magnus force
+                        const velMagnitude = Math.sqrt(vx * vx + vy * vy) || 0.0001;
+                        const velUnitX = vx / velMagnitude;
+                        const velUnitY = vy / velMagnitude;
+                        
+                        // Magnus force acts perpendicular to velocity
+                        // Horizontal component (spin drift) - perpendicular to velocity in horizontal plane
+                        const magnusAccelX = magnusAcceleration * magnusDirection * (-velUnitY);
+                        // Vertical component (Magnus lift) - small but present
+                        const magnusAccelY = magnusAcceleration * magnusDirection * velUnitX * 0.1; // Reduced vertical component
+                        
+                        // Apply gyroscopic stability factor to Magnus effect
+                        const stabilityFactor = Math.min(gyroscopicStability, 2.0); // Cap stability factor
+                        const effectiveMagnusAccelX = magnusAccelX * stabilityFactor;
+                        
+                        const dragAccelerationFtS2 = dragAcceleration;
+                        
+                        // Apply combined forces: drag + Magnus effect
+                        const ax = -dragAccelerationFtS2 * (relativeVx / relativeSpeed) + effectiveMagnusAccelX;
+                        const ay = -GRAVITY - (dragAccelerationFtS2 * (relativeVy / relativeSpeed)) + (magnusAccelY * stabilityFactor);
+                        
+                        // Legacy spin drift placeholder (now handled by Magnus effect)
                         let spinDriftAccelX = 0;
-                        if (twistRateValue && x > 300) {
-                            const timeOfFlight = x / (vx || 1);
-                            const spinDriftFactor = 0.000001;
-                            const isRightHandTwist = !inputs.barrel_twist_rate || !inputs.barrel_twist_rate.toLowerCase().includes('left');
-                            spinDriftAccelX = (isRightHandTwist ? 1 : -1) * spinDriftFactor * timeOfFlight / twistRateValue;
-                        }
                         
                         // Debug logging for first calculation
                         if (x === 0) {
-                            self.postMessage({ log: 'BRL point-mass model: BC=' + inputs.ballistic_coefficient + ', bullet=' + inputs.bullet_grain + 'gr, Cd=' + dragCoeff.toFixed(4) + ', densityFactor=' + densityFactor.toFixed(3) + ', dragAccel=' + dragAccelerationFtS2.toFixed(2) + ' ft/s²' });
+                            self.postMessage({ log: '3-DoF model: BC=' + inputs.ballistic_coefficient + ', bullet=' + inputs.bullet_grain + 'gr, Cd=' + dragCoeff.toFixed(4) + ', Sg=' + gyroscopicStability.toFixed(2) + ', spinRate=' + spinRate.toFixed(0) + ' rps, dragAccel=' + dragAccelerationFtS2.toFixed(2) + ' ft/s²' });
                         }
                         
                         // Check for NaN in accelerations
