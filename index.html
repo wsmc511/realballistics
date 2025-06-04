@@ -4538,6 +4538,50 @@ window.resetPassword = async function() {
                 return Math.max(muzzleVelocity + velocityAdjustment, 0);
             }
 
+            // Helper function to run trajectory simulation via Web Worker
+            async function runTrajectorySimulation(inputs) {
+                return new Promise((resolve, reject) => {
+                    const worker = new Worker('data:application/javascript;base64,' + btoa(`
+                        ${window.workerCode}
+                    `));
+                    
+                    worker.onmessage = function(e) {
+                        if (e.data.error) {
+                            reject(new Error(e.data.error));
+                        } else if (e.data.trajectory) {
+                            resolve(e.data.trajectory);
+                        }
+                    };
+                    
+                    worker.onerror = function(error) {
+                        reject(error);
+                    };
+                    
+                    // Convert inputs to worker format
+                    const workerInputs = {
+                        bullet_grain: inputs.bullet_grain,
+                        muzzle_velocity: inputs.muzzle_velocity,
+                        ballistic_coefficient: inputs.ballistic_coefficient,
+                        drag_model: inputs.drag_model,
+                        zero_distance: inputs.zero_distance,
+                        height_over_bore: inputs.height_over_bore,
+                        barrel_length: inputs.barrel_length,
+                        caliber: inputs.caliber,
+                        wind_speed: inputs.wind_speed || 0,
+                        wind_angle: inputs.wind_angle || 0,
+                        shooting_angle: inputs.shooting_angle || 0,
+                        temperature: inputs.temperature || 59,
+                        pressure: inputs.pressure || 29.92,
+                        humidity: inputs.humidity || 50,
+                        altitude: inputs.altitude || 0,
+                        step_interval_yards: inputs.step_interval_yards || 25,
+                        max_distance_yards: inputs.max_distance_yards || 1000
+                    };
+                    
+                    worker.postMessage(workerInputs);
+                });
+            }
+
             // Helper function to create comparison data from visible sessions
             async function createComparisonDataFromRows(rows) {
                 try {
@@ -4641,13 +4685,13 @@ window.resetPassword = async function() {
                             };
                             
                             try {
-                                const trajectory = await simulateTrajectory(windInputs);
+                                const trajectory = await runTrajectorySimulation(windInputs);
                                 const targetPoint = trajectory.find(point => 
-                                    Math.abs(point.distance - range) <= 5
+                                    Math.abs(point.x - range * 3) <= 15 // Convert yards to feet and allow 15ft tolerance
                                 );
                                 
                                 if (targetPoint) {
-                                    const windage = targetPoint.windageInches;
+                                    const windage = targetPoint.windage * 12; // Convert feet to inches
                                     const windageMOA = (windage / (range * 1.047 / 100));
                                     analysisHTML += `<td style="border: 1px solid #ddd; padding: 8px; text-align: center;">
                                         ${windage.toFixed(1)}"<br>
@@ -4727,15 +4771,16 @@ window.resetPassword = async function() {
                         energyHTML += `<td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${Math.round(muzzleEnergy)} ft-lbs</td>`;
                         
                         try {
-                            const trajectory = await simulateTrajectory(load.inputs);
+                            const trajectory = await runTrajectorySimulation(load.inputs);
                             
                             distances.forEach(targetDist => {
                                 const targetPoint = trajectory.find(point => 
-                                    Math.abs(point.distance - targetDist) <= 5
+                                    Math.abs(point.x / 3 - targetDist) <= 5 // Convert feet to yards
                                 );
                                 
-                                if (targetPoint && targetPoint.velocity) {
-                                    const energy = 0.5 * bulletMass * Math.pow(targetPoint.velocity, 2) / 32.174;
+                                if (targetPoint && targetPoint.v) {
+                                    const velocityFps = targetPoint.v * 3.28084; // Convert m/s to fps
+                                    const energy = 0.5 * bulletMass * Math.pow(velocityFps, 2) / 32.174;
                                     const retention = (energy / muzzleEnergy * 100);
                                     energyHTML += `<td style="border: 1px solid #ddd; padding: 8px; text-align: center;">
                                         ${Math.round(energy)} ft-lbs<br>
