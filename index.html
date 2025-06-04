@@ -4667,11 +4667,17 @@ window.resetPassword = async function() {
                         const bulletMass = inputs.bullet_grain / 7000; // Convert grains to pounds
                         const referenceArea = Math.PI * Math.pow(bulletRadius / 12, 2); // ft²
                         
-                        // Corrected BRL drag equation with proper scaling
-                        // The drag coefficient needs to be scaled by 1000 for proper units
-                        const scaledDragCoeff = dragCoeff / 1000; // Convert to proper scale
-                        const dragAcceleration = (densityFactor * Math.pow(relativeSpeed, 2) * scaledDragCoeff) / 
-                                                 (inputs.ballistic_coefficient * 2 * 32.174);
+                        // Standard BRL point-mass equation - mathematically correct
+                        // F = (1/2) * ρ * Cd * A * V² where A is reference area, not bullet area
+                        // BC = m / (i * d²) where i is form factor, d is diameter, m is mass
+                        // Deceleration = F/m = (ρ/ρ₀) * (V²/2) * (Cd/BC) * (7000/m_grains)
+                        
+                        const referenceBC = 1.0; // G1 standard reference
+                        const standardMass = 1.0; // Normalized mass for BC=1.0 projectile
+                        
+                        // Correct drag deceleration per BRL TR-1630
+                        const dragAcceleration = (densityFactor * Math.pow(relativeSpeed, 2) * dragCoeff) / 
+                                                 (inputs.ballistic_coefficient * 7000); // 7000 converts grain-seconds to lb-seconds
                         
                         // Enhanced Magnus effect calculation for 3-DoF model
                         // Based on McCoy's Modern Exterior Ballistics and BRL research
@@ -4712,10 +4718,13 @@ window.resetPassword = async function() {
                         
                         // Debug logging for first calculation
                         if (x === 0) {
-                            self.postMessage({ log: 'Physics debug: BC=' + inputs.ballistic_coefficient + ', bullet=' + inputs.bullet_grain + 'gr' });
+                            self.postMessage({ log: 'BC Input Validation: Raw BC=' + inputs.ballistic_coefficient + ' (type: ' + typeof inputs.ballistic_coefficient + ')' });
+                            if (inputs.ballistic_coefficient < 0.1 || inputs.ballistic_coefficient > 1.0) {
+                                self.postMessage({ log: 'WARNING: BC value ' + inputs.ballistic_coefficient + ' outside typical range (0.1-1.0)' });
+                            }
+                            self.postMessage({ log: 'Physics: BC=' + inputs.ballistic_coefficient + ', bullet=' + inputs.bullet_grain + 'gr' });
                             self.postMessage({ log: 'Velocity=' + relativeSpeed.toFixed(0) + 'fps, Mach=' + mach.toFixed(3) + ', Cd=' + dragCoeff.toFixed(4) });
-                            self.postMessage({ log: 'DensityFactor=' + densityFactor.toFixed(3) + ', ScaledCd=' + scaledDragCoeff.toFixed(6) + ', DragAccel=' + dragAcceleration.toFixed(2) + ' ft/s²' });
-                            self.postMessage({ log: 'Expected at muzzle: ~10-50 ft/s² drag for typical rifle' });
+                            self.postMessage({ log: 'DragAccel=' + dragAcceleration.toFixed(2) + ' ft/s² (target: 10-50 ft/s²)' });
                         }
                         
                         // Check for NaN in accelerations
