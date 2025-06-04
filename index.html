@@ -615,6 +615,10 @@
                 <input type="number" step="0.01" name="height_over_bore">
             </div>
             <div class="form-group">
+                <label>Shooting Angle (degrees):</label>
+                <input type="number" step="0.1" min="-90" max="90" name="shooting_angle" placeholder="0 = level, positive = upward, negative = downward">
+            </div>
+            <div class="form-group">
                 <label>Drag Model:</label>
                 <select name="drag_model">
                     <option value="">Select</option>
@@ -4936,6 +4940,11 @@ window.resetPassword = async function() {
                     // Wind components
                     const windSpeed = inputs.wind_speed || 0; // mph
                     const windAngle = (inputs.wind_angle || 0) * Math.PI / 180; // Convert to radians
+                    
+                    // Shooting angle for inclined trajectories
+                    const shootingAngle = (inputs.shooting_angle || 0) * Math.PI / 180; // Convert to radians
+                    const cosShootingAngle = Math.cos(shootingAngle);
+                    const sinShootingAngle = Math.sin(shootingAngle);
 
                     const targetDistances = Array.from(
                         { length: Math.floor(inputs.max_distance_yards / inputs.step_interval_yards) + 1 },
@@ -4982,7 +4991,8 @@ window.resetPassword = async function() {
                         // Check for invalid ballistic coefficient
                         if (!inputs.ballistic_coefficient || inputs.ballistic_coefficient <= 0) {
                             self.postMessage({ log: 'Invalid BC=' + inputs.ballistic_coefficient });
-                            return [vx, vy, 0, -GRAVITY, 0, speed]; // Fallback to gravity only
+                            const effectiveGravity = GRAVITY * cosShootingAngle;
+                            return [vx, vy, 0, -effectiveGravity, 0, speed]; // Fallback to gravity only with angle correction
                         }
                         
                         // Wind effects (convert mph to ft/s)
@@ -5051,9 +5061,12 @@ window.resetPassword = async function() {
                         const magnusAccelX = -magnusAcceleration * stabilityFactor * (relativeVy / relativeSpeed);
                         const magnusAccelY = magnusAcceleration * stabilityFactor * (relativeVx / relativeSpeed);
                         
+                        // Adjust gravity for shooting angle (inclined trajectory physics)
+                        const effectiveGravity = GRAVITY * cosShootingAngle;
+                        
                         // Total accelerations including all 3-DoF effects
                         const ax = -dragAcceleration * (relativeVx / relativeSpeed) + magnusAccelX;
-                        const ay = -GRAVITY - dragAcceleration * (relativeVy / relativeSpeed) + magnusAccelY;
+                        const ay = -effectiveGravity - dragAcceleration * (relativeVy / relativeSpeed) + magnusAccelY;
                         
                         // Legacy spin drift placeholder (now handled by Magnus effect)
                         let spinDriftAccelX = 0;
@@ -5070,7 +5083,8 @@ window.resetPassword = async function() {
                         // Check for NaN in accelerations
                         if (isNaN(ax) || isNaN(ay)) {
                             self.postMessage({ log: 'NaN detected: ax=' + ax + ', ay=' + ay + ', dragAccel=' + dragAcceleration + ', BC=' + inputs.ballistic_coefficient });
-                            return [vx, vy, 0, -GRAVITY, 0, speed]; // Fallback
+                            const effectiveGravity = GRAVITY * cosShootingAngle;
+                            return [vx, vy, 0, -effectiveGravity, 0, speed]; // Fallback with angle correction
                         }
                         
                         return [vx, vy, ax, ay, dragAcceleration, speed];
@@ -5710,6 +5724,7 @@ window.resetPassword = async function() {
                     ballistic_coefficient: parseFloat(form.ballistic_coefficient.value),
                     zero_distance: parseFloat(form.zero_distance.value),
                     height_over_bore: parseFloat(form.height_over_bore.value),
+                    shooting_angle: parseFloat(form.shooting_angle.value) || 0,
                     drag_model: form.drag_model.value,
                     step_interval_yards: parseInt(form.step_interval_yards.value),
                     max_distance_yards: parseInt(form.max_distance_yards.value),
@@ -5776,6 +5791,7 @@ window.resetPassword = async function() {
                 form.ballistic_coefficient.value = session.ballistic_coefficient || '';
                 form.zero_distance.value = session.zero_distance || '';
                 form.height_over_bore.value = session.height_over_bore || '';
+                form.shooting_angle.value = session.shooting_angle || 0;
                 form.drag_model.value = session.drag_model || '';
                 form.step_interval_yards.value = session.step_interval_yards || '';
                 form.max_distance_yards.value = session.max_distance_yards || '';
