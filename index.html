@@ -4654,11 +4654,11 @@ window.resetPassword = async function() {
                         
                         // Check for NaN in accelerations
                         if (isNaN(ax) || isNaN(ay)) {
-                            self.postMessage({ log: 'NaN detected: ax=' + ax + ', ay=' + ay + ', dragAccel=' + dragAcceleration + ', BC=' + inputs.ballistic_coefficient });
+                            self.postMessage({ log: 'NaN detected: ax=' + ax + ', ay=' + ay + ', dragAccel=' + dragAccelerationFtS2 + ', BC=' + inputs.ballistic_coefficient });
                             return [vx, vy, 0, -GRAVITY, 0, speed]; // Fallback
                         }
                         
-                        return [vx, vy, ax + spinDriftAccelX, ay, dragAcceleration, speed];
+                        return [vx, vy, ax + spinDriftAccelX, ay, dragAccelerationFtS2, speed];
                     }
 
                     function rk4Step(state, dt) {
