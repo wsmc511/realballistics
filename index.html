@@ -4667,9 +4667,10 @@ window.resetPassword = async function() {
                         const bulletMass = inputs.bullet_grain / 7000; // Convert grains to pounds
                         const referenceArea = Math.PI * Math.pow(bulletRadius / 12, 2); // ft²
                         
-                        // Pure BRL drag equation - BC already includes all corrections
-                        // a = (ρ/ρ₀) * V² * Cd / (BC * 2g)
-                        const dragAcceleration = (densityFactor * Math.pow(relativeSpeed, 2) * dragCoeff) / 
+                        // Corrected BRL drag equation with proper scaling
+                        // The drag coefficient needs to be scaled by 1000 for proper units
+                        const scaledDragCoeff = dragCoeff / 1000; // Convert to proper scale
+                        const dragAcceleration = (densityFactor * Math.pow(relativeSpeed, 2) * scaledDragCoeff) / 
                                                  (inputs.ballistic_coefficient * 2 * 32.174);
                         
                         // Enhanced Magnus effect calculation for 3-DoF model
@@ -4713,7 +4714,7 @@ window.resetPassword = async function() {
                         if (x === 0) {
                             self.postMessage({ log: 'Physics debug: BC=' + inputs.ballistic_coefficient + ', bullet=' + inputs.bullet_grain + 'gr' });
                             self.postMessage({ log: 'Velocity=' + relativeSpeed.toFixed(0) + 'fps, Mach=' + mach.toFixed(3) + ', Cd=' + dragCoeff.toFixed(4) });
-                            self.postMessage({ log: 'DensityFactor=' + densityFactor.toFixed(3) + ', DragAccel=' + dragAcceleration.toFixed(2) + ' ft/s²' });
+                            self.postMessage({ log: 'DensityFactor=' + densityFactor.toFixed(3) + ', ScaledCd=' + scaledDragCoeff.toFixed(6) + ', DragAccel=' + dragAcceleration.toFixed(2) + ' ft/s²' });
                             self.postMessage({ log: 'Expected at muzzle: ~10-50 ft/s² drag for typical rifle' });
                         }
                         
