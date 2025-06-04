@@ -6151,7 +6151,7 @@ window.resetPassword = async function() {
                 document.getElementById('message').innerHTML = '';
             };
 
-            window.compareSelected = function() {
+            window.compareSelected = async function() {
                 const checkboxes = document.querySelectorAll('.select-session:checked');
                 if (checkboxes.length < 2) {
                     document.getElementById('message').innerHTML = '<div class="error">Please select at least two sessions to compare.</div>';
