@@ -5601,7 +5601,8 @@ window.resetPassword = async function() {
                             step_interval_yards: parseInt(form.step_interval_yards.value),
                             max_distance_yards: parseInt(form.max_distance_yards.value),
                             wind_speed: form.wind_speed.value !== '' ? parseFloat(form.wind_speed.value) : null,
-                            wind_angle: form.wind_angle.value !== '' ? parseFloat(form.wind_angle.value) : null
+                            wind_angle: form.wind_angle.value !== '' ? parseFloat(form.wind_angle.value) : null,
+                            shooting_angle: form.shooting_angle.value !== '' ? parseFloat(form.shooting_angle.value) : null
                         };
 
                         const sessionData = {
@@ -5624,9 +5625,11 @@ window.resetPassword = async function() {
                             max_distance_yards: inputs.max_distance_yards,
                             wind_speed: inputs.wind_speed,
                             wind_angle: inputs.wind_angle,
+                            shooting_angle: inputs.shooting_angle,
                             environment: {
                                 wind_speed: inputs.wind_speed,
-                                wind_angle: inputs.wind_angle
+                                wind_angle: inputs.wind_angle,
+                                shooting_angle: inputs.shooting_angle
                             },
                             results_grid: results_grid,
                             user_id: currentUser.id // Tie the session to the logged-in user
@@ -5791,13 +5794,13 @@ window.resetPassword = async function() {
                 form.ballistic_coefficient.value = session.ballistic_coefficient || '';
                 form.zero_distance.value = session.zero_distance || '';
                 form.height_over_bore.value = session.height_over_bore || '';
-                form.shooting_angle.value = session.shooting_angle || 0;
                 form.drag_model.value = session.drag_model || '';
                 form.step_interval_yards.value = session.step_interval_yards || '';
                 form.max_distance_yards.value = session.max_distance_yards || '';
-                console.log('Wind data from database:', { wind_speed: session.wind_speed, wind_angle: session.wind_angle });
+                console.log('Wind data from database:', { wind_speed: session.wind_speed, wind_angle: session.wind_angle, shooting_angle: session.shooting_angle });
                 form.wind_speed.value = session.wind_speed !== null && session.wind_speed !== undefined ? session.wind_speed : '';
                 form.wind_angle.value = session.wind_angle !== null && session.wind_angle !== undefined ? session.wind_angle : '';
+                form.shooting_angle.value = session.shooting_angle !== null && session.shooting_angle !== undefined ? session.shooting_angle : '';
 
                 editSessionId = sessionId;
                 document.getElementById('cancelEditButton').style.display = 'inline-block';
@@ -6101,6 +6104,7 @@ window.resetPassword = async function() {
                             height_over_bore: sessionData.height_over_bore || 1.5,
                             wind_speed: 0,
                             wind_angle: 0,
+                            shooting_angle: 0,
                             temperature: 59,
                             pressure: 29.92,
                             humidity: 50,
