@@ -4541,11 +4541,120 @@ window.resetPassword = async function() {
             // Helper function to run trajectory simulation via Web Worker
             async function runTrajectorySimulation(inputs) {
                 return new Promise((resolve, reject) => {
-                    const worker = new Worker('data:application/javascript;base64,' + btoa(`
-                        ${window.workerCode}
-                    `));
+                    const workerCode = `
+                        // Constants
+                        const G = 32.174; // gravity ft/s²
+                        const RHO = 0.076474; // air density at sea level lb/ft³
+                        const GRAINS_TO_LB = 1/7000;
+                        const FPS_TO_MPS = 0.3048;
+                        const INCHES_PER_METER = 39.3701;
+                        const METERS_PER_YARD = 0.9144;
+                        
+                        function simulateTrajectory(inputs) {
+                            const {
+                                bullet_grain, muzzle_velocity, ballistic_coefficient, drag_model,
+                                zero_distance, height_over_bore, barrel_length, caliber,
+                                wind_speed, wind_angle, shooting_angle, temperature, pressure,
+                                humidity, altitude, step_interval_yards, max_distance_yards
+                            } = inputs;
+                            
+                            const mass = bullet_grain * GRAINS_TO_LB;
+                            const zeroRange = zero_distance * 3; // Convert yards to feet
+                            const HOB = height_over_bore / 12; // Convert inches to feet
+                            
+                            // Simple launch angle estimation
+                            const angle = Math.atan(HOB / zeroRange) + 0.001; // Small positive angle
+                            
+                            const stepSize = step_interval_yards * 3; // Convert to feet
+                            const maxDistance = max_distance_yards * 3; // Convert to feet
+                            
+                            let velocity = [
+                                muzzle_velocity * Math.cos(angle),
+                                0,
+                                muzzle_velocity * Math.sin(angle)
+                            ];
+                            
+                            let position = [0, 0, 0];
+                            const trajectory = [];
+                            let time = 0;
+                            
+                            // Wind components (convert mph to fps)
+                            const windSpeedFps = (wind_speed || 0) * 1.467;
+                            const windAngleRad = (wind_angle || 0) * Math.PI / 180;
+                            const windX = windSpeedFps * Math.cos(windAngleRad);
+                            const windY = windSpeedFps * Math.sin(windAngleRad);
+                            
+                            while (position[2] >= -50 && position[0] <= maxDistance) {
+                                const relVel = [
+                                    velocity[0] - windX,
+                                    velocity[1] - windY,
+                                    velocity[2]
+                                ];
+                                const vMag = Math.sqrt(relVel[0]*relVel[0] + relVel[1]*relVel[1] + relVel[2]*relVel[2]);
+                                
+                                // Simple drag calculation
+                                const dragCoeff = drag_model === 'G7' ? 0.15 : 0.25;
+                                const dragMag = 0.5 * RHO * vMag * vMag * dragCoeff / ballistic_coefficient / mass;
+                                
+                                const dragAccel = [
+                                    -dragMag * relVel[0] / vMag,
+                                    -dragMag * relVel[1] / vMag,
+                                    -dragMag * relVel[2] / vMag
+                                ];
+                                
+                                const accel = [
+                                    dragAccel[0],
+                                    dragAccel[1],
+                                    dragAccel[2] - G
+                                ];
+                                
+                                const dt = 0.01;
+                                for (let i = 0; i < 3; i++) {
+                                    position[i] += velocity[i] * dt;
+                                    velocity[i] += accel[i] * dt;
+                                }
+                                
+                                time += dt;
+                                
+                                // Record data at step intervals
+                                if (Math.abs(position[0] % stepSize) < velocity[0] * dt || position[0] === 0) {
+                                    const distanceYards = position[0] / 3;
+                                    const dropInches = -position[2] * 12;
+                                    const windageInches = position[1] * 12;
+                                    const velocityFPS = Math.sqrt(velocity[0]*velocity[0] + velocity[1]*velocity[1] + velocity[2]*velocity[2]);
+                                    
+                                    trajectory.push({
+                                        x: position[0], // feet
+                                        y: position[2], // feet
+                                        windage: position[1], // feet
+                                        v: velocityFPS / 3.28084, // m/s for compatibility
+                                        t: time,
+                                        distance: distanceYards,
+                                        drop: dropInches,
+                                        windageInches: windageInches,
+                                        velocity: velocityFPS,
+                                        energy: 0.5 * mass * velocityFPS * velocityFPS / G
+                                    });
+                                }
+                            }
+                            
+                            return trajectory;
+                        }
+                        
+                        self.onmessage = function(e) {
+                            try {
+                                const result = simulateTrajectory(e.data);
+                                self.postMessage({ trajectory: result });
+                            } catch (error) {
+                                self.postMessage({ error: error.message });
+                            }
+                        };
+                    `;
+                    
+                    const worker = new Worker('data:application/javascript;charset=utf-8,' + encodeURIComponent(workerCode));
                     
                     worker.onmessage = function(e) {
+                        worker.terminate();
                         if (e.data.error) {
                             reject(new Error(e.data.error));
                         } else if (e.data.trajectory) {
@@ -4554,31 +4663,11 @@ window.resetPassword = async function() {
                     };
                     
                     worker.onerror = function(error) {
+                        worker.terminate();
                         reject(error);
                     };
                     
-                    // Convert inputs to worker format
-                    const workerInputs = {
-                        bullet_grain: inputs.bullet_grain,
-                        muzzle_velocity: inputs.muzzle_velocity,
-                        ballistic_coefficient: inputs.ballistic_coefficient,
-                        drag_model: inputs.drag_model,
-                        zero_distance: inputs.zero_distance,
-                        height_over_bore: inputs.height_over_bore,
-                        barrel_length: inputs.barrel_length,
-                        caliber: inputs.caliber,
-                        wind_speed: inputs.wind_speed || 0,
-                        wind_angle: inputs.wind_angle || 0,
-                        shooting_angle: inputs.shooting_angle || 0,
-                        temperature: inputs.temperature || 59,
-                        pressure: inputs.pressure || 29.92,
-                        humidity: inputs.humidity || 50,
-                        altitude: inputs.altitude || 0,
-                        step_interval_yards: inputs.step_interval_yards || 25,
-                        max_distance_yards: inputs.max_distance_yards || 1000
-                    };
-                    
-                    worker.postMessage(workerInputs);
+                    worker.postMessage(inputs);
                 });
             }
 
