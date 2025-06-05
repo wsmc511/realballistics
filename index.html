@@ -4551,6 +4551,8 @@ window.resetPassword = async function() {
                         const METERS_PER_YARD = 0.9144;
                         
                         function simulateTrajectory(inputs) {
+                            console.log('Starting simulation with inputs:', JSON.stringify(inputs, null, 2));
+                            
                             const {
                                 bullet_grain, muzzle_velocity, ballistic_coefficient, drag_model,
                                 zero_distance, height_over_bore, barrel_length, caliber,
@@ -4558,8 +4560,14 @@ window.resetPassword = async function() {
                                 humidity, altitude, step_interval_yards, max_distance_yards
                             } = inputs;
                             
+                            console.log('Extracted values:', {
+                                bullet_grain, muzzle_velocity, ballistic_coefficient, 
+                                zero_distance, height_over_bore
+                            });
+                            
                             // Validate inputs
                             if (!bullet_grain || !muzzle_velocity || !ballistic_coefficient) {
+                                console.error('Validation failed:', {bullet_grain, muzzle_velocity, ballistic_coefficient});
                                 throw new Error('Missing required ballistic parameters');
                             }
                             
