@@ -4603,7 +4603,14 @@ window.resetPassword = async function() {
                             
                             // Integration loop
                             const dt = 0.001; // Small time step for accuracy
-                            while (z >= -10 && x <= maxDistance && x >= 0) {
+                            let iterationCount = 0;
+                            const maxIterations = 1000000; // Prevent infinite loops
+                            
+                            console.log('Starting integration loop');
+                            console.log('Initial conditions:', {x, y, z, vx, vy, vz, maxDistance});
+                            
+                            while (z >= -10 && x <= maxDistance && x >= 0 && iterationCount < maxIterations) {
+                                iterationCount++;
                                 // Relative velocity (bullet velocity minus wind)
                                 const vx_rel = vx - windX;
                                 const vy_rel = vy - windY;
@@ -4662,9 +4669,26 @@ window.resetPassword = async function() {
                                         energy: energy
                                     });
                                     
+                                    if (trajectory.length <= 3) {
+                                        console.log('First trajectory points:', {
+                                            distanceYards, dropInches, velocityFPS, energy
+                                        });
+                                    }
+                                    
                                     nextStepDistance += stepSize;
                                 }
+                                
+                                // Log first few iterations
+                                if (iterationCount <= 5) {
+                                    console.log(`Iteration ${iterationCount}:`, {x, y, z, vx, vy, vz, vMag});
+                                }
                             }
+                            
+                            console.log('Integration loop completed:', {
+                                iterationCount, 
+                                finalPosition: {x, y, z}, 
+                                trajectoryPoints: trajectory.length
+                            });
                             
                             return trajectory;
                         }
