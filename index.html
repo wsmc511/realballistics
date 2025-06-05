@@ -2115,13 +2115,13 @@
                     { data: bullets, error: bulletsError },
                     { data: firearms, error: firearmsError },
                     { data: dopeData, error: dopeError },
-                    { data: zeroProfiles, error: zeroError }
+                    { data: ballisticSessions, error: ballisticError }
                 ] = await Promise.all([
                     window.supabase.from('user_profile').select('*').limit(1000),
                     window.supabase.from('bullet_library').select('user_id, created_at').limit(1000),
                     window.supabase.from('firearm_profile').select('user_id, created_at').limit(1000),
-                    window.supabase.from('dope_sessions').select('user_id, created_at').limit(1000),
-                    window.supabase.from('zero_profiles').select('user_id, created_at').limit(1000)
+                    window.supabase.from('dope_engagements').select('user_id, created_at').limit(1000),
+                    window.supabase.from('ballistic_sessions').select('user_id, created_at').limit(1000)
                 ]);
 
                 console.log('User profiles loaded:', userProfiles);
@@ -2143,7 +2143,7 @@
                         bullets: 0,
                         firearms: 0,
                         dope: 0,
-                        zeros: 0,
+                        sessions: 0,
                         firstActivity: null
                     };
                 });
@@ -2178,10 +2178,10 @@
                     }
                 });
                 
-                // Count zero profiles per user
-                zeroProfiles?.forEach(item => {
+                // Count ballistic sessions per user
+                ballisticSessions?.forEach(item => {
                     if (allUsers[item.user_id]) {
-                        allUsers[item.user_id].zeros++;
+                        allUsers[item.user_id].sessions++;
                         if (!allUsers[item.user_id].firstActivity || item.created_at < allUsers[item.user_id].firstActivity) {
                             allUsers[item.user_id].firstActivity = item.created_at;
                         }
@@ -2236,7 +2236,7 @@
                     const isAdmin = userId === '5df728ad-7154-4744-994a-d89bd3040946' || profile.role === 'Admin';
                     const fullName = [profile.first_name, profile.last_name].filter(n => n).join(' ') || 'N/A';
                     const registeredDate = new Date(profile.created_at).toLocaleDateString();
-                    const totalActivity = user.bullets + user.firearms + user.dope + user.zeros;
+                    const totalActivity = user.bullets + user.firearms + user.dope + user.sessions;
                     
                     let statusColor = '#28a745'; // approved - green
                     let statusText = profile.status;
@@ -2377,13 +2377,13 @@
                                 </div>
                                 
                                 <div>
-                                    <h4 style="color: #dc3545; border-bottom: 2px solid #dc3545; padding-bottom: 5px;">🎯 DOPE Sessions (${dopeData?.length || 0})</h4>
+                                    <h4 style="color: #dc3545; border-bottom: 2px solid #dc3545; padding-bottom: 5px;">🎯 DOPE Engagements (${dopeData?.length || 0})</h4>
                                     ${dopeData?.length ? dopeData.slice(0, 3).map(d => `<p style="margin: 5px 0; padding: 8px; background: #fff0f0; border-radius: 4px; font-size: 13px;">${d.range_yards || 'N/A'}yd - ${new Date(d.created_at).toLocaleDateString()}</p>`).join('') + (dopeData.length > 3 ? `<p style="font-style: italic; color: #666;">... and ${dopeData.length - 3} more</p>` : '') : '<p style="color: #666; font-style: italic;">No DOPE data</p>'}
                                 </div>
                                 
                                 <div>
-                                    <h4 style="color: #6c757d; border-bottom: 2px solid #6c757d; padding-bottom: 5px;">⚙️ Zero Profiles (${zeroProfiles?.length || 0})</h4>
-                                    ${zeroProfiles?.length ? zeroProfiles.slice(0, 3).map(z => `<p style="margin: 5px 0; padding: 8px; background: #f8f9fa; border-radius: 4px; font-size: 13px;">${z.zero_range || 'N/A'}yd zero - ${new Date(z.created_at).toLocaleDateString()}</p>`).join('') + (zeroProfiles.length > 3 ? `<p style="font-style: italic; color: #666;">... and ${zeroProfiles.length - 3} more</p>` : '') : '<p style="color: #666; font-style: italic;">No zero profiles</p>'}
+                                    <h4 style="color: #6c757d; border-bottom: 2px solid #6c757d; padding-bottom: 5px;">⚙️ Ballistic Sessions (${ballisticSessions?.length || 0})</h4>
+                                    ${ballisticSessions?.length ? ballisticSessions.slice(0, 3).map(s => `<p style="margin: 5px 0; padding: 8px; background: #f8f9fa; border-radius: 4px; font-size: 13px;">${s.shooter_name || 'N/A'} - ${new Date(s.created_at).toLocaleDateString()}</p>`).join('') + (ballisticSessions.length > 3 ? `<p style="font-style: italic; color: #666;">... and ${ballisticSessions.length - 3} more</p>` : '') : '<p style="color: #666; font-style: italic;">No ballistic sessions</p>'}
                                 </div>
                             </div>
                             
