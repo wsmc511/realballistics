@@ -1253,7 +1253,7 @@
                     <h4>Wind Sensitivity Analysis</h4>
                     <p style="color: #666; margin-bottom: 10px;">Compare how each load performs across different wind conditions</p>
                     <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                        <input type="number" id="windAnalysisRange" placeholder="Range (yards)" value="600" style="width: 120px; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                        <input type="number" id="windAnalysisRange" placeholder="Range (yards)" value="200" style="width: 120px; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
                         <button onclick="runWindSensitivityAnalysis()" style="background: #17a2b8; color: white; padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer;">Analyze Wind Sensitivity</button>
                     </div>
                     <div id="windSensitivityResults" style="margin-top: 15px;"></div>
@@ -4774,11 +4774,19 @@ window.resetPassword = async function() {
                         
                         console.log('Created comparison data inputs:', inputs);
                         
+                        const targetDistance = sessionData.target_distance || sessionData.zero_distance || parseFloat(row.cells[9].textContent) || 200;
+                        console.log('Target distance extraction:', {
+                            sessionData_target_distance: sessionData.target_distance,
+                            sessionData_zero_distance: sessionData.zero_distance,
+                            row_cells_9: row.cells[9].textContent,
+                            final_targetDistance: targetDistance
+                        });
+                        
                         return {
                             name: `${row.cells[3].textContent} - ${row.cells[8].textContent}gr`,
                             inputs: inputs,
                             trajectory: JSON.parse(row.dataset.resultsGrid),
-                            targetDistance: sessionData.target_distance || sessionData.zero_distance || parseFloat(row.cells[9].textContent) || 200
+                            targetDistance: targetDistance
                         };
                     }));
                     console.log('Created comparison data:', window.lastComparisonData);
@@ -4792,7 +4800,10 @@ window.resetPassword = async function() {
                 // Use the profile's target distance instead of hardcoded range
                 const profileRange = window.lastComparisonData && window.lastComparisonData.length > 0 ? 
                     window.lastComparisonData[0].targetDistance : 200;
-                const range = parseFloat(document.getElementById('windAnalysisRange').value) || profileRange;
+                
+                // Auto-set the input field to the profile's target distance
+                document.getElementById('windAnalysisRange').value = profileRange;
+                const range = profileRange;
                 const resultsDiv = document.getElementById('windSensitivityResults');
                 
                 console.log('Wind analysis debug:', {
