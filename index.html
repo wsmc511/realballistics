@@ -3955,7 +3955,7 @@ User Data Summary:
                         const trajectory = [];
                         let time = 0;
                         
-                        while (position[2] >= -50 && position[0] <= maxMeters) {
+                        while (position[2] >= -100 && position[0] <= maxMeters) {
                             const relVel = [
                                 velocity[0] - wind[0],
                                 velocity[1] - wind[1],
@@ -4609,7 +4609,7 @@ window.resetPassword = async function() {
                             console.log('Starting integration loop');
                             console.log('Initial conditions:', {x, y, z, vx, vy, vz, maxDistance});
                             
-                            while (z >= -10 && x <= maxDistance && x >= 0 && iterationCount < maxIterations) {
+                            while (z >= -100 && x <= maxDistance && x >= 0 && iterationCount < maxIterations) {
                                 iterationCount++;
                                 // Relative velocity (bullet velocity minus wind)
                                 const vx_rel = vx - windX;
