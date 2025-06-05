@@ -4777,7 +4777,8 @@ window.resetPassword = async function() {
                         return {
                             name: `${row.cells[3].textContent} - ${row.cells[8].textContent}gr`,
                             inputs: inputs,
-                            trajectory: JSON.parse(row.dataset.resultsGrid)
+                            trajectory: JSON.parse(row.dataset.resultsGrid),
+                            targetDistance: sessionData.target_distance || sessionData.zero_distance || parseFloat(row.cells[9].textContent) || 200
                         };
                     }));
                     console.log('Created comparison data:', window.lastComparisonData);
@@ -4788,7 +4789,10 @@ window.resetPassword = async function() {
 
             // Advanced Ballistic Analysis Functions
             window.runWindSensitivityAnalysis = async function() {
-                const range = parseFloat(document.getElementById('windAnalysisRange').value) || 600;
+                // Use the profile's target distance instead of hardcoded range
+                const profileRange = window.lastComparisonData && window.lastComparisonData.length > 0 ? 
+                    window.lastComparisonData[0].targetDistance : 200;
+                const range = parseFloat(document.getElementById('windAnalysisRange').value) || profileRange;
                 const resultsDiv = document.getElementById('windSensitivityResults');
                 
                 console.log('Wind analysis debug:', {
@@ -4853,7 +4857,7 @@ window.resetPassword = async function() {
                                 
                                 console.log(`Target range: ${range}y, closest point:`, targetPoint, `diff: ${minDiff}y`);
                                 
-                                if (targetPoint && minDiff <= 50) { // Allow 50 yard tolerance
+                                if (targetPoint && minDiff <= 100) { // Allow 100 yard tolerance
                                     const windage = targetPoint.windageInches || 0;
                                     const windageMOA = Math.abs(windage) > 0 ? (windage / (range * 1.047 / 100)) : 0;
                                     analysisHTML += `<td style="border: 1px solid #ddd; padding: 8px; text-align: center;">
@@ -4953,7 +4957,7 @@ window.resetPassword = async function() {
                                 
                                 console.log(`Target distance: ${targetDist}y, closest point:`, targetPoint, `diff: ${minDiff}y`);
                                 
-                                if (targetPoint && minDiff <= 50 && targetPoint.velocity) { // Allow 50 yard tolerance
+                                if (targetPoint && minDiff <= 100 && targetPoint.velocity) { // Allow 100 yard tolerance
                                     const energy = targetPoint.energy || (0.5 * bulletMass * Math.pow(targetPoint.velocity, 2) / 32.174);
                                     const retention = (energy / muzzleEnergy * 100);
                                     energyHTML += `<td style="border: 1px solid #ddd; padding: 8px; text-align: center;">
@@ -4997,7 +5001,10 @@ window.resetPassword = async function() {
                 resultsDiv.innerHTML = '<p>Generating trajectory visualization...</p>';
                 
                 try {
-                    const distances = [0, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000];
+                    // Use the profile's target distance as the focus point
+                    const profileRange = window.lastComparisonData && window.lastComparisonData.length > 0 ? 
+                        window.lastComparisonData[0].targetDistance : 200;
+                    const distances = [0, profileRange]; // Focus on zero and target distance
                     const colors = ['#007bff', '#28a745', '#dc3545', '#ffc107', '#17a2b8', '#6f42c1'];
                     
                     let chartHTML = `
@@ -5071,7 +5078,10 @@ window.resetPassword = async function() {
                 resultsDiv.innerHTML = '<p>Calculating flight times...</p>';
                 
                 try {
-                    const distances = [100, 200, 300, 400, 500, 600, 800, 1000];
+                    // Use the profile's target distance as primary analysis point
+                    const profileRange = window.lastComparisonData && window.lastComparisonData.length > 0 ? 
+                        window.lastComparisonData[0].targetDistance : 200;
+                    const distances = [profileRange]; // Focus on the profile's specific distance
                     
                     let timeHTML = `
                         <h5>Time of Flight Comparison</h5>
