@@ -4663,9 +4663,15 @@ window.resetPassword = async function() {
                         
                         self.onmessage = function(e) {
                             try {
+                                console.log('Worker received inputs:', e.data);
                                 const result = simulateTrajectory(e.data);
+                                console.log('Worker generated trajectory points:', result.length);
+                                if (result.length > 0) {
+                                    console.log('First trajectory point:', result[0]);
+                                }
                                 self.postMessage({ trajectory: result });
                             } catch (error) {
+                                console.error('Worker simulation error:', error);
                                 self.postMessage({ error: error.message });
                             }
                         };
@@ -4714,27 +4720,31 @@ window.resetPassword = async function() {
                             sessionData = JSON.parse(row.dataset.sessionData || '{}');
                         }
                         
+                        const inputs = {
+                            bullet_grain: sessionData.bullet_grain || parseFloat(row.cells[8].textContent) || 55,
+                            muzzle_velocity: sessionData.muzzle_velocity || 2800,
+                            ballistic_coefficient: sessionData.ballistic_coefficient || 0.5,
+                            drag_model: sessionData.drag_model || 'G1',
+                            zero_distance: sessionData.zero_distance || parseFloat(row.cells[9].textContent) || 100,
+                            height_over_bore: sessionData.height_over_bore || 1.5,
+                            barrel_length: sessionData.barrel_length || 20,
+                            caliber: sessionData.firearm_caliber || 0.308,
+                            wind_speed: 0,
+                            wind_angle: 0,
+                            shooting_angle: sessionData.shooting_angle || 0,
+                            temperature: sessionData.temperature || 59,
+                            pressure: sessionData.pressure || 29.92,
+                            humidity: sessionData.humidity || 50,
+                            altitude: sessionData.altitude || 0,
+                            step_interval_yards: sessionData.step_interval_yards || 25,
+                            max_distance_yards: sessionData.max_distance_yards || 1000
+                        };
+                        
+                        console.log('Created comparison data inputs:', inputs);
+                        
                         return {
                             name: `${row.cells[3].textContent} - ${row.cells[8].textContent}gr`,
-                            inputs: {
-                                bullet_grain: sessionData.bullet_grain || parseFloat(row.cells[8].textContent),
-                                muzzle_velocity: sessionData.muzzle_velocity || 2800,
-                                ballistic_coefficient: sessionData.ballistic_coefficient || 0.5,
-                                drag_model: sessionData.drag_model || 'G1',
-                                zero_distance: sessionData.zero_distance || parseFloat(row.cells[9].textContent),
-                                height_over_bore: sessionData.height_over_bore || 1.5,
-                                barrel_length: sessionData.barrel_length || 20,
-                                caliber: sessionData.firearm_caliber || 0.308,
-                                wind_speed: 0,
-                                wind_angle: 0,
-                                shooting_angle: sessionData.shooting_angle || 0,
-                                temperature: sessionData.temperature || 59,
-                                pressure: sessionData.pressure || 29.92,
-                                humidity: sessionData.humidity || 50,
-                                altitude: sessionData.altitude || 0,
-                                step_interval_yards: sessionData.step_interval_yards || 25,
-                                max_distance_yards: sessionData.max_distance_yards || 1000
-                            },
+                            inputs: inputs,
                             trajectory: JSON.parse(row.dataset.resultsGrid)
                         };
                     }));
