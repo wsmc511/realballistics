@@ -4620,16 +4620,16 @@ window.resetPassword = async function() {
                                 
                                 if (vMag <= 0) break;
                                 
-                                // Drag coefficient based on model
-                                const cd = drag_model === 'G7' ? 0.2 : 0.3;
+                                // Standard drag function for ballistic coefficient
+                                const dragCoeff = drag_model === 'G7' ? 0.5191 : 0.5191; // Standard reference
                                 
-                                // Drag force magnitude
-                                const dragForce = 0.5 * 0.0765 * vMag * vMag * cd / ballistic_coefficient;
+                                // Drag acceleration magnitude (using standard ballistic coefficient formula)
+                                const dragAccelMag = (dragCoeff * vMag * vMag) / (ballistic_coefficient * mass * 144000);
                                 
                                 // Drag acceleration components
-                                const ax_drag = -dragForce * vx_rel / vMag / mass;
-                                const ay_drag = -dragForce * vy_rel / vMag / mass;
-                                const az_drag = -dragForce * vz_rel / vMag / mass;
+                                const ax_drag = -dragAccelMag * vx_rel / vMag;
+                                const ay_drag = -dragAccelMag * vy_rel / vMag;
+                                const az_drag = -dragAccelMag * vz_rel / vMag;
                                 
                                 // Total acceleration (drag + gravity)
                                 const ax = ax_drag;
